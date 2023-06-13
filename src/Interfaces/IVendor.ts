@@ -1,4 +1,4 @@
-import IVendorContacts from "./IVendorContects";
+import IVendorContacts from "./IVendorContacts";
 
 export default interface IVendor {
   id: string;

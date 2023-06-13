@@ -1,4 +1,4 @@
-import IVendorContacts from "../Interfaces/IVendorContects";
+import IVendorContacts from "../Interfaces/IVendorContacts";
 
 export default class VendorContacts implements IVendorContacts {
   constructor(public phoneNumber: Number) {}

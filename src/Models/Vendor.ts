@@ -1,5 +1,5 @@
 import { Model, Schema, model } from "mongoose";
-import IVendorContacts from "../Interfaces/IVendorContects";
+import IVendorContacts from "../Interfaces/IVendorContacts";
 import VendorContacts from "../Classes/VendorContacts";
 interface vendor {
   name: string;
