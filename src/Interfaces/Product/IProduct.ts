@@ -1,5 +1,6 @@
 import IVendor from "../Vendor/IVendor";
 import IPrice from "./IPrice";
+import IProductMedia from "./IProducMedia";
 
 export default interface IProduct {
   id: string;
@@ -7,5 +8,5 @@ export default interface IProduct {
   name: string;
   description: string;
   price: Array<IPrice> | IPrice;
-  media: Array<string>;
+  media: Array<IProductMedia>;
 }
