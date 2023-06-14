@@ -37,5 +37,5 @@ const vendorSchema = new Schema(
 vendorSchema.statics.build = (attrs: vendor): VendorDoc => {
   return new Vendor(attrs);
 };
-const Vendor = model<VendorDoc, VendorModel>("Admin", vendorSchema);
+const Vendor = model<VendorDoc, VendorModel>("Vendor", vendorSchema);
 export default Vendor;

@@ -1,5 +1,5 @@
 import IVendorContacts from "../Interfaces/Vendor/IVendorContacts";
 
-export default class VendorContacts implements IVendorContacts {
-  constructor(public phoneNumber: Number) {}
+export default abstract class VendorContacts implements IVendorContacts {
+  public abstract phoneNumber: Number;
 }

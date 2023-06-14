@@ -1,6 +1,7 @@
 import IVendor from "../Vendor/IVendor";
 import IPrice from "./IPrice";
 import IProductMedia from "./IProducMedia";
+import IProps from "./IProps";
 
 export default interface IProduct {
   id: string;
@@ -10,4 +11,5 @@ export default interface IProduct {
   price: Array<IPrice>;
   media: Array<IProductMedia>;
   video: IProductMedia;
+  props: Array<IProps>;
 }
