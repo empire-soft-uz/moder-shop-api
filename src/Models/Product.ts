@@ -31,6 +31,7 @@ const productSchema = new Schema(
     price: Array<IPrice>,
     media: Array<IProductMedia>,
     video: ProductMedia,
+    reveiews: [{ type: Schema.Types.ObjectId, ref: "Review" }],
   },
   {
     toJSON: {

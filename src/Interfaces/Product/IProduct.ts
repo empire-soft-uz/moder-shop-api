@@ -2,7 +2,7 @@ import IVendor from "../Vendor/IVendor";
 import IPrice from "./IPrice";
 import IProductMedia from "./IProducMedia";
 import IProps from "./IProps";
-import IReview from "./IReview";
+import IReview from "../Review/IReview";
 
 export default interface IProduct {
   id: string;
