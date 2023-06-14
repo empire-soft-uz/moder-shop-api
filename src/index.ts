@@ -9,6 +9,7 @@ const mongoURL = process.env.MONGO || "mongodb://localhost:27017/Moder";
 async function startServer() {
   try {
     await mongoose.connect(mongoURL);
+    console.log("Db connected");
     app.listen(port, () => {
       console.log(`Listening on Port: ${port}`);
     });
@@ -16,3 +17,4 @@ async function startServer() {
     console.log(error);
   }
 }
+startServer();
