@@ -2,6 +2,7 @@ import IVendor from "../Vendor/IVendor";
 import IPrice from "./IPrice";
 import IProductMedia from "./IProducMedia";
 import IProps from "./IProps";
+import IReview from "./IReview";
 
 export default interface IProduct {
   id: string;
@@ -12,4 +13,5 @@ export default interface IProduct {
   media: Array<IProductMedia>;
   video: IProductMedia;
   props: Array<IProps>;
+  review: Array<IReview>;
 }
