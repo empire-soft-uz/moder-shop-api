@@ -7,6 +7,7 @@ export default interface IProduct {
   vendorId: IVendor["id"];
   name: string;
   description: string;
-  price: Array<IPrice> | IPrice;
+  price: Array<IPrice>;
   media: Array<IProductMedia>;
+  video: IProductMedia;
 }

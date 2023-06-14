@@ -1,5 +1,5 @@
 import { Model, Schema, model } from "mongoose";
-import IVendorContacts from "../Interfaces/IVendorContacts";
+import IVendorContacts from "../Interfaces/Vendor/IVendorContacts";
 import VendorContacts from "../Classes/VendorContacts";
 interface vendor {
   name: string;
@@ -22,7 +22,7 @@ const vendorSchema = new Schema(
     name: String,
     description: String,
     contacts: VendorContacts,
-    products: [],
+    products: [{ type: Schema.Types.ObjectId, ref: "Product" }],
   },
   {
     toJSON: {
@@ -38,3 +38,4 @@ vendorSchema.statics.build = (attrs: vendor): VendorDoc => {
   return new Vendor(attrs);
 };
 const Vendor = model<VendorDoc, VendorModel>("Admin", vendorSchema);
+export default Vendor;
