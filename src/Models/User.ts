@@ -1,6 +1,14 @@
 import { Model, Document, Schema, model } from "mongoose";
 import IUser from "../Interfaces/IUser";
-
+interface user {
+  fullName: string;
+  password: string;
+  phoneNumber: number;
+  email: string;
+  avatar: string;
+  gender: string;
+  berthdate: Date;
+}
 interface UserDoc extends Document {
   fullName: string;
   password: string;
@@ -11,7 +19,7 @@ interface UserDoc extends Document {
   berthdate: Date;
 }
 interface UserModel extends Model<UserDoc> {
-  build(attrs: IUser): UserDoc;
+  build(attrs: user): UserDoc;
 }
 
 const userSchema = new Schema(
@@ -34,7 +42,7 @@ const userSchema = new Schema(
   }
 );
 
-userSchema.statics.build = (attrs: IUser): UserDoc => {
+userSchema.statics.build = (attrs: user): UserDoc => {
   return new User(attrs);
 };
 const User = model<UserDoc, UserModel>("User", userSchema);
