@@ -5,6 +5,7 @@ import errorHandler from "./middlewares/errorHandler";
 import "express-async-errors";
 
 const app = express();
+app.use(express.json());
 app.get("/", async (req, res) => {
   throw new Error("async error");
   res.send("test message");
