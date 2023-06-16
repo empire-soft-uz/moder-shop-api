@@ -3,6 +3,7 @@ import IVendor from "../Interfaces/Vendor/IVendor";
 import IPrice from "../Interfaces/Product/IPrice";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
 import ProductMedia from "../Classes/Product/ProductMedia";
+import ProductPrice from "../Classes/Product/ProductPrice";
 interface product {
   vendorId: IVendor["id"];
   name: string;
@@ -28,9 +29,9 @@ const productSchema = new Schema(
     vendorId: { type: Schema.Types.ObjectId, ref: "Vendor" },
     name: String,
     description: String,
-    price: Array<IPrice>,
-    media: Array<IProductMedia>,
-    video: ProductMedia,
+    price: [{ price: Number, qtyMin: Number, qtyMax: Number }],
+    media: [{ url: String }],
+    video: { url: String },
     reveiews: [{ type: Schema.Types.ObjectId, ref: "Review" }],
   },
   {
