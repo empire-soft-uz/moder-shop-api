@@ -4,10 +4,11 @@ import RequestValidationError from "../Classes/Errors/RequestValidationError";
 const userRoute = Router();
 import "express-async-errors";
 import jwt from "jsonwebtoken";
-import { userRegistrationRules } from "../Validation/UserRules";
+import { userLoginRules, userRegistrationRules } from "../Validation/UserRules";
 import User from "../Models/User";
 import Password from "../utils/Password";
 import BadRequestError from "../Classes/Errors/BadRequestError";
+import Validator from "../utils/Valiadtor";
 
 const jwtKey = process.env.JWT || "someKEy";
 
@@ -15,10 +16,7 @@ userRoute.post(
   "/register",
   [...userRegistrationRules],
   async (req: Request, res: Response) => {
-    const errs = validationResult(req).array();
-    if (errs.length > 0) {
-      throw new RequestValidationError(errs);
-    }
+    Validator.validate(req);
 
     const { fullName, phoneNumber, email, password, gender, birthDate } =
       req.body;
@@ -40,5 +38,9 @@ userRoute.post(
     res.send({ user: token });
   }
 );
-
+userRoute.post(
+  "login",
+  [...userLoginRules],
+  async (req: Request, res: Response) => {}
+);
 export default userRoute;

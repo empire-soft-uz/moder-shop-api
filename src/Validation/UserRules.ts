@@ -21,3 +21,16 @@ export const userRegistrationRules = [
   body("gender").notEmpty().withMessage("Please provide your gender"),
   body("birthDate").notEmpty().withMessage("Please provide your Date of Birth"),
 ];
+export const userLoginRules = [
+  body("password")
+    .notEmpty()
+    .withMessage("Password is required")
+    .isLength({ min: 4, max: 20 })
+    .withMessage(
+      "Password length shoulr be between 4 and 20 characters cantaining capital and lower case letters with numbers"
+    ),
+  body("email")
+    .notEmpty()
+    .isEmail()
+    .withMessage("Please provide valid email address"),
+];
