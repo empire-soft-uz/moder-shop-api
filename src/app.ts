@@ -5,12 +5,12 @@ import errorHandler from "./middlewares/errorHandler";
 import "express-async-errors";
 import BadRequestError from "./Classes/Errors/BadRequestError";
 import NotFoundError from "./Classes/Errors/NotFoundError";
+import validateUser from "./middlewares/validateUser";
 
 const app = express();
 app.use(express.json());
-app.get("/", async (req, res, next) => {
-  next(new BadRequestError("async error"));
-  res.send("test message");
+app.get("/", validateUser, async (req, res, next) => {
+  res.send("protected route");
 });
 app.use("/api/users", userRoute);
 
