@@ -39,8 +39,29 @@ userRoute.post(
   }
 );
 userRoute.post(
-  "login",
+  "/login",
   [...userLoginRules],
-  async (req: Request, res: Response) => {}
+  async (req: Request, res: Response) => {
+    Validator.validate(req);
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    const isValidPass =
+      user &&
+      (await Password.compare(password, {
+        buff: user.password.split(".")[0],
+        salt: user.password.split(".")[1],
+      }));
+    if (!user || !isValidPass) throw new BadRequestError("Invalid Credentials");
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+      },
+      jwtKey
+    );
+    await user.save();
+    res.send({ user: token });
+  }
 );
 export default userRoute;

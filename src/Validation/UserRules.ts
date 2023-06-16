@@ -16,6 +16,7 @@ export const userRegistrationRules = [
     .withMessage("Please provide valid phone number"),
   body("email")
     .notEmpty()
+    .withMessage("Please provide valid email address")
     .isEmail()
     .withMessage("Please provide valid email address"),
   body("gender").notEmpty().withMessage("Please provide your gender"),
