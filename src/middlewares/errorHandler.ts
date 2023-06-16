@@ -2,13 +2,12 @@ import BaseError from "../Classes/Errors/BaseError";
 
 //@ts-ignore
 const errorHandler = (err, req, res, next) => {
-  console.log("error handling middleware", err);
+  console.log(err, err instanceof BaseError);
   if (err instanceof BaseError) {
-    res
-      .status(err.statusCode)
-      .send({ message: err.message, errors: err.formatError() });
+    console.log("Base Error instance");
+    res.status(err.statusCode).send({ errors: err.formatError() });
     return;
   }
-  res.status(500).send({ message: "Something went wrong", errors: [err] });
+  res.status(500).send({ errors: [err] });
 };
 export default errorHandler;
