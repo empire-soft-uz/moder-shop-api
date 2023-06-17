@@ -8,6 +8,7 @@ import NotFoundError from "./Classes/Errors/NotFoundError";
 import validateUser from "./middlewares/validateUser";
 import productRouter from "./routes/productRoute";
 import vendorRoute from "./routes/vendorRoute";
+import reviewRouter from "./routes/reviewRoute";
 
 const app = express();
 app.use(express.json());
@@ -17,6 +18,7 @@ app.get("/", validateUser, async (req, res, next) => {
 app.use("/api/users", userRoute);
 app.use("/api/products", productRouter);
 app.use("/api/vendors", vendorRoute);
+app.use("/api/reviews", reviewRouter);
 app.all("*", (req, res, next) => {
   throw new NotFoundError("Not Found");
 });

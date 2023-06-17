@@ -1,4 +1,4 @@
-import { Model, Schema, model } from "mongoose";
+import { Model, Schema, model, Document } from "mongoose";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
 import IUser from "../Interfaces/IUser";
 interface review {
