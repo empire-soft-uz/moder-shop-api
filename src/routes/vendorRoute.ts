@@ -14,7 +14,10 @@ vendorRoute.post(
   }
 );
 vendorRoute.get("/:id", async (req: Request, res: Response) => {
-  const vendor = await Vendor.findById(req.params.id).populate("products");
+  const vendor = await Vendor.findById(req.params.id).populate({
+    path: "products",
+    model: "Product",
+  });
   if (!vendor) throw new NotFoundError("Vendor Not Found");
   res.send(vendor);
 });

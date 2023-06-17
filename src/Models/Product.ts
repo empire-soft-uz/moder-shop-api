@@ -2,6 +2,7 @@ import { Model, Schema, model, Document } from "mongoose";
 import IVendor from "../Interfaces/Vendor/IVendor";
 import IPrice from "../Interfaces/Product/IPrice";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
+import Review from "./Review";
 interface product {
   vendorId: IVendor["id"];
   name: string;
@@ -37,7 +38,7 @@ const productSchema = new Schema(
     price: [priceSchema],
     media: [{ url: String }],
     video: { url: String },
-    reveiews: [{ type: Schema.Types.ObjectId, ref: "Review" }],
+    reviews: [{ type: Schema.Types.ObjectId, ref: Review }],
   },
   {
     toJSON: {

@@ -18,14 +18,19 @@ interface ReviewDoc extends Document {
 interface ReviewModel extends Model<ReviewDoc> {
   build(attrs: review): ReviewDoc;
 }
-
+const productMediaSchema = new Schema(
+  {
+    url: String,
+  },
+  { id: false, _id: false }
+);
 const reviewSchema = new Schema(
   {
     authorId: { type: Schema.Types.ObjectId, ref: "User" },
     createdDate: Date,
     review: String,
     rating: { type: Number, min: 0, max: 5 },
-    imgs: Array<IProductMedia>,
+    imgs: [productMediaSchema],
   },
   {
     toJSON: {
