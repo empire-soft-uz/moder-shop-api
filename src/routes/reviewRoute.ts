@@ -55,4 +55,25 @@ reviewRouter.put(
     res.send(review);
   }
 );
+reviewRouter.delete(
+  "/product/:prodId/delete/:reviewId",
+  validateUser,
+
+  async (req: Request, res: Response) => {
+    const review = await Review.findById(req.params.reviewId);
+    if (!review) throw new NotFoundError("Review Not Found");
+    const authHeader = req.headers.authorization;
+    //@ts-ignore
+    const author = jwt.verify(authHeader, jwtKey) as IUserPayload;
+
+    //@ts-ignore
+    if (!review.authorId.equals(author.id))
+      throw new ForbidenError("You don't Own this Review!");
+    const deleted = await Review.findByIdAndDelete(req.params.reviewId);
+    await Product.findByIdAndUpdate(req.params.prodId, {
+      $pull: { reviews: deleted?.id },
+    });
+    res.send({ deleted });
+  }
+);
 export default reviewRouter;
