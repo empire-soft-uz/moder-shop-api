@@ -21,13 +21,20 @@ interface ProductDoc extends Document {
 interface ProductModel extends Model<ProductDoc> {
   build(attrs: product): ProductDoc;
 }
-
+const priceSchema = new Schema(
+  {
+    price: Number,
+    qtyMin: Number,
+    qtyMax: Number,
+  },
+  { id: false, _id: false }
+);
 const productSchema = new Schema(
   {
     vendorId: { type: Schema.Types.ObjectId, ref: "Vendor" },
     name: String,
     description: String,
-    price: [{ price: Number, qtyMin: Number, qtyMax: Number }],
+    price: [priceSchema],
     media: [{ url: String }],
     video: { url: String },
     reveiews: [{ type: Schema.Types.ObjectId, ref: "Review" }],
