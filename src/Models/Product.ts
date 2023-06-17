@@ -1,9 +1,7 @@
-import { Model, Schema, model } from "mongoose";
+import { Model, Schema, model, Document } from "mongoose";
 import IVendor from "../Interfaces/Vendor/IVendor";
 import IPrice from "../Interfaces/Product/IPrice";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
-import ProductMedia from "../Classes/Product/ProductMedia";
-import ProductPrice from "../Classes/Product/ProductPrice";
 interface product {
   vendorId: IVendor["id"];
   name: string;

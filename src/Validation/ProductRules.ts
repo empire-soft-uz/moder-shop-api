@@ -6,5 +6,5 @@ export const productCreation = [
   body("price")
     .notEmpty()
     .withMessage("Please provide price for varity of product quantity"),
-  body("video").notEmpty().withMessage("Product Video is Required"),
+  // body("video").notEmpty().withMessage("Product Video is Required"),
 ];
