@@ -1,6 +1,5 @@
 import { Model, Document, Schema, model } from "mongoose";
-import IUser from "../Interfaces/IUser";
-import Password from "../utils/Password";
+
 interface user {
   fullName: string;
   password: string;

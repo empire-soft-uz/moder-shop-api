@@ -5,6 +5,6 @@ export const createReview = [
   body("rating")
     .notEmpty()
     .withMessage("Rating is required")
-    .isInt({ lt: 5, gt: 1 })
+    .isInt({ max: 5, min: 1 })
     .withMessage("Rating must be Number in range 1 to 5"),
 ];

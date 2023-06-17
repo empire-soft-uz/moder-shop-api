@@ -2,14 +2,14 @@ import { Model, Schema, model, Document } from "mongoose";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
 import IUser from "../Interfaces/IUser";
 interface review {
-  authorId: IUser["id"];
+  authorId: Schema.Types.ObjectId;
   createdDate: Date;
   review: string;
   rating: number;
   imgs?: Array<IProductMedia>;
 }
 interface ReviewDoc extends Document {
-  authorId: IUser["id"];
+  authorId: Schema.Types.ObjectId;
   createdDate: Date;
   review: string;
   rating: number;
