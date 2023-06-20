@@ -41,10 +41,25 @@ productRouter.post(
     const product = Product.build({ ...req.body });
     vendor.products.push(product.id);
     if (files) {
+      const video = [
+        "video/mp4",
+        "video/webm",
+        "video/x-m4v",
+        "video/quicktime",
+      ];
       //@ts-ignore
       for (let i = 0; i < files.length; i++) {
         //@ts-ignore
-        MediaManager.uploadFile(files[i]).then();
+        if (video.find((i) => i === files[i].mimetype)) {
+          //@ts-ignore
+          MediaManager.uploadFile(files[i]).then((f) => {
+            product.video = f;
+          });
+        }
+        //@ts-ignore
+        MediaManager.uploadFile(files[i]).then((f) => {
+          product.media.push(f);
+        });
       }
     }
     await product.save();
