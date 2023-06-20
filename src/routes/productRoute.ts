@@ -66,5 +66,20 @@ productRouter.post(
     res.send(product);
   }
 );
-
+productRouter.delete("/delete/:id", async (req: Request, res: Response) => {
+  const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+  if (!deletedProduct) throw new NotFoundError("Product Not Found");
+  await Vendor.findByIdAndUpdate(deletedProduct.vendorId, {
+    $pull: { products: req.params.id },
+  });
+  if (deletedProduct.media && deletedProduct.media.length > 0) {
+    deletedProduct.media.forEach(async (i) => {
+      await MediaManager.deletefiles(i);
+    });
+  }
+  if (deletedProduct.video) {
+    await MediaManager.deletefiles(deletedProduct.video);
+  }
+  res.send({ deletedProduct });
+});
 export default productRouter;

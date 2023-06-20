@@ -10,8 +10,9 @@ interface product {
   name: string;
   description: string;
   price: Array<IPrice>;
-  media: Array<IProductMedia>;
-  video: IProductMedia;
+  media: Array<IProductMedia> | undefined;
+  props: Array<IProps>;
+  video: IProductMedia | undefined;
   reviews: Array<IReview>;
 }
 interface ProductDoc extends Document {
@@ -19,9 +20,9 @@ interface ProductDoc extends Document {
   name: string;
   description: string;
   price: Array<IPrice>;
-  media: Array<IProductMedia>;
+  media: Array<IProductMedia> | undefined;
   props: Array<IProps>;
-  video: IProductMedia;
+  video: IProductMedia | undefined;
   reviews: Array<IReview>;
 }
 interface ProductModel extends Model<ProductDoc> {
