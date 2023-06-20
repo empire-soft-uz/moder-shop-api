@@ -50,7 +50,13 @@ const propSchema = new Schema(
   },
   { id: false, _id: false }
 );
-
+const mediaSchema = new Schema(
+  {
+    name: String,
+    fileId: String,
+  },
+  { id: false, _id: false }
+);
 const productSchema = new Schema(
   {
     vendorId: { type: Schema.Types.ObjectId, ref: "Vendor" },
@@ -58,8 +64,8 @@ const productSchema = new Schema(
     description: String,
     price: [priceSchema],
     props: [propSchema],
-    media: [{ url: String }],
-    video: { url: String },
+    media: [mediaSchema],
+    video: mediaSchema,
     reviews: [{ type: Schema.Types.ObjectId, ref: Review }],
   },
   {
