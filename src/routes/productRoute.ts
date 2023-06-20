@@ -30,16 +30,18 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
 });
 productRouter.post(
   "/new",
+  upload.array("media", 4),
   [...productCreation],
-  upload.any(),
   async (req: Request, res: Response) => {
     Validator.validate(req);
+
     const { files } = req;
     //@ts-ignore
     const vendor = await Vendor.findById(req.body.vendorId);
     if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
     const product = Product.build({ ...req.body });
     vendor.products.push(product.id);
+
     if (files) {
       const video = [
         "video/mp4",
@@ -50,16 +52,13 @@ productRouter.post(
       //@ts-ignore
       for (let i = 0; i < files.length; i++) {
         //@ts-ignore
-        if (video.find((i) => i === files[i].mimetype)) {
+        if (video.find((e) => e === files[i].mimetype)) {
           //@ts-ignore
-          MediaManager.uploadFile(files[i]).then((f) => {
-            product.video = f;
-          });
+          product.video = await MediaManager.uploadFile(files[i]);
         }
         //@ts-ignore
-        MediaManager.uploadFile(files[i]).then((f) => {
-          product.media.push(f);
-        });
+        const img = await MediaManager.uploadFile(files[i]);
+        product.media.push(img);
       }
     }
     await product.save();
