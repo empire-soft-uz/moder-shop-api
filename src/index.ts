@@ -3,6 +3,7 @@ dotenv.config();
 
 import app from "./app";
 import mongoose from "mongoose";
+import ImageKit from "imagekit";
 
 const port = process.env.PORT || 3000;
 const mongoURL = process.env.MONGO || "mongodb://localhost:27017/Moder";
