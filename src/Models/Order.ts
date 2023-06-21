@@ -1,23 +1,30 @@
 import { Model, Schema, model } from "mongoose";
+import IOrderProducts from "../Interfaces/Order/IOrderProducts";
 interface order {
-  productId: string;
+  products: Array<IOrderProducts>;
   userId: string;
-  qty: number;
+  deliveryAddress: string;
 }
 interface OrderDoc extends Document {
-  productId: string;
+  products: Array<IOrderProducts>;
   userId: string;
-  qty: number;
+  deliveryAddress: string;
 }
 interface OrderModel extends Model<OrderDoc> {
   build(attrs: order): OrderDoc;
 }
-
-const orderSchema = new Schema(
+const productSchema = new Schema(
   {
     productId: { type: Schema.Types.ObjectId, ref: "Product" },
-    qty: { type: Number, default: 1 },
+    qty: Number,
+  },
+  { id: false, _id: false }
+);
+const orderSchema = new Schema(
+  {
     userId: { type: Schema.Types.ObjectId, ref: "User" },
+    products: [productSchema],
+    deliveryAddress: String,
   },
   {
     toJSON: {
