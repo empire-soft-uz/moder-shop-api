@@ -10,7 +10,7 @@ import { createReview } from "../Validation/ReviewRules";
 import Validator from "../utils/Valiadtor";
 import ForbidenError from "../Classes/Errors/ForbidenError";
 const reviewRouter = Router();
-const jwtKey = process.env.JWT || "someKEy";
+const jwtKey = process.env.JWT || "SomeJwT_keY";
 
 reviewRouter.post(
   "/new/:postId",

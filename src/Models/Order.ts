@@ -1,13 +1,13 @@
-import { Model, Schema, model } from "mongoose";
+import { Model, Schema, model, Document } from "mongoose";
 import IOrderProducts from "../Interfaces/Order/IOrderProducts";
 interface order {
   products: Array<IOrderProducts>;
-  userId: string;
+  userId: Schema.Types.ObjectId;
   deliveryAddress: string;
 }
 interface OrderDoc extends Document {
   products: Array<IOrderProducts>;
-  userId: string;
+  userId: Schema.Types.ObjectId;
   deliveryAddress: string;
 }
 interface OrderModel extends Model<OrderDoc> {

@@ -9,8 +9,8 @@ import User from "../Models/User";
 import Password from "../utils/Password";
 import BadRequestError from "../Classes/Errors/BadRequestError";
 import Validator from "../utils/Valiadtor";
-
-const jwtKey = process.env.JWT || "someKEy";
+import "express-async-errors";
+const jwtKey = process.env.JWT || "SomeJwT_keY";
 
 userRoute.post(
   "/register",
