@@ -58,6 +58,7 @@ productRouter.post(
         }
         //@ts-ignore
         const img = await MediaManager.uploadFile(files[i]);
+        //@ts-ignore
         product.media.push(img);
       }
     }
