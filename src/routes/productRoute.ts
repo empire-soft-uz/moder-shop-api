@@ -14,6 +14,7 @@ const upload = multer({ storage: storage, limits: { fileSize: 50 * 1048576 } });
 const productRouter = Router();
 
 productRouter.get("/", async (req: Request, res: Response) => {
+  console.log(req.query);
   const products = await Product.find().populate("vendorId", "name");
   res.send(products);
 });

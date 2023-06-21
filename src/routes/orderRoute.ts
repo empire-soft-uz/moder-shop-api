@@ -11,6 +11,26 @@ import NotFoundError from "../Classes/Errors/NotFoundError";
 import ForbidenError from "../Classes/Errors/ForbidenError";
 const orderRoute = Router();
 const jwtKey = process.env.JWT || "SomeJwT_keY";
+
+orderRoute.get("/user", validateUser, async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  //@ts-ignore
+  const author = jwt.verify(authHeader, jwtKey) as IUserPayload;
+  const order = await Order.find({ userId: author.id }).populate({
+    path: "products.productId",
+    model: "Product",
+    populate: {
+      path: "vendorId",
+      model: "Vendor",
+    },
+  });
+
+  if (!order) throw new NotFoundError("Order Not Found");
+
+  //@ts-ignore
+  res.send(order);
+});
+
 orderRoute.get("/:id", validateUser, async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   const orderId = req.params.id;
@@ -19,8 +39,15 @@ orderRoute.get("/:id", validateUser, async (req: Request, res: Response) => {
   const order = await Order.findById(orderId).populate({
     path: "products.productId",
     model: "Product",
+    populate: {
+      path: "vendorId",
+
+      model: "Vendor",
+    },
   });
+
   if (!order) throw new NotFoundError("Order Not Found");
+
   //@ts-ignore
   const author = jwt.verify(authHeader, jwtKey) as IUserPayload;
   //@ts-ignore
@@ -56,4 +83,16 @@ orderRoute.delete(
     res.send(deletedOrder);
   }
 );
+// orderRoute.put(
+//   "/edit/:id",
+//   validateUser,
+//   async (req: Request, res: Response) => {
+//     const authHeader = req.headers.authorization;
+//     //@ts-ignore
+//     const author = jwt.verify(authHeader, jwtKey) as IUserPayload;
+//     const order = await Order.findByIdAndUpdate({});
+
+//     res.send(order);
+//   }
+// );
 export default orderRoute;
