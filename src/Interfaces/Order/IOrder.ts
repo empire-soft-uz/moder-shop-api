@@ -1,6 +1,8 @@
+import IOrderProducts from "./IOrderProducts";
+
 export default interface IOrder {
   id: string;
-  productId: string;
+  products: Array<IOrderProducts>;
   userId: string;
-  qty: number;
+  deliveryAddress: string;
 }
