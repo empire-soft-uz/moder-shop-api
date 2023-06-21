@@ -20,8 +20,11 @@ productRouter.get("/", async (req: Request, res: Response) => {
 productRouter.get("/:id", async (req: Request, res: Response) => {
   const product = await Product.findById(req.params.id)
     .populate({
-      path: "reviews",
-      model: "Review",
+      path: "products",
+      populate: {
+        path: "productId",
+        model: "Product",
+      },
     })
     .populate("vendorId");
 

@@ -9,6 +9,7 @@ import validateUser from "./middlewares/validateUser";
 import productRouter from "./routes/productRoute";
 import vendorRoute from "./routes/vendorRoute";
 import reviewRouter from "./routes/reviewRoute";
+import orderRoute from "./routes/orderRoute";
 
 const app = express();
 app.use(express.json());
@@ -19,6 +20,7 @@ app.use("/api/users", userRoute);
 app.use("/api/products", productRouter);
 app.use("/api/vendors", vendorRoute);
 app.use("/api/reviews", reviewRouter);
+app.use("/api/orders", orderRoute);
 app.all("*", (req, res, next) => {
   throw new NotFoundError("Not Found");
 });
