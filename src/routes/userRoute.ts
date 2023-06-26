@@ -35,7 +35,7 @@ userRoute.post(
       jwtKey
     );
     await user.save();
-    res.send({ user: token });
+    res.send({ name:user.fullName, id:user.id, email:user.email, token });
   }
 );
 userRoute.post(
@@ -61,7 +61,7 @@ userRoute.post(
       jwtKey
     );
     await user.save();
-    res.send({ user: token });
+    res.send({ name:user.fullName, id:user.id, email:user.email, token }                                                                                         );
   }
 );
 export default userRoute;
