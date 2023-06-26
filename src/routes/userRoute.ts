@@ -10,6 +10,7 @@ import Password from "../utils/Password";
 import BadRequestError from "../Classes/Errors/BadRequestError";
 import Validator from "../utils/Valiadtor";
 import "express-async-errors";
+import validateUser from "../middlewares/validateUser";
 const jwtKey = process.env.JWT || "SomeJwT_keY";
 
 userRoute.post(
@@ -35,7 +36,7 @@ userRoute.post(
       jwtKey
     );
     await user.save();
-    res.send({ name:user.fullName, id:user.id, email:user.email, token });
+    res.send({ name: user.fullName, id: user.id, email: user.email, token });
   }
 );
 userRoute.post(
@@ -61,7 +62,41 @@ userRoute.post(
       jwtKey
     );
     await user.save();
-    res.send({ name:user.fullName, id:user.id, email:user.email, token }                                                                                         );
+    res.send({ name: user.fullName, id: user.id, email: user.email, token });
   }
 );
+userRoute.put(
+  "/update",
+  [...userRegistrationRules],
+  validateUser,
+  async (req: Request, res: Response) => {
+    const author = jwt.verify(
+      //@ts-ignore
+      req.headers.authorization,
+      jwtKey
+      //@ts-ignore
+    ) as IUserPayload;
+    const p = await Password.hashPassword(req.body.password);
+
+    const user = await User.findByIdAndUpdate(author.id, {
+      ...req.body,
+      password: `${p.buff}.${p.salt}`,
+    });
+    //@ts-ignore
+    user?.password = undefined;
+    res.send(user);
+  }
+);
+
+userRoute.get("/current", validateUser, async (req: Request, res: Response) => {
+  const author = jwt.verify(
+    //@ts-ignore
+    req.headers.authorization,
+    jwtKey
+    //@ts-ignore
+  ) as IUserPayload;
+  const user = await User.findOne({ _id: author.id }, { password: 0 });
+
+  res.send(user);
+});
 export default userRoute;
