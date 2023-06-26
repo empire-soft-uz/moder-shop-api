@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 import ImageKit from "imagekit";
 
 const port = process.env.PORT || 3000;
-const mongoURL = "mongodb://localhost:27017/Moder" || process.env.MONGO;
+const mongoURL = process.env.MONGO||"mongodb://localhost:27017/Moder"  ;
 async function startServer() {
   try {
     await mongoose.connect(mongoURL);
