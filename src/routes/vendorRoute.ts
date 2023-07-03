@@ -4,6 +4,10 @@ import { vendorCreation } from "../Validation/VendorRules";
 import Vendor from "../Models/Vendor";
 import NotFoundError from "../Classes/Errors/NotFoundError";
 const vendorRoute = Router();
+vendorRoute.get("/", async (req: Request, res: Response) => {
+  const vendors = await Vendor.find();
+  res.send(vendors);
+});
 vendorRoute.post(
   "/new",
   [...vendorCreation],

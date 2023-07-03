@@ -15,8 +15,15 @@ const productRouter = Router();
 
 productRouter.get("/", async (req: Request, res: Response) => {
   console.log(req.query);
-  const products = await Product.find().populate("vendorId", "name");
-  res.send(products);
+  const { page, limit } = req.query || 1;
+  // const limit = 1 || process.env.LIMIT || 10;
+  const products = await Product.find()
+    //@ts-ignore
+    .skip(page * limit)
+    .limit(limit)
+    .populate("vendorId", "name");
+
+  res.send({ products, page: page || 1, limit });
 });
 productRouter.get("/:id", async (req: Request, res: Response) => {
   const product = await Product.findById(req.params.id)
