@@ -11,6 +11,7 @@ import vendorRoute from "./routes/vendorRoute";
 import reviewRouter from "./routes/reviewRoute";
 import orderRoute from "./routes/orderRoute";
 import adminRoute from "./routes/adminRoutes";
+import categoryRoute from "./routes/categoryRoute";
 
 const app = express();
 app.use(express.json());
@@ -19,6 +20,7 @@ app.get("/", validateUser, async (req, res, next) => {
 });
 app.use("/api/admins", adminRoute);
 app.use("/api/users", userRoute);
+app.use("/api/categories", categoryRoute);
 app.use("/api/products", productRouter);
 app.use("/api/vendors", vendorRoute);
 app.use("/api/reviews", reviewRouter);
