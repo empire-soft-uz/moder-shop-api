@@ -1,7 +1,6 @@
 import { body } from "express-validator";
 
 export const userRegistrationRules = [
-  body("fullName").notEmpty().withMessage("Name is required"),
   body("password")
     .notEmpty()
     .withMessage("Password is required")
@@ -14,13 +13,9 @@ export const userRegistrationRules = [
     .withMessage("Please provide valid phone number")
     .isMobilePhone("any")
     .withMessage("Please provide valid phone number"),
-  body("email")
-    .notEmpty()
-    .withMessage("Please provide valid email address")
-    .isEmail()
-    .withMessage("Please provide valid email address"),
-  body("gender").notEmpty().withMessage("Please provide your gender"),
-  body("birthDate").notEmpty().withMessage("Please provide your Date of Birth"),
+  // body("fullName").notEmpty().withMessage("Name is required"),
+  // body("gender").notEmpty().withMessage("Please provide your gender"),
+  // body("birthDate").notEmpty().withMessage("Please provide your Date of Birth"),
 ];
 export const userLoginRules = [
   body("password")
@@ -30,8 +25,9 @@ export const userLoginRules = [
     .withMessage(
       "Password length shoulr be between 4 and 20 characters cantaining capital and lower case letters with numbers"
     ),
-  body("email")
+  body("phoneNumber")
     .notEmpty()
-    .isEmail()
-    .withMessage("Please provide valid email address"),
+    .withMessage("Please provide valid phone number")
+    .isMobilePhone("any")
+    .withMessage("Please provide valid phone number"),
 ];
