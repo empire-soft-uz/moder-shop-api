@@ -61,7 +61,6 @@ userRoute.post(
       },
       jwtKey
     );
-    await user.save();
     res.send({ name: user.fullName, id: user.id, email: user.email, token });
   }
 );
