@@ -19,24 +19,28 @@ userRoute.post(
   async (req: Request, res: Response) => {
     Validator.validate(req);
 
-    const { fullName, phoneNumber, email, password, gender, birthDate } =
-      req.body;
-    const existingUser = await User.findOne({ email });
+    const { fullName, phoneNumber, password, gender, birthDate } = req.body;
+    const existingUser = await User.findOne({ phoneNumber });
     if (existingUser)
-      throw new BadRequestError(`User with ${email} already exists`);
+      throw new BadRequestError(`User with ${phoneNumber} already exists`);
     const user = User.build(req.body);
     const p = await Password.hashPassword(password);
     user.password = `${p.buff}.${p.salt}`;
     const token = jwt.sign(
       {
         id: user.id,
-        email: user.email,
+        phoneNumber: user.phoneNumber,
         fullName: user.fullName,
       },
       jwtKey
     );
     await user.save();
-    res.send({ name: user.fullName, id: user.id, email: user.email, token });
+    res.send({
+      name: user.fullName,
+      id: user.id,
+      phoneNumber: user.phoneNumber,
+      token,
+    });
   }
 );
 userRoute.post(
@@ -44,8 +48,8 @@ userRoute.post(
   [...userLoginRules],
   async (req: Request, res: Response) => {
     Validator.validate(req);
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const { phoneNumber, password } = req.body;
+    const user = await User.findOne({ phoneNumber });
     const isValidPass =
       user &&
       (await Password.compare(password, {
@@ -56,12 +60,17 @@ userRoute.post(
     const token = jwt.sign(
       {
         id: user.id,
-        email: user.email,
+        phoneNumber: user.phoneNumber,
         fullName: user.fullName,
       },
       jwtKey
     );
-    res.send({ name: user.fullName, id: user.id, email: user.email, token });
+    res.send({
+      name: user.fullName,
+      id: user.id,
+      phoneNumber: user.phoneNumber,
+      token,
+    });
   }
 );
 userRoute.put(
