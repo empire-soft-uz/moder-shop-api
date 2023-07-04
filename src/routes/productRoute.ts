@@ -1,4 +1,4 @@
-import { Request, Response, Router } from "express";
+import { Request, Response, Router, query } from "express";
 import "express-async-errors";
 import Product from "../Models/Product";
 import { productCreation } from "../Validation/ProductRules";
@@ -15,15 +15,33 @@ const productRouter = Router();
 
 productRouter.get("/", async (req: Request, res: Response) => {
   console.log(req.query);
-  const { page, limit } = req.query || 1;
-  // const limit = 1 || process.env.LIMIT || 10;
-  const products = await Product.find()
+  const { page, limit, name, priceMax, priceMin, subcategory } = req.query;
+  let query = {};
+  if (name) {
+    //@ts-ignore
+    query = { ...query, name: { $regex: new RegExp(name, "i") } };
+  }
+  if (priceMin) {
+    query = { ...query, price: { price: { $gte: priceMin } } };
+  }
+  if (priceMax) {
+    query = { ...query, price: { price: { $lte: priceMax } } };
+  }
+  if (priceMin && priceMax) {
+    //@ts-ignore
+    query = { ...query, price: { price: { $gte: priceMin, $lte: priceMax } } };
+  }
+  if (subcategory) {
+    query = { ...query, subcategory };
+  }
+  const products = await Product.find(query)
     //@ts-ignore
     .skip(page * limit)
+    //@ts-ignore
     .limit(limit)
     .populate("vendorId", "name");
-
-  res.send({ products, page: page || 1, limit });
+  const totalCount = await Product.count(query);
+  res.send({ page: page || 1, limit, totalCount, products });
 });
 productRouter.get("/:id", async (req: Request, res: Response) => {
   const product = await Product.findById(req.params.id)

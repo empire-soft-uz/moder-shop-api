@@ -5,10 +5,13 @@ import IProductMedia from "../Interfaces/Product/IProducMedia";
 import Review from "./Review";
 import IProps from "../Interfaces/Product/IProps";
 import IReview from "../Interfaces/Review/IReview";
+import Subcategory from "./Subcateygory";
+import Vendor from "./Vendor";
 interface product {
   vendorId: IVendor["id"];
   name: string;
   description: string;
+  subcategoty: string;
   price: Array<IPrice>;
   media: Array<IProductMedia> | undefined;
   props: Array<IProps>;
@@ -18,6 +21,7 @@ interface product {
 interface ProductDoc extends Document {
   vendorId: IVendor["id"];
   name: string;
+  subcategoty: string;
   description: string;
   price: Array<IPrice>;
   media: Array<IProductMedia> | undefined;
@@ -60,13 +64,14 @@ const mediaSchema = new Schema(
 );
 const productSchema = new Schema(
   {
-    vendorId: { type: Schema.Types.ObjectId, ref: "Vendor" },
+    vendorId: { type: Schema.Types.ObjectId, ref: Vendor },
     name: String,
     description: String,
     price: [priceSchema],
     props: [propSchema],
     media: [mediaSchema],
     video: mediaSchema,
+    subcategory: { type: Schema.Types.ObjectId, ref: Subcategory },
     reviews: [{ type: Schema.Types.ObjectId, ref: Review }],
   },
   {

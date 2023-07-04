@@ -18,6 +18,7 @@ const adminSchema = new Schema(
     email: String,
     password: String,
     vendorId: { type: Schema.Types.ObjectId, ref: "Vendor" },
+    super: { type: Boolean, default: false },
   },
   {
     toJSON: {
