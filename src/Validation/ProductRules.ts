@@ -2,7 +2,7 @@ import { body } from "express-validator";
 
 export const productCreation = [
   body("name").notEmpty().withMessage("Product name is required"),
-  body("subcategory").notEmpty().withMessage("Product category is required"),
+  // body("subcategory").notEmpty().withMessage("Product category is required"),
   // body("vendorId").notEmpty().withMessage("Please provide product vendor"),
   // body("price")
   //   .notEmpty()

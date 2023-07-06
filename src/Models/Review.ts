@@ -27,7 +27,7 @@ const productMediaSchema = new Schema(
 const reviewSchema = new Schema(
   {
     authorId: { type: Schema.Types.ObjectId, ref: "User" },
-    createdDate: Date,
+    createdDate: { type: Date, default: new Date() },
     review: String,
     rating: { type: Number, min: 0, max: 5 },
     imgs: [productMediaSchema],

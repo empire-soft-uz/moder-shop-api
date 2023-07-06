@@ -41,7 +41,6 @@ orderRoute.get("/:id", validateUser, async (req: Request, res: Response) => {
     model: "Product",
     populate: {
       path: "vendorId",
-
       model: "Vendor",
     },
   });

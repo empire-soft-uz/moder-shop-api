@@ -8,6 +8,7 @@ import Review from "../Models/Review";
 import NotFoundError from "../Classes/Errors/NotFoundError";
 import multer from "multer";
 import MediaManager from "../utils/MediaManager";
+import validateAdmin from "../middlewares/validateAdmin";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage, limits: { fileSize: 50 * 1048576 } });
@@ -44,21 +45,22 @@ productRouter.get("/", async (req: Request, res: Response) => {
   res.send({ page: page || 1, limit, totalCount, products });
 });
 productRouter.get("/:id", async (req: Request, res: Response) => {
-  const product = await Product.findById(req.params.id)
-    .populate({
-      path: "products",
-      populate: {
-        path: "productId",
-        model: "Product",
-      },
-    })
-    .populate("vendorId");
+  const product = await Product.findById(req.params.id).populate({
+    path: "reviews",
+    model: "Review",
+    populate: {
+      path: "authorId",
+      model: "User",
+      select: "id fullName phoneNumber",
+    },
+  });
 
   if (!product) throw new NotFoundError("Product Not Found");
   res.send(product);
 });
 productRouter.post(
   "/new",
+  validateAdmin,
   upload.array("media", 4),
   [...productCreation],
   async (req: Request, res: Response) => {
@@ -66,11 +68,14 @@ productRouter.post(
 
     const { files } = req;
     //@ts-ignore
-    const vendor = await Vendor.findById(req.body.vendorId);
-    if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
-    const product = Product.build({ ...req.body });
-    vendor.products.push(product.id);
+    // let vendor;
 
+    const product = Product.build({ ...req.body });
+    // if (req.body.vendorId) {
+    //   const vendor = await Vendor.findById(req.body.vendorId);
+    //   if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
+    //   vendor?.products.push(product.id);
+    // }
     if (files) {
       const video = [
         "video/mp4",
@@ -92,7 +97,7 @@ productRouter.post(
       }
     }
     await product.save();
-    await vendor.save();
+    //await vendor.save();
     res.send(product);
   }
 );
