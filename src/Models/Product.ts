@@ -28,6 +28,7 @@ interface ProductDoc extends Document {
   props: Array<IProps>;
   video: IProductMedia | undefined;
   reviews: Array<IReview>;
+  viewCount: number;
 }
 interface ProductModel extends Model<ProductDoc> {
   build(attrs: product): ProductDoc;
@@ -57,6 +58,7 @@ const productSchema = new Schema(
     props: [{ type: Schema.Types.ObjectId }],
     media: [mediaSchema],
     video: mediaSchema,
+    viewCount: { type: Number, default: 0 },
     subcategory: { type: Schema.Types.ObjectId, ref: Subcategory },
     reviews: [{ type: Schema.Types.ObjectId, ref: Review }],
   },

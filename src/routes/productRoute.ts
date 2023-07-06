@@ -54,8 +54,9 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
       select: "id fullName phoneNumber",
     },
   });
-
   if (!product) throw new NotFoundError("Product Not Found");
+  product.viewCount += 1;
+  await product.save();
   res.send(product);
 });
 productRouter.post(
