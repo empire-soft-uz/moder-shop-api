@@ -1,12 +1,13 @@
 import { Model, Schema, model, Document } from "mongoose";
+import Prop from "./Prop";
 
 interface subcategory {
-  categoryId: string;
   name: string;
+  props: Array<string>;
 }
 interface SubcategoryDoc extends Document {
-  categoryId: string;
   name: string;
+  props: Array<string>;
 }
 interface SubcategoryModel extends Model<SubcategoryDoc> {
   build(attrs: subcategory): SubcategoryDoc;
@@ -15,7 +16,7 @@ interface SubcategoryModel extends Model<SubcategoryDoc> {
 const subcategorySchema = new Schema(
   {
     name: String,
-    categoryId: { type: Schema.Types.ObjectId, ref: "Category" },
+    props: { type: [Schema.Types.ObjectId], ref: Prop },
   },
   {
     toJSON: {

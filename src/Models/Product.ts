@@ -40,21 +40,7 @@ const priceSchema = new Schema(
   },
   { id: false, _id: false }
 );
-const optionSchema = new Schema(
-  {
-    label: String,
-    value: String,
-  },
-  { id: false, _id: false }
-);
-const propSchema = new Schema(
-  {
-    type: String,
-    options: [optionSchema],
-    label: String,
-  },
-  { id: false, _id: false }
-);
+
 const mediaSchema = new Schema(
   {
     name: String,
@@ -68,7 +54,7 @@ const productSchema = new Schema(
     name: String,
     description: String,
     price: [priceSchema],
-    props: [propSchema],
+    props: [{ type: Schema.Types.ObjectId }],
     media: [mediaSchema],
     video: mediaSchema,
     subcategory: { type: Schema.Types.ObjectId, ref: Subcategory },
