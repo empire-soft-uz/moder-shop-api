@@ -4,7 +4,7 @@ import IProductMedia from "../Interfaces/Product/IProducMedia";
 
 interface category {
   name: string;
-  icon: IProductMedia;
+  icon?: IProductMedia;
 }
 interface CategoryDoc extends Document {
   name: string;
