@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm i && tsc && nodemon build/index",
+    "start": "nodemon build/index",
     "dev": "concurrently  \"tsc -w\" \"nodemon build/index.js\""
   },
   "keywords": [],
