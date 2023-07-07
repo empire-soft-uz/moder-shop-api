@@ -1,4 +1,4 @@
-import { Model, Schema, model } from "mongoose";
+import { Model, Schema, model, Document } from "mongoose";
 interface admin {
   email: string;
   password: string;
@@ -8,6 +8,7 @@ interface AdminDoc extends Document {
   email: string;
   password: string;
   vendorId: string;
+  super: boolean;
 }
 interface AdminModel extends Model<AdminDoc> {
   build(attrs: admin): AdminDoc;
@@ -18,6 +19,7 @@ const adminSchema = new Schema(
     email: String,
     password: String,
     vendorId: { type: Schema.Types.ObjectId, ref: "Vendor" },
+    super: { type: Boolean, default: false },
   },
   {
     toJSON: {
@@ -33,3 +35,4 @@ adminSchema.statics.build = (attrs: admin): AdminDoc => {
   return new Admin(attrs);
 };
 const Admin = model<AdminDoc, AdminModel>("Admin", adminSchema);
+export default Admin;

@@ -1,37 +1,66 @@
-import { Model, Schema, model } from "mongoose";
+import { Model, Schema, model, Document } from "mongoose";
 import IVendor from "../Interfaces/Vendor/IVendor";
 import IPrice from "../Interfaces/Product/IPrice";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
-import ProductMedia from "../Classes/Product/ProductMedia";
+import Review from "./Review";
+import IProps from "../Interfaces/Product/IProps";
+import IReview from "../Interfaces/Review/IReview";
+import Subcategory from "./Subcateygory";
+import Vendor from "./Vendor";
 interface product {
   vendorId: IVendor["id"];
   name: string;
   description: string;
+  subcategoty: string;
   price: Array<IPrice>;
-  media: Array<IProductMedia>;
-  video: IProductMedia;
+  media: Array<IProductMedia> | undefined;
+  props: Array<IProps>;
+  video: IProductMedia | undefined;
+  reviews: Array<IReview>;
 }
 interface ProductDoc extends Document {
   vendorId: IVendor["id"];
   name: string;
+  subcategoty: string;
   description: string;
   price: Array<IPrice>;
-  media: Array<IProductMedia>;
-  video: IProductMedia;
+  media: Array<IProductMedia> | undefined;
+  props: Array<IProps>;
+  video: IProductMedia | undefined;
+  reviews: Array<IReview>;
+  viewCount: number;
 }
 interface ProductModel extends Model<ProductDoc> {
   build(attrs: product): ProductDoc;
 }
+const priceSchema = new Schema(
+  {
+    price: Number,
+    qtyMin: Number,
+    qtyMax: Number,
+  },
+  { id: false, _id: false }
+);
 
+const mediaSchema = new Schema(
+  {
+    name: String,
+    fileId: String,
+  },
+  { id: false, _id: false }
+);
 const productSchema = new Schema(
   {
-    vendorId: { type: Schema.Types.ObjectId, ref: "Vendor" },
+    vendorId: { type: Schema.Types.ObjectId, ref: Vendor },
     name: String,
     description: String,
-    price: Array<IPrice>,
-    media: Array<IProductMedia>,
-    video: ProductMedia,
-    reveiews: [{ type: Schema.Types.ObjectId, ref: "Review" }],
+    price: [priceSchema],
+    props: [{ type: Schema.Types.ObjectId }],
+    media: [mediaSchema],
+    video: mediaSchema,
+    viewCount: { type: Number, default: 0 },
+    subcategory: { type: Schema.Types.ObjectId, ref: Subcategory },
+    reviews: [{ type: Schema.Types.ObjectId, ref: Review }],
   },
   {
     toJSON: {
@@ -42,7 +71,13 @@ const productSchema = new Schema(
     },
   }
 );
-
+productSchema.post("findOneAndDelete", async function (doc) {
+  if (doc) {
+    await Review.deleteMany({
+      _id: { $in: doc.reviews },
+    });
+  }
+});
 productSchema.statics.build = (attrs: product): ProductDoc => {
   return new Product(attrs);
 };

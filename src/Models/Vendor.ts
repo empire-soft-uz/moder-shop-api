@@ -1,4 +1,4 @@
-import { Model, Schema, model } from "mongoose";
+import { Model, Schema, model, Document } from "mongoose";
 import IVendorContacts from "../Interfaces/Vendor/IVendorContacts";
 import VendorContacts from "../Classes/VendorContacts";
 interface vendor {
@@ -21,7 +21,9 @@ const vendorSchema = new Schema(
   {
     name: String,
     description: String,
-    contacts: VendorContacts,
+    contacts: {
+      phoneNumber: Number,
+    },
     products: [{ type: Schema.Types.ObjectId, ref: "Product" }],
   },
   {

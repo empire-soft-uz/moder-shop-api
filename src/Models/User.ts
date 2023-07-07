@@ -1,22 +1,22 @@
 import { Model, Document, Schema, model } from "mongoose";
-import IUser from "../Interfaces/IUser";
+
 interface user {
   fullName: string;
   password: string;
   phoneNumber: number;
-  email: string;
+
   avatar: string;
   gender: string;
-  berthdate: Date;
+  birthdate: Date;
 }
 interface UserDoc extends Document {
   fullName: string;
   password: string;
   phoneNumber: number;
-  email: string;
+
   avatar: string;
   gender: string;
-  berthdate: Date;
+  birthdate: Date;
 }
 interface UserModel extends Model<UserDoc> {
   build(attrs: user): UserDoc;
@@ -27,10 +27,9 @@ const userSchema = new Schema(
     fullName: String,
     password: String,
     phoneNumber: Number,
-    email: String,
     avatar: String,
     gender: String,
-    berthdate: Date,
+    birthdate: Date,
   },
   {
     toJSON: {

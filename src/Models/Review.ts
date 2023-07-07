@@ -1,15 +1,15 @@
-import { Model, Schema, model } from "mongoose";
+import { Model, Schema, model, Document } from "mongoose";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
 import IUser from "../Interfaces/IUser";
 interface review {
-  authorId: IUser["id"];
+  authorId: Schema.Types.ObjectId;
   createdDate: Date;
   review: string;
   rating: number;
   imgs?: Array<IProductMedia>;
 }
 interface ReviewDoc extends Document {
-  authorId: IUser["id"];
+  authorId: Schema.Types.ObjectId;
   createdDate: Date;
   review: string;
   rating: number;
@@ -18,14 +18,19 @@ interface ReviewDoc extends Document {
 interface ReviewModel extends Model<ReviewDoc> {
   build(attrs: review): ReviewDoc;
 }
-
+const productMediaSchema = new Schema(
+  {
+    url: String,
+  },
+  { id: false, _id: false }
+);
 const reviewSchema = new Schema(
   {
     authorId: { type: Schema.Types.ObjectId, ref: "User" },
-    createdDate: Date,
+    createdDate: { type: Date, default: new Date() },
     review: String,
     rating: { type: Number, min: 0, max: 5 },
-    imgs: Array<IProductMedia>,
+    imgs: [productMediaSchema],
   },
   {
     toJSON: {

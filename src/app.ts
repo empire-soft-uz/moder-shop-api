@@ -1,9 +1,36 @@
 import express from "express";
 import userRoute from "./routes/userRoute";
-const app = express();
-app.get("/", (req, res) => {
-  res.send("test message");
-});
-app.use("/api/users", userRoute);
+import errorHandler from "./middlewares/errorHandler";
 
+import "express-async-errors";
+import BadRequestError from "./Classes/Errors/BadRequestError";
+import NotFoundError from "./Classes/Errors/NotFoundError";
+import validateUser from "./middlewares/validateUser";
+import productRouter from "./routes/productRoute";
+import vendorRoute from "./routes/vendorRoute";
+import reviewRouter from "./routes/reviewRoute";
+import orderRoute from "./routes/orderRoute";
+import adminRoute from "./routes/adminRoutes";
+import categoryRoute from "./routes/categoryRoute";
+import subcatRoute from "./routes/subcategoryRoute";
+import propRoutes from "./routes/propRoutes";
+
+const app = express();
+app.use(express.json());
+app.get("/", validateUser, async (req, res, next) => {
+  res.send("protected route");
+});
+app.use("/api/admins", adminRoute);
+app.use("/api/users", userRoute);
+app.use("/api/categories", categoryRoute);
+app.use("/api/subcategories", subcatRoute);
+app.use("/api/props", propRoutes);
+app.use("/api/products", productRouter);
+app.use("/api/vendors", vendorRoute);
+app.use("/api/reviews", reviewRouter);
+app.use("/api/orders", orderRoute);
+app.all("*", (req, res, next) => {
+  throw new NotFoundError("Not Found");
+});
+app.use(errorHandler);
 export default app;
