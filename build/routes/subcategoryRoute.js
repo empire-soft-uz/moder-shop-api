@@ -33,4 +33,8 @@ subcatRoute.post("/new", [...SubcatRules_1.subcatCreation], validateAdmin_1.isSu
     yield parentCat.save();
     res.send(subCt);
 }));
+subcatRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const subCts = yield Subcateygory_1.default.find();
+    res.send(subCts);
+}));
 exports.default = subcatRoute;

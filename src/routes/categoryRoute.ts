@@ -6,6 +6,7 @@ import BadRequestError from "../Classes/Errors/BadRequestError";
 import NotFoundError from "../Classes/Errors/NotFoundError";
 import multer from "multer";
 import MediaManager from "../utils/MediaManager";
+import Subcategory from "../Models/Subcateygory";
 const categoryRoute = Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage, limits: { fileSize: 50 * 1048576 } });
@@ -38,6 +39,9 @@ categoryRoute.delete(
     if (!category) throw new NotFoundError("Category not found");
     if (category.icon) {
       await MediaManager.deletefiles(category.icon);
+    }
+    for await (const subCt of category.subcategories) {
+      await Subcategory.findByIdAndDelete(subCt);
     }
     res.send(category);
   }

@@ -27,7 +27,7 @@ const upload = (0, multer_1.default)({ storage: storage, limits: { fileSize: 50 
 const productRouter = (0, express_1.Router)();
 productRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(req.query);
-    const { page, limit, name, priceMax, priceMin, subcategory } = req.query;
+    const { page, limit, name, priceMax, priceMin, category, subcategory, popularProducts, } = req.query;
     let query = {};
     if (name) {
         //@ts-ignore
@@ -43,20 +43,31 @@ productRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function*
         //@ts-ignore
         query = Object.assign(Object.assign({}, query), { price: { price: { $gte: priceMin, $lte: priceMax } } });
     }
+    if (category) {
+        query = Object.assign(Object.assign({}, query), { category });
+    }
     if (subcategory) {
         query = Object.assign(Object.assign({}, query), { subcategory });
     }
+    let sort = {};
+    if (popularProducts) {
+        sort = { viewCount: -1 };
+    }
     const products = yield Product_1.default.find(query)
+        .sort(sort)
         //@ts-ignore
         .skip(page * limit)
         //@ts-ignore
         .limit(limit)
-        .populate("vendorId", "name");
+        .populate("vendorId", "name")
+        .populate("category", "name id")
+        .populate("subcategory", "name id");
     const totalCount = yield Product_1.default.count(query);
     res.send({ page: page || 1, limit, totalCount, products });
 }));
 productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const product = yield Product_1.default.findById(req.params.id).populate({
+    const product = yield Product_1.default.findById(req.params.id)
+        .populate({
         path: "reviews",
         model: "Review",
         populate: {
@@ -64,7 +75,9 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
             model: "User",
             select: "id fullName phoneNumber",
         },
-    });
+    })
+        .populate("category", "name id")
+        .populate("subcategory", "name id");
     if (!product)
         throw new NotFoundError_1.default("Product Not Found");
     product.viewCount += 1;

@@ -16,7 +16,16 @@ const productRouter = Router();
 
 productRouter.get("/", async (req: Request, res: Response) => {
   console.log(req.query);
-  const { page, limit, name, priceMax, priceMin, subcategory } = req.query;
+  const {
+    page,
+    limit,
+    name,
+    priceMax,
+    priceMin,
+    category,
+    subcategory,
+    popularProducts,
+  } = req.query;
   let query = {};
   if (name) {
     //@ts-ignore
@@ -32,28 +41,41 @@ productRouter.get("/", async (req: Request, res: Response) => {
     //@ts-ignore
     query = { ...query, price: { price: { $gte: priceMin, $lte: priceMax } } };
   }
+  if (category) {
+    query = { ...query, category };
+  }
   if (subcategory) {
     query = { ...query, subcategory };
   }
+  let sort = {};
+  if (popularProducts) {
+    sort = { viewCount: -1 };
+  }
   const products = await Product.find(query)
+    .sort(sort)
     //@ts-ignore
     .skip(page * limit)
     //@ts-ignore
     .limit(limit)
-    .populate("vendorId", "name");
+    .populate("vendorId", "name")
+    .populate("category", "name id")
+    .populate("subcategory", "name id");
   const totalCount = await Product.count(query);
   res.send({ page: page || 1, limit, totalCount, products });
 });
 productRouter.get("/:id", async (req: Request, res: Response) => {
-  const product = await Product.findById(req.params.id).populate({
-    path: "reviews",
-    model: "Review",
-    populate: {
-      path: "authorId",
-      model: "User",
-      select: "id fullName phoneNumber",
-    },
-  });
+  const product = await Product.findById(req.params.id)
+    .populate({
+      path: "reviews",
+      model: "Review",
+      populate: {
+        path: "authorId",
+        model: "User",
+        select: "id fullName phoneNumber",
+      },
+    })
+    .populate("category", "name id")
+    .populate("subcategory", "name id");
   if (!product) throw new NotFoundError("Product Not Found");
   product.viewCount += 1;
   await product.save();

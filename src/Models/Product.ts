@@ -7,25 +7,30 @@ import IProps from "../Interfaces/Product/IProps";
 import IReview from "../Interfaces/Review/IReview";
 import Subcategory from "./Subcateygory";
 import Vendor from "./Vendor";
+import Category from "./Category";
+import Prop from "./Prop";
 interface product {
   vendorId: IVendor["id"];
   name: string;
   description: string;
+  category: string;
   subcategoty: string;
   price: Array<IPrice>;
   media: Array<IProductMedia> | undefined;
-  props: Array<IProps>;
+  props: Array<string>;
   video: IProductMedia | undefined;
   reviews: Array<IReview>;
 }
 interface ProductDoc extends Document {
   vendorId: IVendor["id"];
   name: string;
+  category: string;
+
   subcategoty: string;
   description: string;
   price: Array<IPrice>;
   media: Array<IProductMedia> | undefined;
-  props: Array<IProps>;
+  props: Array<string>;
   video: IProductMedia | undefined;
   reviews: Array<IReview>;
   viewCount: number;
@@ -55,10 +60,11 @@ const productSchema = new Schema(
     name: String,
     description: String,
     price: [priceSchema],
-    props: [{ type: Schema.Types.ObjectId }],
+    props: [{ type: Schema.Types.ObjectId, ref: Prop }],
     media: [mediaSchema],
     video: mediaSchema,
     viewCount: { type: Number, default: 0 },
+    category: { type: Schema.Types.ObjectId, ref: Category },
     subcategory: { type: Schema.Types.ObjectId, ref: Subcategory },
     reviews: [{ type: Schema.Types.ObjectId, ref: Review }],
   },

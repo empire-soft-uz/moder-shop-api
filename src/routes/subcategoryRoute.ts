@@ -24,4 +24,8 @@ subcatRoute.post(
     res.send(subCt);
   }
 );
+subcatRoute.get("/", async (req: Request, res: Response) => {
+  const subCts = await Subcategory.find();
+  res.send(subCts);
+});
 export default subcatRoute;
