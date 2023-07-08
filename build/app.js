@@ -26,8 +26,10 @@ const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
 const categoryRoute_1 = __importDefault(require("./routes/categoryRoute"));
 const subcategoryRoute_1 = __importDefault(require("./routes/subcategoryRoute"));
 const propRoutes_1 = __importDefault(require("./routes/propRoutes"));
+const cors_1 = __importDefault(require("cors"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+app.use((0, cors_1.default)({ origin: "*" }));
 app.get("/", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     res.send("protected route");
 }));

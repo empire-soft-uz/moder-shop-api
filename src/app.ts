@@ -14,9 +14,10 @@ import adminRoute from "./routes/adminRoutes";
 import categoryRoute from "./routes/categoryRoute";
 import subcatRoute from "./routes/subcategoryRoute";
 import propRoutes from "./routes/propRoutes";
-
+import cors from "cors";
 const app = express();
 app.use(express.json());
+app.use(cors({ origin: "*" }));
 app.get("/", validateUser, async (req, res, next) => {
   res.send("protected route");
 });
