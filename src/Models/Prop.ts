@@ -27,7 +27,17 @@ const propSchema = new Schema(
     options: [optionSchema],
     label: String,
   },
-  { id: false, _id: false }
+  {
+    toJSON: {
+      transform(doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+      },
+    },
+  }
 );
+propSchema.statics.build = (attrs: prop): PropDoc => {
+  return new Prop(attrs);
+};
 const Prop = model<PropDoc, PropModel>("Prop", propSchema);
 export default Prop;

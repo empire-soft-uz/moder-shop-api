@@ -9,6 +9,16 @@ const propSchema = new mongoose_1.Schema({
     type: String,
     options: [optionSchema],
     label: String,
-}, { id: false, _id: false });
+}, {
+    toJSON: {
+        transform(doc, ret) {
+            ret.id = ret._id;
+            delete ret._id;
+        },
+    },
+});
+propSchema.statics.build = (attrs) => {
+    return new Prop(attrs);
+};
 const Prop = (0, mongoose_1.model)("Prop", propSchema);
 exports.default = Prop;
