@@ -1,15 +1,13 @@
 import { Document, Model } from "mongoose";
-interface option {
-    label: string;
-    value: string;
-}
 interface prop {
-    type: string;
-    options: option[];
+    name: string;
+    label: string;
+    values: Array<string>;
 }
 interface PropDoc extends Document {
-    type: string;
-    options: option[];
+    name: string;
+    label: string;
+    values: Array<string>;
 }
 interface PropModel extends Model<PropDoc> {
     build(attrs: prop): PropDoc;

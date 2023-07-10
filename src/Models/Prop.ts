@@ -1,30 +1,23 @@
 import mongoose, { Schema, Document, Model, model } from "mongoose";
-interface option {
-  label: string;
-  value: string;
-}
+
 interface prop {
-  type: string;
-  options: option[];
+  name: string;
+  label: string;
+  values: Array<string>;
 }
 interface PropDoc extends Document {
-  type: string;
-  options: option[];
+  name: string;
+  label: string;
+  values: Array<string>;
 }
 interface PropModel extends Model<PropDoc> {
   build(attrs: prop): PropDoc;
 }
-const optionSchema = new Schema(
-  {
-    label: String,
-    value: String,
-  },
-  { id: false, _id: false }
-);
+
 const propSchema = new Schema(
   {
-    type: String,
-    options: [optionSchema],
+    name: String,
+    values: [String],
     label: String,
   },
   {

@@ -1,13 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
-const optionSchema = new mongoose_1.Schema({
-    label: String,
-    value: String,
-}, { id: false, _id: false });
 const propSchema = new mongoose_1.Schema({
-    type: String,
-    options: [optionSchema],
+    name: String,
+    values: [String],
     label: String,
 }, {
     toJSON: {
