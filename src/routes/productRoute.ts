@@ -75,7 +75,8 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
       },
     })
     .populate("category", "name id")
-    .populate("subcategory", "name id");
+    .populate("subcategory", "name id")
+    .populate("props");
   if (!product) throw new NotFoundError("Product Not Found");
   product.viewCount += 1;
   await product.save();
@@ -90,15 +91,14 @@ productRouter.post(
     Validator.validate(req);
 
     const { files } = req;
-    //@ts-ignore
-    // let vendor;
 
     const product = Product.build({ ...req.body });
-    // if (req.body.vendorId) {
-    //   const vendor = await Vendor.findById(req.body.vendorId);
-    //   if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
-    //   vendor?.products.push(product.id);
-    // }
+    if (req.body.vendorId) {
+      const vendor = await Vendor.findByIdAndUpdate(req.body.vendorId, {
+        $push: { products: product.id },
+      });
+      if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
+    }
     if (files) {
       const video = [
         "video/mp4",
@@ -124,6 +124,53 @@ productRouter.post(
     res.send(product);
   }
 );
+
+productRouter.put(
+  "/edit/:id",
+  validateAdmin,
+  upload.array("media", 4),
+  [...productCreation],
+  async (req: Request, res: Response) => {
+    Validator.validate(req);
+
+    const { files } = req;
+
+    const product = await Product.findByIdAndUpdate(req.params.id, {
+      ...req.body,
+    });
+    if (!product) throw new NotFoundError("Product Not Found");
+    if (req.body.vendorId) {
+      const vendor = await Vendor.findByIdAndUpdate(req.body.vendorId, {
+        $push: { products: product.id },
+      });
+      if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
+    }
+    if (files) {
+      const video = [
+        "video/mp4",
+        "video/webm",
+        "video/x-m4v",
+        "video/quicktime",
+      ];
+      //@ts-ignore
+      for (let i = 0; i < files.length; i++) {
+        //@ts-ignore
+        if (video.find((e) => e === files[i].mimetype)) {
+          //@ts-ignore
+          product.video = await MediaManager.uploadFile(files[i]);
+        }
+        //@ts-ignore
+        const img = await MediaManager.uploadFile(files[i]);
+        //@ts-ignore
+        product.media.push(img);
+      }
+    }
+    await product.save();
+    //await vendor.save();
+    res.send(product);
+  }
+);
+
 productRouter.delete("/delete/:id", async (req: Request, res: Response) => {
   const deletedProduct = await Product.findByIdAndDelete(req.params.id);
   if (!deletedProduct) throw new NotFoundError("Product Not Found");

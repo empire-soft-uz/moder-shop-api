@@ -77,7 +77,8 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
         },
     })
         .populate("category", "name id")
-        .populate("subcategory", "name id");
+        .populate("subcategory", "name id")
+        .populate("props");
     if (!product)
         throw new NotFoundError_1.default("Product Not Found");
     product.viewCount += 1;
@@ -87,14 +88,51 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
 productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [...ProductRules_1.productCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const { files } = req;
-    //@ts-ignore
-    // let vendor;
     const product = Product_1.default.build(Object.assign({}, req.body));
-    // if (req.body.vendorId) {
-    //   const vendor = await Vendor.findById(req.body.vendorId);
-    //   if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
-    //   vendor?.products.push(product.id);
-    // }
+    if (req.body.vendorId) {
+        const vendor = yield Vendor_1.default.findByIdAndUpdate(req.body.vendorId, {
+            $push: { products: product.id },
+        });
+        if (!vendor)
+            throw new NotFoundError_1.default(`Vendor with given id not found`);
+    }
+    if (files) {
+        const video = [
+            "video/mp4",
+            "video/webm",
+            "video/x-m4v",
+            "video/quicktime",
+        ];
+        //@ts-ignore
+        for (let i = 0; i < files.length; i++) {
+            //@ts-ignore
+            if (video.find((e) => e === files[i].mimetype)) {
+                //@ts-ignore
+                product.video = yield MediaManager_1.default.uploadFile(files[i]);
+            }
+            //@ts-ignore
+            const img = yield MediaManager_1.default.uploadFile(files[i]);
+            //@ts-ignore
+            product.media.push(img);
+        }
+    }
+    yield product.save();
+    //await vendor.save();
+    res.send(product);
+}));
+productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4), [...ProductRules_1.productCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    Valiadtor_1.default.validate(req);
+    const { files } = req;
+    const product = yield Product_1.default.findByIdAndUpdate(req.params.id, Object.assign({}, req.body));
+    if (!product)
+        throw new NotFoundError_1.default("Product Not Found");
+    if (req.body.vendorId) {
+        const vendor = yield Vendor_1.default.findByIdAndUpdate(req.body.vendorId, {
+            $push: { products: product.id },
+        });
+        if (!vendor)
+            throw new NotFoundError_1.default(`Vendor with given id not found`);
+    }
     if (files) {
         const video = [
             "video/mp4",
