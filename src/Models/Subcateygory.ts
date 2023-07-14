@@ -1,5 +1,6 @@
 import { Model, Schema, model, Document } from "mongoose";
 import Prop from "./Prop";
+import PropValue from "./PropValue";
 
 interface subcategory {
   name: string;
@@ -16,7 +17,7 @@ interface SubcategoryModel extends Model<SubcategoryDoc> {
 const subcategorySchema = new Schema(
   {
     name: String,
-    props: { type: [Schema.Types.ObjectId], ref: Prop },
+    props: { type: [Schema.Types.ObjectId], ref: PropValue },
   },
   {
     toJSON: {

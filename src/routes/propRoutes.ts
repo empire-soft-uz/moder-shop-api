@@ -6,6 +6,8 @@ import Validator from "../utils/Valiadtor";
 import Prop from "../Models/Prop";
 import Subcategory from "../Models/Subcateygory";
 import NotFoundError from "../Classes/Errors/NotFoundError";
+import BadRequestError from "../Classes/Errors/BadRequestError";
+import PropValue from "../Models/PropValue";
 
 const propRoutes = Router();
 propRoutes.post(
@@ -14,17 +16,25 @@ propRoutes.post(
   [...propCreation],
   async (req: Request, res: Response) => {
     Validator.validate(req);
-    const prop = Prop.build(req.body);
+    const { name, label, values } = req.body;
+    if (!values || !Array.isArray(values) || values.length < 0)
+      throw new BadRequestError("Property values are required");
+    const prop = Prop.build({ name, label });
     await prop.save();
+    const vals = [];
+    for await (const val of values) {
+      const newVal = PropValue.build({ value: val, prop: prop.id });
+      vals.push(newVal);
+      await newVal.save();
+    }
+
     const subcategory = await Subcategory.findByIdAndUpdate(
       req.body.subcategory,
-      { $push: { props: prop.id } }
+      { $push: { props: { $each: vals } } }
     );
     if (!subcategory) throw new NotFoundError("Suncategory not found");
-    res.send({
-      prop,
-      subcategory: { id: subcategory.id, name: subcategory?.name },
-    });
+    await subcategory.save();
+    res.send(vals);
   }
 );
 propRoutes.delete(

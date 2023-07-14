@@ -9,6 +9,7 @@ import Subcategory from "./Subcateygory";
 import Vendor from "./Vendor";
 import Category from "./Category";
 import Prop from "./Prop";
+import PropValue from "./PropValue";
 interface product {
   vendorId: IVendor["id"];
   name: string;
@@ -60,7 +61,7 @@ const productSchema = new Schema(
     name: String,
     description: String,
     price: [priceSchema],
-    props: [{ type: Schema.Types.ObjectId, ref: Prop }],
+    props: [{ type: Schema.Types.ObjectId, ref: PropValue }],
     media: [mediaSchema],
     video: mediaSchema,
     viewCount: { type: Number, default: 0 },
