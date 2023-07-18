@@ -28,4 +28,13 @@ subcatRoute.get("/", async (req: Request, res: Response) => {
   const subCts = await Subcategory.find();
   res.send(subCts);
 });
+subcatRoute.get("/:id", async (req: Request, res: Response) => {
+  //
+  const subcategory = await Subcategory.findById(req.params.id).populate({
+    path: "props",
+    model: "PropValue",
+    populate: { path: "prop", model: "Prop" },
+  });
+  res.send(subcategory);
+});
 export default subcatRoute;

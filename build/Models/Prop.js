@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const propSchema = new mongoose_1.Schema({
     name: String,
-    values: [String],
     label: String,
 }, {
     toJSON: {

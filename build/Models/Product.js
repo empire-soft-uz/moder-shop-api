@@ -17,7 +17,8 @@ const Review_1 = __importDefault(require("./Review"));
 const Subcateygory_1 = __importDefault(require("./Subcateygory"));
 const Vendor_1 = __importDefault(require("./Vendor"));
 const Category_1 = __importDefault(require("./Category"));
-const Prop_1 = __importDefault(require("./Prop"));
+const PropValue_1 = __importDefault(require("./PropValue"));
+const Admin_1 = __importDefault(require("./Admin"));
 const priceSchema = new mongoose_1.Schema({
     price: Number,
     qtyMin: Number,
@@ -31,8 +32,9 @@ const productSchema = new mongoose_1.Schema({
     vendorId: { type: mongoose_1.Schema.Types.ObjectId, ref: Vendor_1.default },
     name: String,
     description: String,
+    author: { type: mongoose_1.Schema.Types.ObjectId, ref: Admin_1.default },
     price: [priceSchema],
-    props: [{ type: mongoose_1.Schema.Types.ObjectId, ref: Prop_1.default }],
+    props: [{ type: mongoose_1.Schema.Types.ObjectId, ref: PropValue_1.default }],
     media: [mediaSchema],
     video: mediaSchema,
     viewCount: { type: Number, default: 0 },

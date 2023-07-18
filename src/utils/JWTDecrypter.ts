@@ -3,8 +3,8 @@ import UnauthorizedError from "../Classes/Errors/UnauthoruzedError";
 import ForbidenError from "../Classes/Errors/ForbidenError";
 import jwt from "jsonwebtoken";
 
-export default class JWTDecrypter {
-  static decryptUser(jwtKey: string, req: Request) {
+export default class JWTDecrypter<T> {
+  static decryptUser(jwtKey: string, req: Request):T {
     const authHeader = req.headers.authorization;
     if (!authHeader) throw new UnauthorizedError("User Unathorised");
     try {

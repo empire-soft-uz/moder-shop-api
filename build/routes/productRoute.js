@@ -22,12 +22,14 @@ const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError
 const multer_1 = __importDefault(require("multer"));
 const MediaManager_1 = __importDefault(require("../utils/MediaManager"));
 const validateAdmin_1 = __importDefault(require("../middlewares/validateAdmin"));
+const JWTDecrypter_1 = __importDefault(require("../utils/JWTDecrypter"));
+const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage: storage, limits: { fileSize: 50 * 1048576 } });
 const productRouter = (0, express_1.Router)();
 productRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(req.query);
-    const { page, limit, name, priceMax, priceMin, category, subcategory, popularProducts, } = req.query;
+    const { page, limit, name, priceMax, priceMin, category, subcategory, popularProducts, props, } = req.query;
     let query = {};
     if (name) {
         //@ts-ignore
@@ -49,6 +51,9 @@ productRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (subcategory) {
         query = Object.assign(Object.assign({}, query), { subcategory });
     }
+    if (props && Array.isArray(props) && props.length > 0) {
+        query = Object.assign(Object.assign({}, query), { props: { $in: props } });
+    }
     let sort = {};
     if (popularProducts) {
         sort = { viewCount: -1 };
@@ -61,7 +66,12 @@ productRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function*
         .limit(limit)
         .populate("vendorId", "name")
         .populate("category", "name id")
-        .populate("subcategory", "name id");
+        .populate("subcategory", "name id")
+        .populate({
+        path: "props",
+        model: "PropValue",
+        populate: { path: "prop", model: "Prop" },
+    });
     const totalCount = yield Product_1.default.count(query);
     res.send({ page: page || 1, limit, totalCount, products });
 }));
@@ -78,7 +88,11 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
     })
         .populate("category", "name id")
         .populate("subcategory", "name id")
-        .populate("props");
+        .populate({
+        path: "props",
+        model: "PropValue",
+        populate: { path: "prop", model: "Prop" },
+    });
     if (!product)
         throw new NotFoundError_1.default("Product Not Found");
     product.viewCount += 1;
@@ -95,6 +109,7 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
         });
         if (!vendor)
             throw new NotFoundError_1.default(`Vendor with given id not found`);
+        yield vendor.save();
     }
     if (files) {
         const video = [
@@ -116,11 +131,12 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
             product.media.push(img);
         }
     }
+    const admin = JWTDecrypter_1.default.decryptUser(jwtKey, req);
+    product.author = admin.id;
     yield product.save();
-    //await vendor.save();
     res.send(product);
 }));
-productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4), [...ProductRules_1.productCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const { files } = req;
     const product = yield Product_1.default.findByIdAndUpdate(req.params.id, Object.assign({}, req.body));
@@ -132,6 +148,7 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
         });
         if (!vendor)
             throw new NotFoundError_1.default(`Vendor with given id not found`);
+        yield vendor.save();
     }
     if (files) {
         const video = [
@@ -154,7 +171,6 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
         }
     }
     yield product.save();
-    //await vendor.save();
     res.send(product);
 }));
 productRouter.delete("/delete/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {

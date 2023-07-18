@@ -10,10 +10,12 @@ import Vendor from "./Vendor";
 import Category from "./Category";
 import Prop from "./Prop";
 import PropValue from "./PropValue";
+import Admin from "./Admin";
 interface product {
   vendorId: IVendor["id"];
   name: string;
   description: string;
+  author: string;
   category: string;
   subcategoty: string;
   price: Array<IPrice>;
@@ -29,6 +31,7 @@ interface ProductDoc extends Document {
 
   subcategoty: string;
   description: string;
+  author: string;
   price: Array<IPrice>;
   media: Array<IProductMedia> | undefined;
   props: Array<string>;
@@ -60,6 +63,7 @@ const productSchema = new Schema(
     vendorId: { type: Schema.Types.ObjectId, ref: Vendor },
     name: String,
     description: String,
+    author: { type: Schema.Types.ObjectId, ref: Admin },
     price: [priceSchema],
     props: [{ type: Schema.Types.ObjectId, ref: PropValue }],
     media: [mediaSchema],

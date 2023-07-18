@@ -37,4 +37,13 @@ subcatRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const subCts = yield Subcateygory_1.default.find();
     res.send(subCts);
 }));
+subcatRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //
+    const subcategory = yield Subcateygory_1.default.findById(req.params.id).populate({
+        path: "props",
+        model: "PropValue",
+        populate: { path: "prop", model: "Prop" },
+    });
+    res.send(subcategory);
+}));
 exports.default = subcatRoute;

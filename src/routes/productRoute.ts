@@ -9,6 +9,11 @@ import NotFoundError from "../Classes/Errors/NotFoundError";
 import multer from "multer";
 import MediaManager from "../utils/MediaManager";
 import validateAdmin from "../middlewares/validateAdmin";
+import PropValue from "../Models/PropValue";
+import { populate } from "dotenv";
+import JWTDecrypter from "../utils/JWTDecrypter";
+
+const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage, limits: { fileSize: 50 * 1048576 } });
@@ -25,6 +30,7 @@ productRouter.get("/", async (req: Request, res: Response) => {
     category,
     subcategory,
     popularProducts,
+    props,
   } = req.query;
   let query = {};
   if (name) {
@@ -47,6 +53,9 @@ productRouter.get("/", async (req: Request, res: Response) => {
   if (subcategory) {
     query = { ...query, subcategory };
   }
+  if (props && Array.isArray(props) && props.length > 0) {
+    query = { ...query, props: { $in: props } };
+  }
   let sort = {};
   if (popularProducts) {
     sort = { viewCount: -1 };
@@ -59,7 +68,12 @@ productRouter.get("/", async (req: Request, res: Response) => {
     .limit(limit)
     .populate("vendorId", "name")
     .populate("category", "name id")
-    .populate("subcategory", "name id");
+    .populate("subcategory", "name id")
+    .populate({
+      path: "props",
+      model: "PropValue",
+      populate: { path: "prop", model: "Prop" },
+    });
   const totalCount = await Product.count(query);
   res.send({ page: page || 1, limit, totalCount, products });
 });
@@ -76,7 +90,11 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
     })
     .populate("category", "name id")
     .populate("subcategory", "name id")
-    .populate("props");
+    .populate({
+      path: "props",
+      model: "PropValue",
+      populate: { path: "prop", model: "Prop" },
+    });
   if (!product) throw new NotFoundError("Product Not Found");
   product.viewCount += 1;
   await product.save();
@@ -98,6 +116,7 @@ productRouter.post(
         $push: { products: product.id },
       });
       if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
+      await vendor.save();
     }
     if (files) {
       const video = [
@@ -118,9 +137,11 @@ productRouter.post(
         //@ts-ignore
         product.media.push(img);
       }
-    }
+    } 
+    const admin=JWTDecrypter.decryptUser(jwtKey, req);
+    product.author=admin.id
     await product.save();
-    //await vendor.save();
+
     res.send(product);
   }
 );
@@ -129,7 +150,7 @@ productRouter.put(
   "/edit/:id",
   validateAdmin,
   upload.array("media", 4),
-  [...productCreation],
+
   async (req: Request, res: Response) => {
     Validator.validate(req);
 
@@ -138,12 +159,14 @@ productRouter.put(
     const product = await Product.findByIdAndUpdate(req.params.id, {
       ...req.body,
     });
+
     if (!product) throw new NotFoundError("Product Not Found");
     if (req.body.vendorId) {
       const vendor = await Vendor.findByIdAndUpdate(req.body.vendorId, {
         $push: { products: product.id },
       });
       if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
+      await vendor.save();
     }
     if (files) {
       const video = [
@@ -166,7 +189,7 @@ productRouter.put(
       }
     }
     await product.save();
-    //await vendor.save();
+
     res.send(product);
   }
 );

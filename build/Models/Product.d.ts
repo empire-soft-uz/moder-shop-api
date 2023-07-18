@@ -7,6 +7,7 @@ interface product {
     vendorId: IVendor["id"];
     name: string;
     description: string;
+    author: string;
     category: string;
     subcategoty: string;
     price: Array<IPrice>;
@@ -21,6 +22,7 @@ interface ProductDoc extends Document {
     category: string;
     subcategoty: string;
     description: string;
+    author: string;
     price: Array<IPrice>;
     media: Array<IProductMedia> | undefined;
     props: Array<string>;
