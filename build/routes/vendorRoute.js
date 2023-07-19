@@ -19,7 +19,10 @@ const Vendor_1 = __importDefault(require("../Models/Vendor"));
 const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError"));
 const vendorRoute = (0, express_1.Router)();
 vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const vendors = yield Vendor_1.default.find();
+    const vendors = yield Vendor_1.default.find().populate({
+        path: "products",
+        model: "Product",
+    });
     res.send(vendors);
 }));
 vendorRoute.post("/new", [...VendorRules_1.vendorCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {

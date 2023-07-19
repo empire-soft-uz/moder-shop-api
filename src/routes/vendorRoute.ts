@@ -5,7 +5,10 @@ import Vendor from "../Models/Vendor";
 import NotFoundError from "../Classes/Errors/NotFoundError";
 const vendorRoute = Router();
 vendorRoute.get("/", async (req: Request, res: Response) => {
-  const vendors = await Vendor.find();
+  const vendors = await Vendor.find().populate({
+    path: "products",
+    model: "Product",
+  });
   res.send(vendors);
 });
 vendorRoute.post(

@@ -1,13 +1,13 @@
 import { body } from "express-validator";
 
 export const userRegistrationRules = [
-  body("password")
-    .notEmpty()
-    .withMessage("Password is required")
-    .isLength({ min: 4, max: 20 })
-    .withMessage(
-      "Password length shoulr be between 4 and 20 characters cantaining capital and lower case letters with numbers"
-    ),
+  // body("password")
+  //   .notEmpty()
+  //   .withMessage("Password is required")
+  //   .isLength({ min: 4, max: 20 })
+  //   .withMessage(
+  //     "Password length shoulr be between 4 and 20 characters cantaining capital and lower case letters with numbers"
+  //   ),
   body("phoneNumber")
     .notEmpty()
     .withMessage("Please provide valid phone number")
@@ -18,13 +18,13 @@ export const userRegistrationRules = [
   // body("birthDate").notEmpty().withMessage("Please provide your Date of Birth"),
 ];
 export const userLoginRules = [
-  body("password")
-    .notEmpty()
-    .withMessage("Password is required")
-    .isLength({ min: 4, max: 20 })
-    .withMessage(
-      "Password length shoulr be between 4 and 20 characters cantaining capital and lower case letters with numbers"
-    ),
+  // body("password")
+  //   .notEmpty()
+  //   .withMessage("Password is required")
+  //   .isLength({ min: 4, max: 20 })
+  //   .withMessage(
+  //     "Password length shoulr be between 4 and 20 characters cantaining capital and lower case letters with numbers"
+  //   ),
   body("phoneNumber")
     .notEmpty()
     .withMessage("Please provide valid phone number")
