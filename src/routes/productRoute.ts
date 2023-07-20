@@ -137,9 +137,9 @@ productRouter.post(
         //@ts-ignore
         product.media.push(img);
       }
-    } 
-    const admin=JWTDecrypter.decryptUser(jwtKey, req);
-    product.author=admin.id
+    }
+    const admin = JWTDecrypter.decryptUser(jwtKey, req);
+    product.author = admin.id;
     await product.save();
 
     res.send(product);

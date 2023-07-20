@@ -23,16 +23,41 @@ const BadRequestError_1 = __importDefault(require("../Classes/Errors/BadRequestE
 const Valiadtor_1 = __importDefault(require("../utils/Valiadtor"));
 require("express-async-errors");
 const validateUser_1 = __importDefault(require("../middlewares/validateUser"));
+const OTP_1 = __importDefault(require("../Models/OTP"));
+const expiresAt = parseInt(process.env.EXPIRATION || "5");
 const jwtKey = process.env.JWT || "SomeJwT_keY";
 userRoute.post("/register", [...UserRules_1.userRegistrationRules], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
-    const { fullName, phoneNumber, password, gender, birthDate } = req.body;
+    const { phoneNumber } = req.body;
+    var code = "0000" || Math.floor(1000 + Math.random() * 9000).toString();
+    const existingUserOPT = yield OTP_1.default.findOneAndUpdate({ phoneNumber }, { code, expiresAt: new Date(Date.now() + expiresAt * 60 * 1000) });
+    if (!existingUserOPT) {
+        const opt = OTP_1.default.build({
+            phoneNumber,
+            code,
+            expiresAt: new Date(Date.now() + expiresAt * 60 * 1000),
+            isVerified: false,
+        });
+        //handle opt sending
+        yield opt.save();
+    }
+    res.send({ message: `One Time Password was send to ${phoneNumber}` });
+}));
+userRoute.post("/verify", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { fullName, phoneNumber, password, gender, birthDate, code } = req.body;
+    const opt = yield OTP_1.default.findOneAndUpdate({ phoneNumber, code }, { verfied: true, expiresAt: undefined });
+    if (!opt)
+        throw new BadRequestError_1.default("Invalid Credentials");
+    if (opt.expiresAt.getTime() < Date.now())
+        throw new BadRequestError_1.default("Verification Code Expired");
     const existingUser = yield User_1.default.findOne({ phoneNumber });
     if (existingUser)
         throw new BadRequestError_1.default(`User with ${phoneNumber} already exists`);
     const user = User_1.default.build(req.body);
-    const p = yield Password_1.default.hashPassword(password);
-    user.password = `${p.buff}.${p.salt}`;
+    if (password) {
+        const p = yield Password_1.default.hashPassword(password);
+        user.password = `${p.buff}.${p.salt}`;
+    }
     const token = jsonwebtoken_1.default.sign({
         id: user.id,
         phoneNumber: user.phoneNumber,
@@ -46,6 +71,33 @@ userRoute.post("/register", [...UserRules_1.userRegistrationRules], (req, res) =
         token,
     });
 }));
+// userRoute.post(
+//   "/register",
+//   async (req: Request, res: Response) => {
+//     const { fullName, phoneNumber, password, gender, birthDate } = req.body;
+//     const existingUser = await User.findOne({ phoneNumber });
+//     if (existingUser)
+//       throw new BadRequestError(`User with ${phoneNumber} already exists`);
+//     const user = User.build(req.body);
+//     const p = await Password.hashPassword(password);
+//     user.password = `${p.buff}.${p.salt}`;
+//     const token = jwt.sign(
+//       {
+//         id: user.id,
+//         phoneNumber: user.phoneNumber,
+//         fullName: user.fullName,
+//       },
+//       jwtKey
+//     );
+//     await user.save();
+//     res.send({
+//       name: user.fullName,
+//       id: user.id,
+//       phoneNumber: user.phoneNumber,
+//       token,
+//     });
+//   }
+// );
 userRoute.post("/login", [...UserRules_1.userLoginRules], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const { phoneNumber, password } = req.body;
