@@ -45,6 +45,7 @@ interface ProductModel extends Model<ProductDoc> {
 const priceSchema = new Schema(
   {
     price: Number,
+    oldPrice: { type: Number, default: 0 },
     qtyMin: Number,
     qtyMax: Number,
   },

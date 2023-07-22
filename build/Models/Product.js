@@ -21,6 +21,7 @@ const PropValue_1 = __importDefault(require("./PropValue"));
 const Admin_1 = __importDefault(require("./Admin"));
 const priceSchema = new mongoose_1.Schema({
     price: Number,
+    oldPrice: { type: Number, default: 0 },
     qtyMin: Number,
     qtyMax: Number,
 }, { id: false, _id: false });
