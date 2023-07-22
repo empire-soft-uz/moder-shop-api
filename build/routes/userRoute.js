@@ -24,9 +24,10 @@ const Valiadtor_1 = __importDefault(require("../utils/Valiadtor"));
 require("express-async-errors");
 const validateUser_1 = __importDefault(require("../middlewares/validateUser"));
 const OTP_1 = __importDefault(require("../Models/OTP"));
+const JWTDecrypter_1 = __importDefault(require("../utils/JWTDecrypter"));
 const expiresAt = parseInt(process.env.EXPIRATION || "5");
 const jwtKey = process.env.JWT || "SomeJwT_keY";
-userRoute.post("/register", [...UserRules_1.userRegistrationRules], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRoute.post("/get-code", [...UserRules_1.userRegistrationRules], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const { phoneNumber } = req.body;
     var code = "0000" || Math.floor(1000 + Math.random() * 9000).toString();
@@ -43,7 +44,7 @@ userRoute.post("/register", [...UserRules_1.userRegistrationRules], (req, res) =
     }
     res.send({ message: `One Time Password was send to ${phoneNumber}` });
 }));
-userRoute.post("/verify", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRoute.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { fullName, phoneNumber, password, gender, birthDate, code } = req.body;
     const opt = yield OTP_1.default.findOneAndUpdate({ phoneNumber, code }, { verfied: true, expiresAt: undefined });
     if (!opt)
@@ -71,33 +72,6 @@ userRoute.post("/verify", (req, res) => __awaiter(void 0, void 0, void 0, functi
         token,
     });
 }));
-// userRoute.post(
-//   "/register",
-//   async (req: Request, res: Response) => {
-//     const { fullName, phoneNumber, password, gender, birthDate } = req.body;
-//     const existingUser = await User.findOne({ phoneNumber });
-//     if (existingUser)
-//       throw new BadRequestError(`User with ${phoneNumber} already exists`);
-//     const user = User.build(req.body);
-//     const p = await Password.hashPassword(password);
-//     user.password = `${p.buff}.${p.salt}`;
-//     const token = jwt.sign(
-//       {
-//         id: user.id,
-//         phoneNumber: user.phoneNumber,
-//         fullName: user.fullName,
-//       },
-//       jwtKey
-//     );
-//     await user.save();
-//     res.send({
-//       name: user.fullName,
-//       id: user.id,
-//       phoneNumber: user.phoneNumber,
-//       token,
-//     });
-//   }
-// );
 userRoute.post("/login", [...UserRules_1.userLoginRules], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const { phoneNumber, password } = req.body;
@@ -122,11 +96,7 @@ userRoute.post("/login", [...UserRules_1.userLoginRules], (req, res) => __awaite
     });
 }));
 userRoute.put("/update", [...UserRules_1.userRegistrationRules], validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const author = jsonwebtoken_1.default.verify(
-    //@ts-ignore
-    req.headers.authorization, jwtKey
-    //@ts-ignore
-    );
+    const author = JWTDecrypter_1.default.decryptUser(jwtKey, req);
     const p = yield Password_1.default.hashPassword(req.body.password);
     const user = yield User_1.default.findByIdAndUpdate(author.id, Object.assign(Object.assign({}, req.body), { password: `${p.buff}.${p.salt}` }));
     //@ts-ignore
@@ -134,11 +104,7 @@ userRoute.put("/update", [...UserRules_1.userRegistrationRules], validateUser_1.
     res.send(user);
 }));
 userRoute.get("/current", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const author = jsonwebtoken_1.default.verify(
-    //@ts-ignore
-    req.headers.authorization, jwtKey
-    //@ts-ignore
-    );
+    const author = JWTDecrypter_1.default.decryptUser(jwtKey, req);
     const user = yield User_1.default.findOne({ _id: author.id }, { password: 0 });
     res.send(user);
 }));

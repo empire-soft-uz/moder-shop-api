@@ -13,10 +13,12 @@ import "express-async-errors";
 import validateUser from "../middlewares/validateUser";
 import OTP from "../Models/OTP";
 import NotFoundError from "../Classes/Errors/NotFoundError";
+import JWTDecrypter from "../utils/JWTDecrypter";
+import IUserPayload from "../Interfaces/IUserPayload";
 const expiresAt = parseInt(process.env.EXPIRATION || "5");
 const jwtKey = process.env.JWT || "SomeJwT_keY";
 userRoute.post(
-  "/register",
+  "/get-code",
   [...userRegistrationRules],
   async (req: Request, res: Response) => {
     Validator.validate(req);
@@ -39,7 +41,7 @@ userRoute.post(
     res.send({ message: `One Time Password was send to ${phoneNumber}` });
   }
 );
-userRoute.post("/verify", async (req: Request, res: Response) => {
+userRoute.post("/register", async (req: Request, res: Response) => {
   const { fullName, phoneNumber, password, gender, birthDate, code } = req.body;
   const opt = await OTP.findOneAndUpdate(
     { phoneNumber, code },
@@ -73,34 +75,7 @@ userRoute.post("/verify", async (req: Request, res: Response) => {
     token,
   });
 });
-// userRoute.post(
-//   "/register",
 
-//   async (req: Request, res: Response) => {
-//     const { fullName, phoneNumber, password, gender, birthDate } = req.body;
-//     const existingUser = await User.findOne({ phoneNumber });
-//     if (existingUser)
-//       throw new BadRequestError(`User with ${phoneNumber} already exists`);
-//     const user = User.build(req.body);
-//     const p = await Password.hashPassword(password);
-//     user.password = `${p.buff}.${p.salt}`;
-//     const token = jwt.sign(
-//       {
-//         id: user.id,
-//         phoneNumber: user.phoneNumber,
-//         fullName: user.fullName,
-//       },
-//       jwtKey
-//     );
-//     await user.save();
-//     res.send({
-//       name: user.fullName,
-//       id: user.id,
-//       phoneNumber: user.phoneNumber,
-//       token,
-//     });
-//   }
-// );
 userRoute.post(
   "/login",
   [...userLoginRules],
@@ -136,12 +111,7 @@ userRoute.put(
   [...userRegistrationRules],
   validateUser,
   async (req: Request, res: Response) => {
-    const author = jwt.verify(
-      //@ts-ignore
-      req.headers.authorization,
-      jwtKey
-      //@ts-ignore
-    ) as IUserPayload;
+    const author = JWTDecrypter.decryptUser<IUserPayload>(jwtKey, req);
     const p = await Password.hashPassword(req.body.password);
 
     const user = await User.findByIdAndUpdate(author.id, {
@@ -155,14 +125,8 @@ userRoute.put(
 );
 
 userRoute.get("/current", validateUser, async (req: Request, res: Response) => {
-  const author = jwt.verify(
-    //@ts-ignore
-    req.headers.authorization,
-    jwtKey
-    //@ts-ignore
-  ) as IUserPayload;
+  const author = JWTDecrypter.decryptUser<IUserPayload>(jwtKey, req);
   const user = await User.findOne({ _id: author.id }, { password: 0 });
-
   res.send(user);
 });
 export default userRoute;

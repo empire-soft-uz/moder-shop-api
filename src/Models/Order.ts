@@ -1,15 +1,23 @@
 import { Model, Schema, model, Document } from "mongoose";
 import IOrderProducts from "../Interfaces/Order/IOrderProducts";
 
+enum orderStatus {
+  new = "new",
+  approved = "approved",
+  delivering = "delivering",
+  completed = "completed",
+}
 interface order {
   products: Array<IOrderProducts>;
   userId: Schema.Types.ObjectId;
   deliveryAddress: string;
+  status: orderStatus;
 }
 interface OrderDoc extends Document {
   products: Array<IOrderProducts>;
   userId: Schema.Types.ObjectId;
   deliveryAddress: string;
+  status: orderStatus;
 }
 interface OrderModel extends Model<OrderDoc> {
   build(attrs: order): OrderDoc;
@@ -26,6 +34,11 @@ const orderSchema = new Schema(
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     products: [productSchema],
     deliveryAddress: String,
+    orderStatus: {
+      type: String,
+      enum: Object.values(orderStatus),
+      default: orderStatus.new,
+    },
   },
   {
     toJSON: {
