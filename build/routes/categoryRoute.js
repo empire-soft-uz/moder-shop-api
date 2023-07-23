@@ -35,6 +35,12 @@ categoryRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function*
     const categories = yield Category_1.default.find().populate("subcategories");
     res.send(categories);
 }));
+categoryRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const category = yield Category_1.default.findById(req.params.id).populate("subcategories");
+    if (!category)
+        throw new NotFoundError_1.default("Category Not Found");
+    res.send(category);
+}));
 categoryRoute.post("/new", validateAdmin_1.isSuperAdmin, upload.single("icon"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name } = req.body;
     if (!name)

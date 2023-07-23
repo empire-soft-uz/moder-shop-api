@@ -15,6 +15,13 @@ categoryRoute.get("/", async (req: Request, res: Response) => {
   const categories = await Category.find().populate("subcategories");
   res.send(categories);
 });
+categoryRoute.get("/:id", async (req: Request, res: Response) => {
+  const category = await Category.findById(req.params.id).populate(
+    "subcategories"
+  );
+  if (!category) throw new NotFoundError("Category Not Found");
+  res.send(category);
+});
 categoryRoute.post(
   "/new",
   isSuperAdmin,
