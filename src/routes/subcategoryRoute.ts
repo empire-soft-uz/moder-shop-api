@@ -24,6 +24,23 @@ subcatRoute.post(
     res.send(subCt);
   }
 );
+subcatRoute.post(
+  "/new/many",
+  // [...subcatCreation],
+  isSuperAdmin,
+  async (req: Request, res: Response) => {
+    const { subcategories, category } = req.body;
+    const parentCat = await Category.findById(category);
+    if (!parentCat) throw new BadRequestError("Invalid category is provided");
+    const subcts = await Subcategory.insertMany(subcategories);
+    subcts.forEach((subCt) => {
+      parentCat.subcategories.push(subCt.id);
+    });
+
+    await parentCat.save();
+    res.send({ category: parentCat, subcts });
+  }
+);
 subcatRoute.get("/", async (req: Request, res: Response) => {
   const subCts = await Subcategory.find();
   res.send(subCts);

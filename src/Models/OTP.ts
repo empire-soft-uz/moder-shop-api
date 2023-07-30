@@ -17,7 +17,7 @@ interface OTPModel extends Model<OTPDoc> {
 }
 const otpSchema = new Schema(
   {
-    phoneNumber: String,
+    phoneNumber: { type: String, unique: true },
     code: String,
     expiresAt: Date,
     isVerified: { type: Boolean, default: false },

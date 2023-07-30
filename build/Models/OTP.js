@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const otpSchema = new mongoose_1.Schema({
-    phoneNumber: String,
+    phoneNumber: { type: String, unique: true },
     code: String,
     expiresAt: Date,
     isVerified: { type: Boolean, default: false },

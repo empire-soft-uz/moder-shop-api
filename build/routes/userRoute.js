@@ -25,6 +25,7 @@ require("express-async-errors");
 const validateUser_1 = __importDefault(require("../middlewares/validateUser"));
 const OTP_1 = __importDefault(require("../Models/OTP"));
 const JWTDecrypter_1 = __importDefault(require("../utils/JWTDecrypter"));
+const verifyUser_1 = __importDefault(require("../middlewares/verifyUser"));
 const expiresAt = parseInt(process.env.EXPIRATION || "5");
 const jwtKey = process.env.JWT || "SomeJwT_keY";
 userRoute.post("/get-code", [...UserRules_1.userRegistrationRules], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -44,13 +45,20 @@ userRoute.post("/get-code", [...UserRules_1.userRegistrationRules], (req, res) =
     }
     res.send({ message: `One Time Password was send to ${phoneNumber}` });
 }));
-userRoute.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { fullName, phoneNumber, password, gender, birthDate, code } = req.body;
-    const opt = yield OTP_1.default.findOneAndUpdate({ phoneNumber, code }, { verfied: true, expiresAt: undefined });
+userRoute.put("/verify", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { phoneNumber, code } = req.body;
+    const opt = yield OTP_1.default.findOne({ phoneNumber, code });
     if (!opt)
-        throw new BadRequestError_1.default("Invalid Credentials");
+        throw new BadRequestError_1.default("Invalid Verification Credentials");
     if (opt.expiresAt.getTime() < Date.now())
         throw new BadRequestError_1.default("Verification Code Expired");
+    opt.isVerified = true;
+    opt.expiresAt = undefined;
+    yield opt.save();
+    res.send(`User with ${phoneNumber} is verified`);
+}));
+userRoute.post("/register", verifyUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { fullName, phoneNumber, password, gender, birthDate } = req.body;
     const existingUser = yield User_1.default.findOne({ phoneNumber });
     if (existingUser)
         throw new BadRequestError_1.default(`User with ${phoneNumber} already exists`);
@@ -72,7 +80,7 @@ userRoute.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, func
         token,
     });
 }));
-userRoute.post("/login", [...UserRules_1.userLoginRules], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRoute.post("/login", [...UserRules_1.userLoginRules], verifyUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const { phoneNumber, password } = req.body;
     const user = yield User_1.default.findOne({ phoneNumber });
@@ -95,7 +103,7 @@ userRoute.post("/login", [...UserRules_1.userLoginRules], (req, res) => __awaite
         token,
     });
 }));
-userRoute.put("/update", [...UserRules_1.userRegistrationRules], validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRoute.put("/update", [...UserRules_1.userRegistrationRules], verifyUser_1.default, validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const author = JWTDecrypter_1.default.decryptUser(jwtKey, req);
     const p = yield Password_1.default.hashPassword(req.body.password);
     const user = yield User_1.default.findByIdAndUpdate(author.id, Object.assign(Object.assign({}, req.body), { password: `${p.buff}.${p.salt}` }));

@@ -13,6 +13,7 @@ const upload = multer({ storage: storage, limits: { fileSize: 50 * 1048576 } });
 
 categoryRoute.get("/", async (req: Request, res: Response) => {
   const categories = await Category.find().populate("subcategories");
+
   res.send(categories);
 });
 categoryRoute.get("/:id", async (req: Request, res: Response) => {
@@ -36,6 +37,16 @@ categoryRoute.post(
     }
     await category.save();
     res.send(category);
+  }
+);
+categoryRoute.post(
+  "/new/many",
+  isSuperAdmin,
+
+  async (req: Request, res: Response) => {
+    const { categories } = req.body;
+    const newCts = await Category.insertMany(categories);
+    res.send(newCts);
   }
 );
 categoryRoute.delete(

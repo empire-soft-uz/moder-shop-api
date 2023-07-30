@@ -25,7 +25,7 @@ const categorySchema = new Schema(
   {
     name: String,
     icon: iconSchema,
-    subcategories: { type: [Schema.Types.ObjectId], ref: Subcategory },
+    subcategories: { type: [Schema.Types.ObjectId], ref: "Subcategory" },
   },
   {
     toJSON: {

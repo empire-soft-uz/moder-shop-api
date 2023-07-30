@@ -53,6 +53,11 @@ categoryRoute.post("/new", validateAdmin_1.isSuperAdmin, upload.single("icon"), 
     yield category.save();
     res.send(category);
 }));
+categoryRoute.post("/new/many", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { categories } = req.body;
+    const newCts = yield Category_1.default.insertMany(categories);
+    res.send(newCts);
+}));
 categoryRoute.delete("/category/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, e_1, _b, _c;
     const category = yield Category_1.default.findByIdAndDelete(req.params.id);

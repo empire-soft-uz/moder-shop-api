@@ -15,6 +15,7 @@ import OTP from "../Models/OTP";
 import NotFoundError from "../Classes/Errors/NotFoundError";
 import JWTDecrypter from "../utils/JWTDecrypter";
 import IUserPayload from "../Interfaces/IUserPayload";
+import verifyUser from "../middlewares/verifyUser";
 const expiresAt = parseInt(process.env.EXPIRATION || "5");
 const jwtKey = process.env.JWT || "SomeJwT_keY";
 userRoute.post(
@@ -41,15 +42,19 @@ userRoute.post(
     res.send({ message: `One Time Password was send to ${phoneNumber}` });
   }
 );
-userRoute.post("/register", async (req: Request, res: Response) => {
-  const { fullName, phoneNumber, password, gender, birthDate, code } = req.body;
-  const opt = await OTP.findOneAndUpdate(
-    { phoneNumber, code },
-    { verfied: true, expiresAt: undefined }
-  );
-  if (!opt) throw new BadRequestError("Invalid Credentials");
+userRoute.put("/verify", async (req: Request, res: Response) => {
+  const { phoneNumber, code } = req.body;
+  const opt = await OTP.findOne({ phoneNumber, code });
+  if (!opt) throw new BadRequestError("Invalid Verification Credentials");
   if (opt.expiresAt.getTime() < Date.now())
     throw new BadRequestError("Verification Code Expired");
+  opt.isVerified = true;
+  opt.expiresAt = undefined;
+  await opt.save();
+  res.send(`User with ${phoneNumber} is verified`);
+});
+userRoute.post("/register", verifyUser, async (req: Request, res: Response) => {
+  const { fullName, phoneNumber, password, gender, birthDate } = req.body;
 
   const existingUser = await User.findOne({ phoneNumber });
   if (existingUser)
@@ -79,6 +84,7 @@ userRoute.post("/register", async (req: Request, res: Response) => {
 userRoute.post(
   "/login",
   [...userLoginRules],
+  verifyUser,
   async (req: Request, res: Response) => {
     Validator.validate(req);
     const { phoneNumber, password } = req.body;
@@ -109,6 +115,7 @@ userRoute.post(
 userRoute.put(
   "/update",
   [...userRegistrationRules],
+  verifyUser,
   validateUser,
   async (req: Request, res: Response) => {
     const author = JWTDecrypter.decryptUser<IUserPayload>(jwtKey, req);

@@ -33,6 +33,20 @@ subcatRoute.post("/new", [...SubcatRules_1.subcatCreation], validateAdmin_1.isSu
     yield parentCat.save();
     res.send(subCt);
 }));
+subcatRoute.post("/new/many", 
+// [...subcatCreation],
+validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { subcategories, category } = req.body;
+    const parentCat = yield Category_1.default.findById(category);
+    if (!parentCat)
+        throw new BadRequestError_1.default("Invalid category is provided");
+    const subcts = yield Subcateygory_1.default.insertMany(subcategories);
+    subcts.forEach((subCt) => {
+        parentCat.subcategories.push(subCt.id);
+    });
+    yield parentCat.save();
+    res.send({ category: parentCat, subcts });
+}));
 subcatRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const subCts = yield Subcateygory_1.default.find();
     res.send(subCts);
