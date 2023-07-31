@@ -36,6 +36,24 @@ propRoutes.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         throw new NotFoundError_1.default("Properties not found");
     res.send(properties);
 }));
+propRoutes.post("/new/many", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { props } = req.body;
+    const newprops = yield Prop_1.default.insertMany(props);
+    res.send(newprops);
+}));
+propRoutes.post("/values/new/many", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { values, subcategory } = req.body;
+    const propVals = yield PropValue_1.default.insertMany(values);
+    const vals = [];
+    console.log(propVals);
+    propVals.forEach((v) => vals.push(v.id));
+    const subct = yield Subcateygory_1.default.findByIdAndUpdate(req.body.subcategory, {
+        $push: { props: { $each: vals } },
+    });
+    if (!subcategory)
+        throw new NotFoundError_1.default("Suncategory not found");
+    res.send({ values: vals });
+}));
 propRoutes.post("/new", validateAdmin_1.isSuperAdmin, [...PropRules_1.propCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const { name, label } = req.body;

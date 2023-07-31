@@ -1,0 +1,30 @@
+[
+  {
+    "value": "Silver",
+    "prop": ObjectId("property001")
+  },
+  {
+    "value": "Rose Gold",
+    "prop": ObjectId("property001")
+  },
+  {
+    "value": "512GB",
+    "prop": ObjectId("property002")
+  },
+  {
+    "value": "256GB",
+    "prop": ObjectId("property002")
+  },
+  {
+    "value": "1 year",
+    "prop": ObjectId("property003")
+  },
+  {
+    "value": "3 years",
+    "prop": ObjectId("property003")
+  },
+  {
+    "value": true,
+    "prop": ObjectId("property004")
+  }
+]

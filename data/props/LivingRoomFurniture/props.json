@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Color",
+    "label": "select"
+  },
+  {
+    "name": "Material",
+    "label": "select"
+  }
+]

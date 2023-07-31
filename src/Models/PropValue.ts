@@ -14,7 +14,7 @@ interface PropValueModel extends Model<PropValueDoc> {
 
 const propValueSchema = new Schema(
   {
-    value: String,
+    value: { type: String, unique: true },
     prop: { type: Schema.Types.ObjectId, ref: Prop },
   },
   {

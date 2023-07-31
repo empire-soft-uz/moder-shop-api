@@ -1,0 +1,18 @@
+[
+  {
+    "value": "Gray",
+    "prop": ObjectId("property001")
+  },
+  {
+    "value": "Brown",
+    "prop": ObjectId("property001")
+  },
+  {
+    "value": "Fabric",
+    "prop": ObjectId("property002")
+  },
+  {
+    "value": "Wood",
+    "prop": ObjectId("property002")
+  }
+]

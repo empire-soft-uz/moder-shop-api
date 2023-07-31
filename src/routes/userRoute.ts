@@ -51,7 +51,18 @@ userRoute.put("/verify", async (req: Request, res: Response) => {
   opt.isVerified = true;
   opt.expiresAt = undefined;
   await opt.save();
-  res.send(`User with ${phoneNumber} is verified`);
+  const token = jwt.sign(
+    {
+      phoneNumber,
+    },
+    jwtKey,
+    {
+      expiresIn: new Date(
+        Date.now() + parseInt(process.env.EXPIRATION || "5") * 60000
+      ).getTime(),
+    }
+  );
+  res.send({ message: `User with ${phoneNumber} is verified`, token });
 });
 userRoute.post("/register", verifyUser, async (req: Request, res: Response) => {
   const { fullName, phoneNumber, password, gender, birthDate } = req.body;
@@ -119,9 +130,18 @@ userRoute.put(
   validateUser,
   async (req: Request, res: Response) => {
     const author = JWTDecrypter.decryptUser<IUserPayload>(jwtKey, req);
-    const p = await Password.hashPassword(req.body.password);
+    if (author.exp && author.exp < Date.now())
+      throw new BadRequestError("Token expired");
 
-    const user = await User.findByIdAndUpdate(author.id, {
+    const p = await Password.hashPassword(req.body.password);
+    let query = {};
+    if (author.id) {
+      query = { ...query, id: author.id };
+    }
+    if (author.phoneNumber) {
+      query = { ...query, phoneNumber: author.phoneNumber };
+    }
+    const user = await User.findOneAndUpdate(query, {
       ...req.body,
       password: `${p.buff}.${p.salt}`,
     });

@@ -125,10 +125,12 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
                 //@ts-ignore
                 product.video = yield MediaManager_1.default.uploadFile(files[i]);
             }
-            //@ts-ignore
-            const img = yield MediaManager_1.default.uploadFile(files[i]);
-            //@ts-ignore
-            product.media.push(img);
+            else {
+                //@ts-ignore
+                const img = yield MediaManager_1.default.uploadFile(files[i]);
+                //@ts-ignore
+                product.media.push(img);
+            }
         }
     }
     const admin = JWTDecrypter_1.default.decryptUser(jwtKey, req);
@@ -139,7 +141,11 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
 productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const { files } = req;
-    const product = yield Product_1.default.findByIdAndUpdate(req.params.id, Object.assign({}, req.body));
+    let tempProps = [];
+    if (req.body.props && req.body.props.length > 0) {
+        tempProps.push(...req.body.props);
+    }
+    const product = yield Product_1.default.findByIdAndUpdate(req.params.id, Object.assign(Object.assign({}, req.body), { $pullAll: { props: tempProps } }));
     if (!product)
         throw new NotFoundError_1.default("Product Not Found");
     if (req.body.vendorId) {

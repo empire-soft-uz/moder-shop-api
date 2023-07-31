@@ -16,6 +16,31 @@ propRoutes.get("/", async (req: Request, res: Response) => {
   res.send(properties);
 });
 propRoutes.post(
+  "/new/many",
+  isSuperAdmin,
+
+  async (req: Request, res: Response) => {
+    const { props } = req.body;
+
+    const newprops = await Prop.insertMany(props);
+
+    res.send(newprops);
+  }
+);
+propRoutes.post("/values/new/many", async (req: Request, res: Response) => {
+  const { values, subcategory } = req.body;
+
+  const propVals = await PropValue.insertMany(values);
+  const vals = [];
+  console.log(propVals);
+  propVals.forEach((v) => vals.push(v.id));
+  const subct = await Subcategory.findByIdAndUpdate(req.body.subcategory, {
+    $push: { props: { $each: vals } },
+  });
+  if (!subcategory) throw new NotFoundError("Suncategory not found");
+  res.send({ values: vals });
+});
+propRoutes.post(
   "/new",
   isSuperAdmin,
   [...propCreation],
@@ -29,6 +54,7 @@ propRoutes.post(
     res.send(prop);
   }
 );
+
 propRoutes.post("/values/new/:propId", async (req: Request, res: Response) => {
   const { values } = req.body;
   const { propId } = req.params;

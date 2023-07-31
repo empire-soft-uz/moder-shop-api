@@ -55,7 +55,12 @@ userRoute.put("/verify", (req, res) => __awaiter(void 0, void 0, void 0, functio
     opt.isVerified = true;
     opt.expiresAt = undefined;
     yield opt.save();
-    res.send(`User with ${phoneNumber} is verified`);
+    const token = jsonwebtoken_1.default.sign({
+        phoneNumber,
+    }, jwtKey, {
+        expiresIn: new Date(Date.now() + parseInt(process.env.EXPIRATION || "5") * 60000).getTime(),
+    });
+    res.send({ message: `User with ${phoneNumber} is verified`, token });
 }));
 userRoute.post("/register", verifyUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { fullName, phoneNumber, password, gender, birthDate } = req.body;
@@ -105,8 +110,17 @@ userRoute.post("/login", [...UserRules_1.userLoginRules], verifyUser_1.default, 
 }));
 userRoute.put("/update", [...UserRules_1.userRegistrationRules], verifyUser_1.default, validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const author = JWTDecrypter_1.default.decryptUser(jwtKey, req);
+    if (author.exp && author.exp < Date.now())
+        throw new BadRequestError_1.default("Token expired");
     const p = yield Password_1.default.hashPassword(req.body.password);
-    const user = yield User_1.default.findByIdAndUpdate(author.id, Object.assign(Object.assign({}, req.body), { password: `${p.buff}.${p.salt}` }));
+    let query = {};
+    if (author.id) {
+        query = Object.assign(Object.assign({}, query), { id: author.id });
+    }
+    if (author.phoneNumber) {
+        query = Object.assign(Object.assign({}, query), { phoneNumber: author.phoneNumber });
+    }
+    const user = yield User_1.default.findOneAndUpdate(query, Object.assign(Object.assign({}, req.body), { password: `${p.buff}.${p.salt}` }));
     //@ts-ignore
     user === null || user === void 0 ? void 0 : user.password = undefined;
     res.send(user);

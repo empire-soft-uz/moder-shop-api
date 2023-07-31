@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const Prop_1 = __importDefault(require("./Prop"));
 const propValueSchema = new mongoose_1.Schema({
-    value: String,
+    value: { type: String, unique: true },
     prop: { type: mongoose_1.Schema.Types.ObjectId, ref: Prop_1.default },
 }, {
     toJSON: {

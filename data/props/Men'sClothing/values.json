@@ -1,0 +1,26 @@
+[
+  {
+    "value": "Blue",
+    "prop": ObjectId("property001")
+  },
+  {
+    "value": "Black",
+    "prop": ObjectId("property001")
+  },
+  {
+    "value": "M",
+    "prop": ObjectId("property002")
+  },
+  {
+    "value": "32",
+    "prop": ObjectId("property002")
+  },
+  {
+    "value": "Cotton",
+    "prop": ObjectId("property003")
+  },
+  {
+    "value": "Denim",
+    "prop": ObjectId("property003")
+  }
+]

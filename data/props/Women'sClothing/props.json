@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Color",
+    "label": "select"
+  },
+  {
+    "name": "Size",
+    "label": "select"
+  },
+  {
+    "name": "Material",
+    "label": "select"
+  }
+]

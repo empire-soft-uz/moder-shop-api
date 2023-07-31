@@ -12,6 +12,8 @@ import validateAdmin from "../middlewares/validateAdmin";
 import PropValue from "../Models/PropValue";
 import { populate } from "dotenv";
 import JWTDecrypter from "../utils/JWTDecrypter";
+import IAdmin from "../Interfaces/IAdmin";
+import IAdmin from "../Interfaces/IAdmin";
 
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
@@ -131,14 +133,15 @@ productRouter.post(
         if (video.find((e) => e === files[i].mimetype)) {
           //@ts-ignore
           product.video = await MediaManager.uploadFile(files[i]);
+        } else {
+          //@ts-ignore
+          const img = await MediaManager.uploadFile(files[i]);
+          //@ts-ignore
+          product.media.push(img);
         }
-        //@ts-ignore
-        const img = await MediaManager.uploadFile(files[i]);
-        //@ts-ignore
-        product.media.push(img);
       }
     }
-    const admin = JWTDecrypter.decryptUser(jwtKey, req);
+    const admin = JWTDecrypter.decryptUser<IAdmin>(jwtKey, req);
     product.author = admin.id;
     await product.save();
 
@@ -155,9 +158,13 @@ productRouter.put(
     Validator.validate(req);
 
     const { files } = req;
-
+    let tempProps = [];
+    if (req.body.props && req.body.props.length > 0) {
+      tempProps.push(...req.body.props);
+    }
     const product = await Product.findByIdAndUpdate(req.params.id, {
       ...req.body,
+      $pullAll: { props: tempProps },
     });
 
     if (!product) throw new NotFoundError("Product Not Found");

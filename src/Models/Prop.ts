@@ -14,8 +14,7 @@ interface PropModel extends Model<PropDoc> {
 
 const propSchema = new Schema(
   {
-    name: String,
-
+    name: { type: String, unique: true },
     label: String,
   },
   {
