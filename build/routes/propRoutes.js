@@ -36,6 +36,13 @@ propRoutes.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         throw new NotFoundError_1.default("Properties not found");
     res.send(properties);
 }));
+propRoutes.post("/new", validateAdmin_1.isSuperAdmin, [...PropRules_1.propCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    Valiadtor_1.default.validate(req);
+    const { name, label } = req.body;
+    const prop = Prop_1.default.build({ name, label });
+    yield prop.save();
+    res.send(prop);
+}));
 propRoutes.post("/new/many", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { props } = req.body;
     const newprops = yield Prop_1.default.insertMany(props);
@@ -54,12 +61,17 @@ propRoutes.post("/values/new/many", (req, res) => __awaiter(void 0, void 0, void
         throw new NotFoundError_1.default("Suncategory not found");
     res.send({ values: vals });
 }));
-propRoutes.post("/new", validateAdmin_1.isSuperAdmin, [...PropRules_1.propCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    Valiadtor_1.default.validate(req);
-    const { name, label } = req.body;
-    const prop = Prop_1.default.build({ name, label });
-    yield prop.save();
-    res.send(prop);
+propRoutes.put("/values/update/:valueId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { value, prop } = req.body;
+    const updated = yield PropValue_1.default.findByIdAndUpdate(req.params.valueId, Object.assign({}, req.body));
+    res.send(updated);
+}));
+propRoutes.get("/:propId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const [prop, vals] = yield Promise.all([
+        Prop_1.default.findById(req.params.propId),
+        PropValue_1.default.find({ prop: req.params.propId }),
+    ]);
+    res.send({ prop, values: vals });
 }));
 propRoutes.post("/values/new/:propId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, e_1, _b, _c;

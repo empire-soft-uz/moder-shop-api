@@ -145,7 +145,11 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
     if (req.body.props && req.body.props.length > 0) {
         tempProps.push(...req.body.props);
     }
-    const product = yield Product_1.default.findByIdAndUpdate(req.params.id, Object.assign(Object.assign({}, req.body), { $pullAll: { props: tempProps } }));
+    const newData = Object.assign({}, req.body);
+    delete newData.props;
+    // console.log(newData, tempProps, req.body);
+    // res.send({ newData, tempProps, body: req.body });
+    const product = yield Product_1.default.findByIdAndUpdate(req.params.id, Object.assign(Object.assign({}, newData), { $push: { props: { $each: tempProps } } }));
     if (!product)
         throw new NotFoundError_1.default("Product Not Found");
     if (req.body.vendorId) {

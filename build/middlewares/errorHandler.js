@@ -7,6 +7,8 @@ const BaseError_1 = __importDefault(require("../Classes/Errors/BaseError"));
 //@ts-ignore
 const errorHandler = (err, req, res, next) => {
     console.log(err, err instanceof BaseError_1.default);
+    console.log("---------------------");
+    console.log(req.hostname);
     if (err instanceof BaseError_1.default) {
         console.log("Base Error instance");
         res.status(err.statusCode).send({ errors: err.formatError() });

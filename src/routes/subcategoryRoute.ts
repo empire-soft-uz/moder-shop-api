@@ -54,4 +54,23 @@ subcatRoute.get("/:id", async (req: Request, res: Response) => {
   });
   res.send(subcategory);
 });
+subcatRoute.put("/:id", validateAdmin, async (req: Request, res: Response) => {
+  const { name, removedProps, newProps } = req.body;
+  let updating = {};
+  if (name) {
+    updating = { ...updating, name };
+  }
+  if (removedProps && removedProps.length > 0) {
+    updating = { ...updating, $pullAll: { props: removedProps } };
+  }
+  if (newProps && newProps.length > 0) {
+    updating = { ...updating, $push: { props: { $each: newProps } } };
+  }
+  const subcategory = await Subcategory.findByIdAndUpdate(
+    req.params.id,
+    updating
+  );
+  res.send(subcategory);
+});
+
 export default subcatRoute;

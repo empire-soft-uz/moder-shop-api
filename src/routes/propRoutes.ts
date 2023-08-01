@@ -16,6 +16,20 @@ propRoutes.get("/", async (req: Request, res: Response) => {
   res.send(properties);
 });
 propRoutes.post(
+  "/new",
+  isSuperAdmin,
+  [...propCreation],
+  async (req: Request, res: Response) => {
+    Validator.validate(req);
+    const { name, label } = req.body;
+
+    const prop = Prop.build({ name, label });
+    await prop.save();
+
+    res.send(prop);
+  }
+);
+propRoutes.post(
   "/new/many",
   isSuperAdmin,
 
@@ -40,20 +54,23 @@ propRoutes.post("/values/new/many", async (req: Request, res: Response) => {
   if (!subcategory) throw new NotFoundError("Suncategory not found");
   res.send({ values: vals });
 });
-propRoutes.post(
-  "/new",
-  isSuperAdmin,
-  [...propCreation],
+propRoutes.put(
+  "/values/update/:valueId",
   async (req: Request, res: Response) => {
-    Validator.validate(req);
-    const { name, label } = req.body;
-
-    const prop = Prop.build({ name, label });
-    await prop.save();
-
-    res.send(prop);
+    const { value, prop } = req.body;
+    const updated = await PropValue.findByIdAndUpdate(req.params.valueId, {
+      ...req.body,
+    });
+    res.send(updated);
   }
 );
+propRoutes.get("/:propId", async (req: Request, res: Response) => {
+  const [prop, vals] = await Promise.all([
+    Prop.findById(req.params.propId),
+    PropValue.find({ prop: req.params.propId }),
+  ]);
+  res.send({ prop, values: vals });
+});
 
 propRoutes.post("/values/new/:propId", async (req: Request, res: Response) => {
   const { values } = req.body;

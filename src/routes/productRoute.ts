@@ -13,7 +13,6 @@ import PropValue from "../Models/PropValue";
 import { populate } from "dotenv";
 import JWTDecrypter from "../utils/JWTDecrypter";
 import IAdmin from "../Interfaces/IAdmin";
-import IAdmin from "../Interfaces/IAdmin";
 
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
@@ -162,9 +161,13 @@ productRouter.put(
     if (req.body.props && req.body.props.length > 0) {
       tempProps.push(...req.body.props);
     }
+    const newData = { ...req.body };
+    delete newData.props;
+    // console.log(newData, tempProps, req.body);
+    // res.send({ newData, tempProps, body: req.body });
     const product = await Product.findByIdAndUpdate(req.params.id, {
-      ...req.body,
-      $pullAll: { props: tempProps },
+      ...newData,
+      $push: { props: { $each: tempProps } },
     });
 
     if (!product) throw new NotFoundError("Product Not Found");
