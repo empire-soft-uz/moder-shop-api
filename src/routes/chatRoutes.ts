@@ -33,7 +33,7 @@ chatRouter.get(
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
     const user = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT);
-    const chats = await Chat.find({ admin: user.id }).populate({
+    const chats = await Chat.find({ user: user.id }).populate({
       path: "user",
       select: "id fullName phoneNumber",
     });

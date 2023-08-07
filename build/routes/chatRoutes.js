@@ -31,7 +31,7 @@ chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(
 }));
 chatRouter.get("/user", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT);
-    const chats = yield Chat_1.default.find({ admin: user.id }).populate({
+    const chats = yield Chat_1.default.find({ user: user.id }).populate({
         path: "user",
         select: "id fullName phoneNumber",
     });
