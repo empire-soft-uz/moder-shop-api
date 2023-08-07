@@ -28,14 +28,18 @@ const subcategoryRoute_1 = __importDefault(require("./routes/subcategoryRoute"))
 const propRoutes_1 = __importDefault(require("./routes/propRoutes"));
 const cors_1 = __importDefault(require("cors"));
 const sliderRoutes_1 = __importDefault(require("./routes/sliderRoutes"));
+const path_1 = __importDefault(require("path"));
+const chatRoutes_1 = __importDefault(require("./routes/chatRoutes"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)({ origin: "*" }));
+app.use(express_1.default.static(path_1.default.join(__dirname, "..", "public")));
 app.get("/", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     res.send("protected route");
 }));
 app.use("/api/admins", adminRoutes_1.default);
 app.use("/api/users", userRoute_1.default);
+app.use("/api/chats", chatRoutes_1.default);
 app.use("/api/categories", categoryRoute_1.default);
 app.use("/api/subcategories", subcategoryRoute_1.default);
 app.use("/api/props", propRoutes_1.default);

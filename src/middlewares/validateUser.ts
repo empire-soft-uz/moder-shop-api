@@ -7,6 +7,6 @@ export default function validateUser(
   res: Response,
   next: NextFunction
 ) {
-  JWTDecrypter.decryptUser(jwtKey, req);
+  JWTDecrypter.decryptUser(req, jwtKey);
   next();
 }

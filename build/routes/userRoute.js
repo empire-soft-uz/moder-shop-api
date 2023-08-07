@@ -85,9 +85,15 @@ userRoute.post("/register", verifyUser_1.default, (req, res) => __awaiter(void 0
         token,
     });
 }));
-userRoute.post("/login", [...UserRules_1.userLoginRules], verifyUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRoute.post("/login", [...UserRules_1.userLoginRules], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const { phoneNumber, password } = req.body;
+    const otp = yield OTP_1.default.findOne({
+        phoneNumber: phoneNumber,
+        isVerified: true,
+    });
+    if (!otp)
+        throw new BadRequestError_1.default("User is not verified");
     const user = yield User_1.default.findOne({ phoneNumber });
     const isValidPass = user &&
         (yield Password_1.default.compare(password, {
@@ -108,25 +114,30 @@ userRoute.post("/login", [...UserRules_1.userLoginRules], verifyUser_1.default, 
         token,
     });
 }));
-userRoute.put("/update", [...UserRules_1.userRegistrationRules], verifyUser_1.default, validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const author = JWTDecrypter_1.default.decryptUser(jwtKey, req);
+userRoute.put("/update", [...UserRules_1.userRegistrationRules], verifyUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const author = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    console.log(author);
     if (author.exp && author.exp < Date.now())
         throw new BadRequestError_1.default("Token expired");
-    const p = yield Password_1.default.hashPassword(req.body.password);
+    let update = Object.assign({}, req.body);
+    const p = req.body.password && (yield Password_1.default.hashPassword(req.body.password));
     let query = {};
     if (author.id) {
-        query = Object.assign(Object.assign({}, query), { id: author.id });
+        query = Object.assign(Object.assign({}, query), { _id: author.id });
     }
     if (author.phoneNumber) {
         query = Object.assign(Object.assign({}, query), { phoneNumber: author.phoneNumber });
     }
-    const user = yield User_1.default.findOneAndUpdate(query, Object.assign(Object.assign({}, req.body), { password: `${p.buff}.${p.salt}` }));
+    if (p) {
+        update = Object.assign(Object.assign({}, update), { password: `${p.buff}.${p.salt}` });
+    }
+    const user = yield User_1.default.findOneAndUpdate(query, update);
     //@ts-ignore
     user === null || user === void 0 ? void 0 : user.password = undefined;
     res.send(user);
 }));
 userRoute.get("/current", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const author = JWTDecrypter_1.default.decryptUser(jwtKey, req);
+    const author = JWTDecrypter_1.default.decryptUser(req, jwtKey);
     const user = yield User_1.default.findOne({ _id: author.id }, { password: 0 });
     res.send(user);
 }));

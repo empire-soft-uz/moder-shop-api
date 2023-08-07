@@ -1,10 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
+const User_1 = __importDefault(require("./User"));
+const Chat_1 = __importDefault(require("./Chat"));
 const messageSchema = new mongoose_1.Schema({
-    sender: { type: mongoose_1.Schema.Types.ObjectId, required: true, reg: User },
-    reciever: { type: mongoose_1.Schema.Types.ObjectId, required: true, reg: User },
-    chat: { type: mongoose_1.Schema.Types.ObjectId, required: true, reg: Chat },
+    sender: { type: mongoose_1.Schema.Types.ObjectId, required: true, reg: User_1.default },
+    reciever: { type: mongoose_1.Schema.Types.ObjectId, required: true, reg: User_1.default },
+    chat: { type: mongoose_1.Schema.Types.ObjectId, required: true, reg: Chat_1.default },
     message: String,
     file: String,
 }, {

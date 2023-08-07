@@ -1,6 +1,4 @@
 import { Router, Request, Response } from "express";
-import { validationResult } from "express-validator";
-import RequestValidationError from "../Classes/Errors/RequestValidationError";
 const userRoute = Router();
 import "express-async-errors";
 import jwt from "jsonwebtoken";
@@ -12,7 +10,6 @@ import Validator from "../utils/Valiadtor";
 import "express-async-errors";
 import validateUser from "../middlewares/validateUser";
 import OTP from "../Models/OTP";
-import NotFoundError from "../Classes/Errors/NotFoundError";
 import JWTDecrypter from "../utils/JWTDecrypter";
 import IUserPayload from "../Interfaces/IUserPayload";
 import verifyUser from "../middlewares/verifyUser";
@@ -95,10 +92,15 @@ userRoute.post("/register", verifyUser, async (req: Request, res: Response) => {
 userRoute.post(
   "/login",
   [...userLoginRules],
-  verifyUser,
+
   async (req: Request, res: Response) => {
     Validator.validate(req);
     const { phoneNumber, password } = req.body;
+    const otp = await OTP.findOne({
+      phoneNumber: phoneNumber,
+      isVerified: true,
+    });
+    if (!otp) throw new BadRequestError("User is not verified");
     const user = await User.findOne({ phoneNumber });
     const isValidPass =
       user &&
@@ -127,32 +129,40 @@ userRoute.put(
   "/update",
   [...userRegistrationRules],
   verifyUser,
-  validateUser,
+
   async (req: Request, res: Response) => {
-    const author = JWTDecrypter.decryptUser<IUserPayload>(jwtKey, req);
+    const author = JWTDecrypter.decryptUser<IUserPayload>(req, jwtKey);
+
+    console.log(author);
     if (author.exp && author.exp < Date.now())
       throw new BadRequestError("Token expired");
-
-    const p = await Password.hashPassword(req.body.password);
+    let update = { ...req.body };
+    const p =
+      req.body.password && (await Password.hashPassword(req.body.password));
     let query = {};
     if (author.id) {
-      query = { ...query, id: author.id };
+      query = { ...query, _id: author.id };
     }
     if (author.phoneNumber) {
       query = { ...query, phoneNumber: author.phoneNumber };
     }
-    const user = await User.findOneAndUpdate(query, {
-      ...req.body,
-      password: `${p.buff}.${p.salt}`,
-    });
+    if (p) {
+      update = {
+        ...update,
+        password: `${p.buff}.${p.salt}`,
+      };
+    }
+
+    const user = await User.findOneAndUpdate(query, update);
     //@ts-ignore
+
     user?.password = undefined;
     res.send(user);
   }
 );
 
 userRoute.get("/current", validateUser, async (req: Request, res: Response) => {
-  const author = JWTDecrypter.decryptUser<IUserPayload>(jwtKey, req);
+  const author = JWTDecrypter.decryptUser<IUserPayload>(req, jwtKey);
   const user = await User.findOne({ _id: author.id }, { password: 0 });
   res.send(user);
 });

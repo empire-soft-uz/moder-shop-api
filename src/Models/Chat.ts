@@ -16,8 +16,8 @@ interface ChatModel extends Model<ChatDoc> {
 
 const chatSchema = new Schema(
   {
-    user: { type: Schema.Types.ObjectId, reg: User },
-    admin: { type: Schema.Types.ObjectId, reg: Admin },
+    user: { type: Schema.Types.ObjectId, ref: User },
+    admin: { type: Schema.Types.ObjectId, ref: Admin },
   },
   {
     toJSON: {
@@ -29,8 +29,8 @@ const chatSchema = new Schema(
   }
 );
 
-messageSchema.statics.build = (attrs: message): ChatDoc => {
+chatSchema.statics.build = (attrs: chat): ChatDoc => {
   return new Chat(attrs);
 };
-const Chat = model<ChatDoc, ChatModel>("Chat", ChatSchema);
+const Chat = model<ChatDoc, ChatModel>("Chat", chatSchema);
 export default Chat;

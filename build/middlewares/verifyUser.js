@@ -14,13 +14,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const BadRequestError_1 = __importDefault(require("../Classes/Errors/BadRequestError"));
 const OTP_1 = __importDefault(require("../Models/OTP"));
+const JWTDecrypter_1 = __importDefault(require("../utils/JWTDecrypter"));
+const jwtKey = process.env.JWT || "SomeJwT_keY";
 function verifyUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { phoneNumber } = req.body;
-            if (!phoneNumber)
+            const otpToken = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+            if (!otpToken.phoneNumber)
                 throw new BadRequestError_1.default("Invalid Verification Credentials");
-            const otp = yield OTP_1.default.findOne({ phoneNumber, isVerified: true });
+            const otp = yield OTP_1.default.findOne({
+                phoneNumber: otpToken.phoneNumber,
+                isVerified: true,
+            });
             if (!otp)
                 throw new BadRequestError_1.default("User is not verified");
             next();

@@ -7,7 +7,7 @@ const UnauthoruzedError_1 = __importDefault(require("../Classes/Errors/Unauthoru
 const ForbidenError_1 = __importDefault(require("../Classes/Errors/ForbidenError"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 class JWTDecrypter {
-    static decryptUser(jwtKey, req) {
+    static decryptUser(req, jwtKey) {
         const authHeader = req.headers.authorization;
         if (!authHeader)
             throw new UnauthoruzedError_1.default("User Unathorised");
@@ -16,6 +16,7 @@ class JWTDecrypter {
             return validatedUser;
         }
         catch (error) {
+            console.log(error);
             throw new ForbidenError_1.default("Invalid User Signature");
         }
     }

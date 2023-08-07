@@ -9,7 +9,7 @@ export default function validateAdmin(
   res: Response,
   next: NextFunction
 ) {
-  JWTDecrypter.decryptUser(jwtKey, req);
+  JWTDecrypter.decryptUser(req, jwtKey);
   next();
 }
 export const isSuperAdmin = async (
@@ -17,7 +17,7 @@ export const isSuperAdmin = async (
   res: Response,
   next: NextFunction
 ) => {
-  const u = JWTDecrypter.decryptUser(jwtKey, req) as {
+  const u = JWTDecrypter.decryptUser(req, jwtKey) as {
     email: string;
     id: string;
   };

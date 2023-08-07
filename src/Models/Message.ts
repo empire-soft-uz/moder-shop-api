@@ -1,4 +1,6 @@
 import { Model, Schema, model, Document } from "mongoose";
+import User from "./User";
+import Chat from "./Chat";
 
 interface message {
   sender: string;

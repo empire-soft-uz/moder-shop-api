@@ -14,8 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const app_1 = __importDefault(require("./app"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const soketRoute_1 = __importDefault(require("./socketRoutes/soketRoute"));
+const WebServer_1 = __importDefault(require("./WebServer"));
 const port = process.env.PORT || 3000;
 const mongoURL = process.env.MONGO;
 function startServer() {
@@ -23,8 +24,9 @@ function startServer() {
         try {
             yield mongoose_1.default.connect(mongoURL);
             console.log("Db connected");
-            app_1.default.listen(port, () => {
+            WebServer_1.default.listen(port, () => {
                 console.log(`Listening on Port: ${port}`);
+                (0, soketRoute_1.default)();
             });
         }
         catch (error) {

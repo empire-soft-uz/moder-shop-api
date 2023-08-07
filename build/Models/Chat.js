@@ -7,8 +7,8 @@ const mongoose_1 = require("mongoose");
 const User_1 = __importDefault(require("./User"));
 const Admin_1 = __importDefault(require("./Admin"));
 const chatSchema = new mongoose_1.Schema({
-    user: { type: mongoose_1.Schema.Types.ObjectId, reg: User_1.default },
-    admin: { type: mongoose_1.Schema.Types.ObjectId, reg: Admin_1.default },
+    user: { type: mongoose_1.Schema.Types.ObjectId, ref: User_1.default },
+    admin: { type: mongoose_1.Schema.Types.ObjectId, ref: Admin_1.default },
 }, {
     toJSON: {
         transform(doc, ret) {
@@ -17,8 +17,8 @@ const chatSchema = new mongoose_1.Schema({
         },
     },
 });
-messageSchema.statics.build = (attrs) => {
+chatSchema.statics.build = (attrs) => {
     return new Chat(attrs);
 };
-const Chat = (0, mongoose_1.model)("Chat", ChatSchema);
+const Chat = (0, mongoose_1.model)("Chat", chatSchema);
 exports.default = Chat;

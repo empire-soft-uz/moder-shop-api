@@ -1,19 +1,19 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import app from "./app";
 import mongoose from "mongoose";
-import ImageKit from "imagekit";
+import startSocketServer from "./socketRoutes/soketRoute";
+import server from "./WebServer";
 
 const port = process.env.PORT || 3000;
 const mongoURL = process.env.MONGO;
-
 async function startServer() {
   try {
     await mongoose.connect(mongoURL);
     console.log("Db connected");
-    app.listen(port, () => {
+    server.listen(port, () => {
       console.log(`Listening on Port: ${port}`);
+      startSocketServer();
     });
   } catch (error) {
     console.log(error);
