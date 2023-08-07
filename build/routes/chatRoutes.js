@@ -29,11 +29,18 @@ chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(
     });
     res.send(chats);
 }));
+chatRouter.get("/admin/:chatId", validateAdmin_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = new mongoose_1.default.Types.ObjectId(req.params.chatId);
+    const msgs = yield Message_1.default.find({
+        chat: id,
+    });
+    res.send({ messages: msgs });
+}));
 chatRouter.get("/user", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT);
     const chats = yield Chat_1.default.find({ user: user.id }).populate({
-        path: "user",
-        select: "id fullName phoneNumber",
+        path: "admin",
+        select: "id email",
     });
     res.send(chats);
 }));

@@ -29,13 +29,26 @@ chatRouter.get(
   }
 );
 chatRouter.get(
+  "/admin/:chatId",
+  validateAdmin,
+  async (req: Request, res: Response, next: NextFunction) => {
+    const id = new mongoose.Types.ObjectId(req.params.chatId);
+    const msgs = await Message.find({
+      chat: id,
+    });
+
+    res.send({ messages: msgs });
+  }
+);
+chatRouter.get(
   "/user",
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
     const user = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT);
+
     const chats = await Chat.find({ user: user.id }).populate({
-      path: "user",
-      select: "id fullName phoneNumber",
+      path: "admin",
+      select: "id email",
     });
     res.send(chats);
   }

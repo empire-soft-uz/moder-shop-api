@@ -25,13 +25,12 @@ const startSocketServer = () => {
       console.log("joined room", chat.id.toString());
     });
     socket.on("recieveMsg", async (msg) => {
-      console.log(msg);
       let m = {
         sender: msg.sender,
-        reciever: msg.reciever.id,
+        reciever: msg.reciever,
         chat: msg.chat,
       };
-      console.log(msg.file);
+
       if (msg.message) {
         m = { ...m, message: msg.message };
       }
@@ -50,8 +49,8 @@ const startSocketServer = () => {
       }
       await newMsg.save();
       //@ts-ignore
-      console.log(newMsg);
       io.to(newMsg.chat.toString()).emit("sendMessage", newMsg);
+
       //socket.to(msg.reciever.socketId).emit("sendMessage", msg);
     });
 
