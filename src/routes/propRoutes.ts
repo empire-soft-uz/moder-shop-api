@@ -1,6 +1,6 @@
 import "express-async-errors";
 import { Router, Request, Response } from "express";
-import { isSuperAdmin } from "../middlewares/validateAdmin";
+import validateAdmin, { isSuperAdmin } from "../middlewares/validateAdmin";
 import { propCreation } from "../Validation/PropRules";
 import Validator from "../utils/Valiadtor";
 import Prop from "../Models/Prop";
@@ -62,6 +62,22 @@ propRoutes.put(
       ...req.body,
     });
     res.send(updated);
+  }
+);
+propRoutes.put(
+  "/edit/:propId",
+  validateAdmin,
+  async (req: Request, res: Response) => {
+    if (!req.body.prop.name || !req.body.prop.label)
+      throw new BadRequestError("All fields are required");
+    const updatedProp = await Prop.findByIdAndUpdate(
+      req.params.propId,
+      {
+        ...req.body.prop,
+      },
+      { new: true }
+    );
+    res.send(updatedProp);
   }
 );
 propRoutes.get("/:propId", async (req: Request, res: Response) => {

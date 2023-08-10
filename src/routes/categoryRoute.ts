@@ -16,13 +16,30 @@ categoryRoute.get("/", async (req: Request, res: Response) => {
 
   res.send(categories);
 });
-categoryRoute.get("/:id", async (req: Request, res: Response) => {
-  const category = await Category.findById(req.params.id).populate(
-    "subcategories"
-  );
-  if (!category) throw new NotFoundError("Category Not Found");
-  res.send(category);
-});
+categoryRoute.put(
+  "/edit/:id",
+  isSuperAdmin,
+  upload.single("icon"),
+  async (req: Request, res: Response) => {
+    const { name } = req.body;
+    const category = await Category.findById(req.params.id);
+    if (!category) throw new NotFoundError("Category not found");
+    if (!name) throw new BadRequestError("Category name is required");
+    if (req.file) {
+      const fns = [];
+      if (category.icon) {
+        fns.push(MediaManager.deletefiles(category.icon));
+      }
+      fns.push(MediaManager.uploadFile(req.file));
+      const [icon] = await Promise.all(fns);
+      category.icon = icon;
+    }
+    category.name = name;
+    await category.save();
+    res.send(category);
+  }
+);
+
 categoryRoute.post(
   "/new",
   isSuperAdmin,
@@ -49,18 +66,28 @@ categoryRoute.post(
     res.send(newCts);
   }
 );
+categoryRoute.get("/:id", async (req: Request, res: Response) => {
+  const category = await Category.findById(req.params.id).populate(
+    "subcategories"
+  );
+  if (!category) throw new NotFoundError("Category Not Found");
+  res.send(category);
+});
 categoryRoute.delete(
-  "/category/:id",
+  "/:id",
   isSuperAdmin,
   async (req: Request, res: Response) => {
     const category = await Category.findByIdAndDelete(req.params.id);
+    const asyncFns = [];
     if (!category) throw new NotFoundError("Category not found");
+    asyncFns.push(
+      Subcategory.deleteMany({ _id: { $in: category.subcategories } })
+    );
     if (category.icon) {
-      await MediaManager.deletefiles(category.icon);
+      asyncFns.push(MediaManager.deletefiles(category.icon));
     }
-    for await (const subCt of category.subcategories) {
-      await Subcategory.findByIdAndDelete(subCt);
-    }
+
+    await Promise.all(asyncFns);
     res.send(category);
   }
 );

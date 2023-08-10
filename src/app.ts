@@ -39,6 +39,8 @@ app.use("/api/vendors", vendorRoute);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/orders", orderRoute);
 app.all("*", (req, res, next) => {
+  console.log(req.originalUrl);
+  console.log(req.headers);
   throw new NotFoundError("Not Found");
 });
 app.use(errorHandler);

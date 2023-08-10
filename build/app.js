@@ -49,6 +49,8 @@ app.use("/api/vendors", vendorRoute_1.default);
 app.use("/api/reviews", reviewRoute_1.default);
 app.use("/api/orders", orderRoute_1.default);
 app.all("*", (req, res, next) => {
+    console.log(req.originalUrl);
+    console.log(req.headers);
     throw new NotFoundError_1.default("Not Found");
 });
 app.use(errorHandler_1.default);
