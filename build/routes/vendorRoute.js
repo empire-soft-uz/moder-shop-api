@@ -31,7 +31,7 @@ vendorRoute.post("/new", [...VendorRules_1.vendorCreation], (req, res) => __awai
     yield vendor.save();
     res.send(vendor);
 }));
-vendorRoute.post("/edit/:id", [...VendorRules_1.vendorCreation], validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+vendorRoute.put("/edit/:id", [...VendorRules_1.vendorCreation], validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const vendor = yield Vendor_1.default.findByIdAndUpdate(req.params.id, Object.assign({}, req.body), { new: true });
     res.send(vendor);
 }));

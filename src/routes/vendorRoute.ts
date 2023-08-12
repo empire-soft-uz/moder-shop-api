@@ -22,7 +22,7 @@ vendorRoute.post(
   }
 );
 
-vendorRoute.post(
+vendorRoute.put(
   "/edit/:id",
   [...vendorCreation],
   isSuperAdmin,
