@@ -133,7 +133,7 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
             }
         }
     }
-    const admin = JWTDecrypter_1.default.decryptUser(jwtKey, req);
+    const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
     product.author = admin.id;
     yield product.save();
     res.send(product);

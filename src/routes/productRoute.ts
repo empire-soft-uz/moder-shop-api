@@ -140,7 +140,7 @@ productRouter.post(
         }
       }
     }
-    const admin = JWTDecrypter.decryptUser<IAdmin>(jwtKey, req);
+    const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
     product.author = admin.id;
     await product.save();
 
