@@ -17,6 +17,7 @@ require("express-async-errors");
 const VendorRules_1 = require("../Validation/VendorRules");
 const Vendor_1 = __importDefault(require("../Models/Vendor"));
 const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError"));
+const validateAdmin_1 = require("../middlewares/validateAdmin");
 const vendorRoute = (0, express_1.Router)();
 vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const vendors = yield Vendor_1.default.find().populate({
@@ -28,6 +29,10 @@ vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* (
 vendorRoute.post("/new", [...VendorRules_1.vendorCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const vendor = Vendor_1.default.build(req.body);
     yield vendor.save();
+    res.send(vendor);
+}));
+vendorRoute.post("/edit/:id", [...VendorRules_1.vendorCreation], validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const vendor = yield Vendor_1.default.findByIdAndUpdate(req.params.id, Object.assign({}, req.body), { new: true });
     res.send(vendor);
 }));
 vendorRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
