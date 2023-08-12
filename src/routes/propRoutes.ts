@@ -57,6 +57,7 @@ propRoutes.post("/values/new/many", async (req: Request, res: Response) => {
 //updating prop value
 propRoutes.put(
   "/values/update/:valueId",
+  isSuperAdmin,
   async (req: Request, res: Response) => {
     const { value, prop } = req.body;
     const updated = await PropValue.findByIdAndUpdate(req.params.valueId, {
@@ -89,6 +90,12 @@ propRoutes.get("/:propId", async (req: Request, res: Response) => {
   ]);
   res.send({ prop, values: vals });
 });
+
+propRoutes.get("/values/:valueId", async (req: Request, res: Response) => {
+  const value = await PropValue.findById(req.params.valueId);
+  res.send(value);
+});
+
 //creating values without binding to subcategory
 propRoutes.post(
   "/values/new/:propId",

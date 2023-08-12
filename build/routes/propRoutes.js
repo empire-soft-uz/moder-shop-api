@@ -78,7 +78,7 @@ propRoutes.post("/values/new/many", (req, res) => __awaiter(void 0, void 0, void
     res.send({ values: vals });
 }));
 //updating prop value
-propRoutes.put("/values/update/:valueId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+propRoutes.put("/values/update/:valueId", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { value, prop } = req.body;
     const updated = yield PropValue_1.default.findByIdAndUpdate(req.params.valueId, Object.assign({}, req.body));
     res.send(updated);
@@ -96,6 +96,10 @@ propRoutes.get("/:propId", (req, res) => __awaiter(void 0, void 0, void 0, funct
         PropValue_1.default.find({ prop: req.params.propId }),
     ]);
     res.send({ prop, values: vals });
+}));
+propRoutes.get("/values/:valueId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const value = yield PropValue_1.default.findById(req.params.valueId);
+    res.send(value);
 }));
 //creating values without binding to subcategory
 propRoutes.post("/values/new/:propId", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
