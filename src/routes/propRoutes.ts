@@ -54,6 +54,7 @@ propRoutes.post("/values/new/many", async (req: Request, res: Response) => {
   if (!subcategory) throw new NotFoundError("Suncategory not found");
   res.send({ values: vals });
 });
+//updating prop value
 propRoutes.put(
   "/values/update/:valueId",
   async (req: Request, res: Response) => {
@@ -64,6 +65,7 @@ propRoutes.put(
     res.send(updated);
   }
 );
+//updating prop itself
 propRoutes.put(
   "/edit/:propId",
   validateAdmin,
@@ -87,27 +89,26 @@ propRoutes.get("/:propId", async (req: Request, res: Response) => {
   ]);
   res.send({ prop, values: vals });
 });
-
-propRoutes.post("/values/new/:propId", async (req: Request, res: Response) => {
-  const { values } = req.body;
-  const { propId } = req.params;
-  const prop = await Prop.findById(propId);
-  if (!prop) throw new NotFoundError("Given property not found");
-  if (!values || !Array.isArray(values) || values.length < 0)
-    throw new BadRequestError("Property values are required");
-  const vals = [];
-  for await (const val of values) {
-    const newVal = PropValue.build({ value: val, prop: propId });
-    vals.push(newVal);
-    await newVal.save();
+//creating values without binding to subcategory
+propRoutes.post(
+  "/values/new/:propId",
+  isSuperAdmin,
+  async (req: Request, res: Response) => {
+    const { values } = req.body;
+    const { propId } = req.params;
+    const prop = await Prop.findById(propId);
+    if (!prop) throw new NotFoundError("Given property not found");
+    if (!values || !Array.isArray(values) || values.length < 0)
+      throw new BadRequestError("Property values are required");
+    const vals: [{ value: string; prop: string }] = [];
+    values.forEach((v) => {
+      vals.push({ value: v, prop: prop.id });
+    });
+    const newVals = await PropValue.insertMany(vals);
+    console.log(newVals);
+    res.send({ values: newVals });
   }
-  const subcategory = await Subcategory.findByIdAndUpdate(
-    req.body.subcategory,
-    { $push: { props: { $each: vals } } }
-  );
-  if (!subcategory) throw new NotFoundError("Suncategory not found");
-  res.send({ values: vals });
-});
+);
 
 propRoutes.delete(
   "/delete/:id/:subcategoryId",

@@ -31,13 +31,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __asyncValues = (this && this.__asyncValues) || function (o) {
-    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-    var m = o[Symbol.asyncIterator], i;
-    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
-    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
-    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -84,11 +77,13 @@ propRoutes.post("/values/new/many", (req, res) => __awaiter(void 0, void 0, void
         throw new NotFoundError_1.default("Suncategory not found");
     res.send({ values: vals });
 }));
+//updating prop value
 propRoutes.put("/values/update/:valueId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { value, prop } = req.body;
     const updated = yield PropValue_1.default.findByIdAndUpdate(req.params.valueId, Object.assign({}, req.body));
     res.send(updated);
 }));
+//updating prop itself
 propRoutes.put("/edit/:propId", validateAdmin_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.body.prop.name || !req.body.prop.label)
         throw new BadRequestError_1.default("All fields are required");
@@ -102,8 +97,8 @@ propRoutes.get("/:propId", (req, res) => __awaiter(void 0, void 0, void 0, funct
     ]);
     res.send({ prop, values: vals });
 }));
-propRoutes.post("/values/new/:propId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, e_1, _b, _c;
+//creating values without binding to subcategory
+propRoutes.post("/values/new/:propId", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { values } = req.body;
     const { propId } = req.params;
     const prop = yield Prop_1.default.findById(propId);
@@ -112,27 +107,12 @@ propRoutes.post("/values/new/:propId", (req, res) => __awaiter(void 0, void 0, v
     if (!values || !Array.isArray(values) || values.length < 0)
         throw new BadRequestError_1.default("Property values are required");
     const vals = [];
-    try {
-        for (var _d = true, values_1 = __asyncValues(values), values_1_1; values_1_1 = yield values_1.next(), _a = values_1_1.done, !_a; _d = true) {
-            _c = values_1_1.value;
-            _d = false;
-            const val = _c;
-            const newVal = PropValue_1.default.build({ value: val, prop: propId });
-            vals.push(newVal);
-            yield newVal.save();
-        }
-    }
-    catch (e_1_1) { e_1 = { error: e_1_1 }; }
-    finally {
-        try {
-            if (!_d && !_a && (_b = values_1.return)) yield _b.call(values_1);
-        }
-        finally { if (e_1) throw e_1.error; }
-    }
-    const subcategory = yield Subcateygory_1.default.findByIdAndUpdate(req.body.subcategory, { $push: { props: { $each: vals } } });
-    if (!subcategory)
-        throw new NotFoundError_1.default("Suncategory not found");
-    res.send({ values: vals });
+    values.forEach((v) => {
+        vals.push({ value: v, prop: prop.id });
+    });
+    const newVals = yield PropValue_1.default.insertMany(vals);
+    console.log(newVals);
+    res.send({ values: newVals });
 }));
 propRoutes.delete("/delete/:id/:subcategoryId", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const prop = yield Prop_1.default.findByIdAndDelete(req.params.id);
