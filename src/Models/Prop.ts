@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model, model } from "mongoose";
+import PropValue from "./PropValue";
 
 interface prop {
   name: string;
@@ -26,6 +27,13 @@ const propSchema = new Schema(
     },
   }
 );
+propSchema.post("findOneAndDelete", async function (doc) {
+  if (doc) {
+    await PropValue.deleteMany({
+      prop: doc._id,
+    });
+  }
+});
 propSchema.statics.build = (attrs: prop): PropDoc => {
   return new Prop(attrs);
 };

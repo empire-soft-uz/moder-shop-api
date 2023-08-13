@@ -85,9 +85,9 @@ propRoutes.put("/values/update/:valueId", validateAdmin_1.isSuperAdmin, (req, re
 }));
 //updating prop itself
 propRoutes.put("/edit/:propId", validateAdmin_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!req.body.prop.name || !req.body.prop.label)
+    if (!req.body.name || !req.body.label)
         throw new BadRequestError_1.default("All fields are required");
-    const updatedProp = yield Prop_1.default.findByIdAndUpdate(req.params.propId, Object.assign({}, req.body.prop), { new: true });
+    const updatedProp = yield Prop_1.default.findByIdAndUpdate(req.params.propId, Object.assign({}, req.body), { new: true });
     res.send(updatedProp);
 }));
 propRoutes.get("/:propId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {

@@ -71,12 +71,12 @@ propRoutes.put(
   "/edit/:propId",
   validateAdmin,
   async (req: Request, res: Response) => {
-    if (!req.body.prop.name || !req.body.prop.label)
+    if (!req.body.name || !req.body.label)
       throw new BadRequestError("All fields are required");
     const updatedProp = await Prop.findByIdAndUpdate(
       req.params.propId,
       {
-        ...req.body.prop,
+        ...req.body,
       },
       { new: true }
     );
