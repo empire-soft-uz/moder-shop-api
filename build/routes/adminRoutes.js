@@ -18,13 +18,33 @@ const Admin_1 = __importDefault(require("../Models/Admin"));
 const Password_1 = __importDefault(require("../utils/Password"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const AdminRules_1 = require("../Validation/AdminRules");
-const validateAdmin_1 = __importDefault(require("../middlewares/validateAdmin"));
+const validateAdmin_1 = require("../middlewares/validateAdmin");
 const Valiadtor_1 = __importDefault(require("../utils/Valiadtor"));
 const BadRequestError_1 = __importDefault(require("../Classes/Errors/BadRequestError"));
 const ForbidenError_1 = __importDefault(require("../Classes/Errors/ForbidenError"));
+const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError"));
 const adminRoute = express_1.default.Router();
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
-adminRoute.post("/new", validateAdmin_1.default, [...AdminRules_1.adminCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+adminRoute.get("/", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const admins = yield Admin_1.default.find({}, { password: 0 }).populate({
+        path: "vendorId",
+        select: "id name contacts",
+    });
+    res.send(admins);
+}));
+adminRoute.post("/edit/:id", validateAdmin_1.isSuperAdmin, [...AdminRules_1.adminCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    Valiadtor_1.default.validate(req);
+    const hash = yield Password_1.default.hashPassword(req.body.password);
+    const admin = yield Admin_1.default.findByIdAndUpdate(req.params.id, Object.assign(Object.assign({}, req.body), { password: `${hash.buff}.${hash.salt}` }));
+    if (!admin)
+        throw new NotFoundError_1.default("Admin Not Found");
+    const token = jsonwebtoken_1.default.sign({
+        id: admin.id,
+        email: admin.email,
+    }, jwtKey);
+    res.send({ id: admin.id, email: admin.email, token });
+}));
+adminRoute.post("/new", validateAdmin_1.isSuperAdmin, [...AdminRules_1.adminCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const authHeader = req.headers.authorization;
     //@ts-ignore

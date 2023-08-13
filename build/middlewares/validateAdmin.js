@@ -24,7 +24,7 @@ function validateAdmin(req, res, next) {
 exports.default = validateAdmin;
 const isSuperAdmin = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const u = JWTDecrypter_1.default.decryptUser(req, jwtKey);
-    const admin = yield Admin_1.default.find({ id: u.id, super: true });
+    const admin = yield Admin_1.default.findOne({ _id: u.id, super: true });
     if (!admin)
         throw new ForbidenError_1.default("Access denied");
     next();

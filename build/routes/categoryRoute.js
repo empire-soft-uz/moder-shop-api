@@ -36,12 +36,10 @@ categoryRoute.put("/edit/:id", validateAdmin_1.isSuperAdmin, upload.single("icon
     if (!name)
         throw new BadRequestError_1.default("Category name is required");
     if (req.file) {
-        const fns = [];
         if (category.icon) {
-            fns.push(MediaManager_1.default.deletefiles(category.icon));
+            yield MediaManager_1.default.deletefiles(category.icon);
         }
-        fns.push(MediaManager_1.default.uploadFile(req.file));
-        const [icon] = yield Promise.all(fns);
+        const icon = yield MediaManager_1.default.uploadFile(req.file);
         category.icon = icon;
     }
     category.name = name;

@@ -17,11 +17,12 @@ export const isSuperAdmin = async (
   res: Response,
   next: NextFunction
 ) => {
-  const u = JWTDecrypter.decryptUser(req, jwtKey) as {
+  const u = JWTDecrypter.decryptUser<{
     email: string;
     id: string;
-  };
-  const admin = await Admin.find({ id: u.id, super: true });
+  }>(req, jwtKey);
+
+  const admin = await Admin.findOne({ _id: u.id, super: true });
   if (!admin) throw new ForbidenError("Access denied");
   next();
 };

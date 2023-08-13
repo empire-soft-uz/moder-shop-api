@@ -26,12 +26,11 @@ categoryRoute.put(
     if (!category) throw new NotFoundError("Category not found");
     if (!name) throw new BadRequestError("Category name is required");
     if (req.file) {
-      const fns = [];
       if (category.icon) {
-        fns.push(MediaManager.deletefiles(category.icon));
+        await MediaManager.deletefiles(category.icon);
       }
-      fns.push(MediaManager.uploadFile(req.file));
-      const [icon] = await Promise.all(fns);
+      const icon = await MediaManager.uploadFile(req.file);
+
       category.icon = icon;
     }
     category.name = name;
