@@ -76,6 +76,11 @@ productRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function*
     const totalCount = yield Product_1.default.count(query);
     res.send({ page: page || 1, limit, totalCount, products });
 }));
+productRouter.get("/liked", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT || "");
+    const products = yield Product_1.default.find({ likes: { $in: [user.id] } });
+    res.send(products);
+}));
 productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const product = yield Product_1.default.findById(req.params.id)
         .populate({

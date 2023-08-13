@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, Model, model } from "mongoose";
 import Prop from "./Prop";
+import { NextFunction } from "express";
 interface propValue {
   prop: string;
   value: string;
@@ -26,6 +27,9 @@ const propValueSchema = new Schema(
     },
   }
 );
+propValueSchema.pre("deleteMany", async (next: NextFunction) => {
+  return next();
+});
 propValueSchema.statics.build = (attrs: propValue): PropValueDoc => {
   return new PropValue(attrs);
 };

@@ -80,6 +80,20 @@ productRouter.get("/", async (req: Request, res: Response) => {
   const totalCount = await Product.count(query);
   res.send({ page: page || 1, limit, totalCount, products });
 });
+
+productRouter.get(
+  "/liked",
+  validateUser,
+  async (req: Request, res: Response) => {
+    const user = JWTDecrypter.decryptUser<IUserPayload>(
+      req,
+      process.env.JWT || ""
+    );
+    const products = await Product.find({ likes: { $in: [user.id] } });
+
+    res.send(products);
+  }
+);
 productRouter.get("/:id", async (req: Request, res: Response) => {
   const product = await Product.findById(req.params.id)
     .populate({
