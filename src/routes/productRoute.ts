@@ -13,6 +13,8 @@ import PropValue from "../Models/PropValue";
 import { populate } from "dotenv";
 import JWTDecrypter from "../utils/JWTDecrypter";
 import IAdmin from "../Interfaces/IAdmin";
+import validateUser from "../middlewares/validateUser";
+import IUserPayload from "../Interfaces/IUserPayload";
 
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
@@ -101,6 +103,19 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
   await product.save();
   res.send(product);
 });
+productRouter.put(
+  "/like/:id",
+  validateUser,
+  async (req: Request, res: Response) => {
+    const user = JWTDecrypter.decryptUser<IUserPayload>(
+      req,
+      process.env.JWT || ""
+    );
+    const product = await Product.likeProduct(req.params.id, user.id);
+
+    res.send(product);
+  }
+);
 productRouter.post(
   "/new",
   validateAdmin,

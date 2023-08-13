@@ -26,12 +26,14 @@ interface ProductDoc extends Document {
     price: Array<IPrice>;
     media: Array<IProductMedia> | undefined;
     props: Array<string>;
+    likes: Array<string>;
     video: IProductMedia | undefined;
     reviews: Array<IReview>;
     viewCount: number;
 }
 interface ProductModel extends Model<ProductDoc> {
     build(attrs: product): ProductDoc;
+    likeProduct(id: string, userId: string): Promise<ProductDoc>;
 }
 declare const Product: ProductModel;
 export default Product;

@@ -23,6 +23,7 @@ const multer_1 = __importDefault(require("multer"));
 const MediaManager_1 = __importDefault(require("../utils/MediaManager"));
 const validateAdmin_1 = __importDefault(require("../middlewares/validateAdmin"));
 const JWTDecrypter_1 = __importDefault(require("../utils/JWTDecrypter"));
+const validateUser_1 = __importDefault(require("../middlewares/validateUser"));
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage: storage, limits: { fileSize: 50 * 1048576 } });
@@ -97,6 +98,11 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
         throw new NotFoundError_1.default("Product Not Found");
     product.viewCount += 1;
     yield product.save();
+    res.send(product);
+}));
+productRouter.put("/like/:id", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT || "");
+    const product = yield Product_1.default.likeProduct(req.params.id, user.id);
     res.send(product);
 }));
 productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [...ProductRules_1.productCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {

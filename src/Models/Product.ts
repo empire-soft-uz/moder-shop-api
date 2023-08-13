@@ -11,6 +11,8 @@ import Category from "./Category";
 import Prop from "./Prop";
 import PropValue from "./PropValue";
 import Admin from "./Admin";
+import NotFoundError from "../Classes/Errors/NotFoundError";
+import User from "./User";
 interface product {
   vendorId: IVendor["id"];
   name: string;
@@ -35,12 +37,14 @@ interface ProductDoc extends Document {
   price: Array<IPrice>;
   media: Array<IProductMedia> | undefined;
   props: Array<string>;
+  likes: Array<string>;
   video: IProductMedia | undefined;
   reviews: Array<IReview>;
   viewCount: number;
 }
 interface ProductModel extends Model<ProductDoc> {
   build(attrs: product): ProductDoc;
+  likeProduct(id: string, userId: string): Promise<ProductDoc>;
 }
 const priceSchema = new Schema(
   {
@@ -70,6 +74,7 @@ const productSchema = new Schema(
     media: [mediaSchema],
     video: mediaSchema,
     viewCount: { type: Number, default: 0 },
+    likes: [{ type: Schema.Types.ObjectId, ref: User }],
     category: { type: Schema.Types.ObjectId, ref: Category },
     subcategory: { type: Schema.Types.ObjectId, ref: Subcategory },
     reviews: [{ type: Schema.Types.ObjectId, ref: Review }],
@@ -92,6 +97,35 @@ productSchema.post("findOneAndDelete", async function (doc) {
 });
 productSchema.statics.build = (attrs: product): ProductDoc => {
   return new Product(attrs);
+};
+productSchema.statics.likeProduct = async (
+  id: string,
+  userId: string
+): Promise<ProductDoc> => {
+  const product = await Product.findById(id)
+    .populate("vendorId", "name")
+    .populate("category", "name id")
+    .populate("subcategory", "name id")
+    .populate({
+      path: "props",
+      model: "PropValue",
+      populate: { path: "prop", model: "Prop" },
+    });
+  if (!product) throw new NotFoundError("Product Not Found");
+  if (
+    product.likes.find((l) => {
+      if (l.toString() === userId) {
+        return true;
+      }
+      return false;
+    })
+  ) {
+    //@ts-ignore
+    product.likes.pull(userId);
+    return product.save();
+  }
+  product.likes.push(userId);
+  return product.save();
 };
 const Product = model<ProductDoc, ProductModel>("Product", productSchema);
 export default Product;
