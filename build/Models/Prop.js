@@ -28,7 +28,7 @@ const propSchema = new mongoose_1.Schema({
 propSchema.post("findOneAndDelete", function (doc) {
     return __awaiter(this, void 0, void 0, function* () {
         if (doc) {
-            yield PropValue_1.default.deleteMany({
+            const del = yield PropValue_1.default.deleteMany({
                 prop: doc._id,
             });
         }

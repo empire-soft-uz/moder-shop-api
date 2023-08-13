@@ -125,4 +125,8 @@ propRoutes.delete("/delete/:id/:subcategoryId", validateAdmin_1.isSuperAdmin, (r
     const subcategory = yield Subcateygory_1.default.findByIdAndUpdate(req.params.subcategoryId, { $pull: { props: prop.id } });
     res.send({ prop, subcategory });
 }));
+propRoutes.delete("/delete/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const prop = yield Prop_1.default.findByIdAndDelete(req.params.id);
+    res.send(prop);
+}));
 exports.default = propRoutes;

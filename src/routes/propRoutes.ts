@@ -130,4 +130,13 @@ propRoutes.delete(
     res.send({ prop, subcategory });
   }
 );
+propRoutes.delete(
+  "/delete/:id",
+  isSuperAdmin,
+  async (req: Request, res: Response) => {
+    const prop = await Prop.findByIdAndDelete(req.params.id);
+
+    res.send(prop);
+  }
+);
 export default propRoutes;

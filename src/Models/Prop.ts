@@ -29,7 +29,7 @@ const propSchema = new Schema(
 );
 propSchema.post("findOneAndDelete", async function (doc) {
   if (doc) {
-    await PropValue.deleteMany({
+    const del = await PropValue.deleteMany({
       prop: doc._id,
     });
   }
