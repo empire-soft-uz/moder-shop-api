@@ -19,5 +19,6 @@ const subcategorySchema = new mongoose_1.Schema({
 subcategorySchema.statics.build = (attrs) => {
     return new Subcategory(attrs);
 };
+subcategorySchema.statics.removePropValues = (vals) => { };
 const Subcategory = (0, mongoose_1.model)("Subcategory", subcategorySchema);
 exports.default = Subcategory;

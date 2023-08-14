@@ -6,6 +6,7 @@ import Validator from "../utils/Valiadtor";
 import Subcategory from "../Models/Subcateygory";
 import Category from "../Models/Category";
 import BadRequestError from "../Classes/Errors/BadRequestError";
+import NotFoundError from "../Classes/Errors/NotFoundError";
 
 const subcatRoute = Router();
 subcatRoute.post(
@@ -54,22 +55,28 @@ subcatRoute.get("/:id", async (req: Request, res: Response) => {
   });
   res.send(subcategory);
 });
-subcatRoute.put("/:id", validateAdmin, async (req: Request, res: Response) => {
+subcatRoute.put("/:id", isSuperAdmin, async (req: Request, res: Response) => {
   const { name, removedProps, newProps } = req.body;
-  let updating = {};
+
+  const subcategory = await Subcategory.findById(req.params.id);
+  if (!subcategory) throw new NotFoundError("Subcategory Not Found");
   if (name) {
-    updating = { ...updating, name };
+    subcategory.name = name;
   }
+  let tempProps: string[] = [];
   if (removedProps && removedProps.length > 0) {
-    updating = { ...updating, $pullAll: { props: removedProps } };
+    tempProps = subcategory.props.filter((p) => {
+      if (!removedProps.find((r: string) => r === p)) {
+        return p;
+      }
+    });
   }
   if (newProps && newProps.length > 0) {
-    updating = { ...updating, $push: { props: { $each: newProps } } };
+    tempProps.push(...newProps);
   }
-  const subcategory = await Subcategory.findByIdAndUpdate(
-    req.params.id,
-    updating
-  );
+  const uniqueProps = new Set(tempProps);
+  subcategory.props = Array.from(uniqueProps);
+  await subcategory.save();
   res.send(subcategory);
 });
 

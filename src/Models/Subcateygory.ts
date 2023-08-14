@@ -32,6 +32,7 @@ const subcategorySchema = new Schema(
 subcategorySchema.statics.build = (attrs: subcategory): SubcategoryDoc => {
   return new Subcategory(attrs);
 };
+subcategorySchema.statics.removePropValues = (vals: { id: string }[]) => {};
 const Subcategory = model<SubcategoryDoc, SubcategoryModel>(
   "Subcategory",
   subcategorySchema

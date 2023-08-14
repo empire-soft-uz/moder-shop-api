@@ -27,9 +27,7 @@ const propValueSchema = new Schema(
     },
   }
 );
-propValueSchema.pre("deleteMany", async (next: NextFunction) => {
-  return next();
-});
+
 propValueSchema.statics.build = (attrs: propValue): PropValueDoc => {
   return new PropValue(attrs);
 };

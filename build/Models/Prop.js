@@ -28,9 +28,10 @@ const propSchema = new mongoose_1.Schema({
 propSchema.post("findOneAndDelete", function (doc) {
     return __awaiter(this, void 0, void 0, function* () {
         if (doc) {
-            const del = yield PropValue_1.default.deleteMany({
+            const values = yield PropValue_1.default.find({
                 prop: doc._id,
-            });
+            }).distinct("_id");
+            console.log(values);
         }
     });
 });
