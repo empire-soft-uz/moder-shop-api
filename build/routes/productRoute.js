@@ -112,9 +112,21 @@ productRouter.put("/like/:id", validateUser_1.default, (req, res) => __awaiter(v
 }));
 productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [...ProductRules_1.productCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
+    const { qtyMin, qtyMax, price, oldPrice } = req.body;
+    console.log(req.body);
+    const prices = [];
+    price.forEach((p, i) => {
+        prices.push({
+            price: Number(p),
+            qtyMax: Number(qtyMin[i]) || 1,
+            qtyMin: Number(qtyMax[i]) || 1,
+            oldPrice: Number(oldPrice[i]) || 0,
+        });
+    });
     const { files } = req;
     const product = Product_1.default.build(Object.assign({}, req.body));
-    if (req.body.vendorId) {
+    const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    if (admin.vendorId) {
         const vendor = yield Vendor_1.default.findByIdAndUpdate(req.body.vendorId, {
             $push: { products: product.id },
         });
@@ -144,7 +156,7 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
             }
         }
     }
-    const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    product.price = prices;
     product.author = admin.id;
     yield product.save();
     res.send(product);

@@ -15,6 +15,7 @@ import JWTDecrypter from "../utils/JWTDecrypter";
 import IAdmin from "../Interfaces/IAdmin";
 import validateUser from "../middlewares/validateUser";
 import IUserPayload from "../Interfaces/IUserPayload";
+import IPrice from "../Interfaces/Product/IPrice";
 
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
@@ -137,11 +138,23 @@ productRouter.post(
   [...productCreation],
   async (req: Request, res: Response) => {
     Validator.validate(req);
+    const { qtyMin, qtyMax, price, oldPrice } = req.body;
+    console.log(req.body);
+    const prices: IPrice[] = [];
+    price.forEach((p, i) => {
+      prices.push({
+        price: Number(p),
+        qtyMax: Number(qtyMin[i]) || 1,
+        qtyMin: Number(qtyMax[i]) || 1,
+        oldPrice: Number(oldPrice[i]) || 0,
+      });
+    });
 
     const { files } = req;
 
     const product = Product.build({ ...req.body });
-    if (req.body.vendorId) {
+    const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
+    if (admin.vendorId) {
       const vendor = await Vendor.findByIdAndUpdate(req.body.vendorId, {
         $push: { products: product.id },
       });
@@ -169,7 +182,7 @@ productRouter.post(
         }
       }
     }
-    const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
+    product.price = prices;
     product.author = admin.id;
     await product.save();
 
