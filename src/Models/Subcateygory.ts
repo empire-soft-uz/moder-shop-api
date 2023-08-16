@@ -1,6 +1,7 @@
 import { Model, Schema, model, Document } from "mongoose";
 import Prop from "./Prop";
 import PropValue from "./PropValue";
+import { IPropValue } from "../Interfaces/Product/IPropValue";
 
 interface subcategory {
   name: string;
@@ -8,7 +9,7 @@ interface subcategory {
 }
 interface SubcategoryDoc extends Document {
   name: string;
-  props: Array<string>;
+  props: Array<IPropValue>;
 }
 interface SubcategoryModel extends Model<SubcategoryDoc> {
   build(attrs: subcategory): SubcategoryDoc;

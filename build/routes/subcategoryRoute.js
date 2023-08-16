@@ -59,7 +59,19 @@ subcatRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function
         model: "PropValue",
         populate: { path: "prop", model: "Prop" },
     });
-    res.send(subcategory);
+    let temp = {};
+    subcategory === null || subcategory === void 0 ? void 0 : subcategory.props.map((p, i) => {
+        if (temp[p.prop.name]) {
+            temp[p.prop.name] = [...temp[p.prop.name], p];
+        }
+        else {
+            temp[p.prop.name] = [p];
+        }
+    });
+    //console.log(temp);
+    res.send(subcategory
+        ? { id: subcategory.id, name: subcategory.name, props: temp }
+        : {});
 }));
 subcatRoute.put("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, removedProps, newProps } = req.body;

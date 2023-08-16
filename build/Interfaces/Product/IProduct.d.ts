@@ -1,7 +1,7 @@
 import IVendor from "../Vendor/IVendor";
 import IPrice from "./IPrice";
 import IProductMedia from "./IProducMedia";
-import IProps from "./IProps";
+import IProps from "./IProp";
 import IReview from "../Review/IReview";
 export default interface IProduct {
     id: string;

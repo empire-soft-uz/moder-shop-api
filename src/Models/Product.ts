@@ -3,7 +3,7 @@ import IVendor from "../Interfaces/Vendor/IVendor";
 import IPrice from "../Interfaces/Product/IPrice";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
 import Review from "./Review";
-import IProps from "../Interfaces/Product/IProps";
+import IProps from "../Interfaces/Product/IProp";
 import IReview from "../Interfaces/Review/IReview";
 import Subcategory from "./Subcateygory";
 import Vendor from "./Vendor";

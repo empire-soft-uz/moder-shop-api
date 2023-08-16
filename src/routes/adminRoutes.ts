@@ -52,12 +52,7 @@ adminRoute.post(
   [...adminCreation],
   async (req: Request, res: Response) => {
     Validator.validate(req);
-    const authHeader = req.headers.authorization;
-    //@ts-ignore
-    const author = jwt.verify(authHeader, jwtKey) as adminPayload;
-    const superAdmin = await Admin.findById(author.id);
-    if (!superAdmin) throw new BadRequestError("Invalid Crtedentials");
-    if (!superAdmin.super) throw new ForbidenError("Access Denied");
+
     const admin = Admin.build(req.body);
     const hash = await Password.hashPassword(req.body.password);
     admin.password = `${hash.buff}.${hash.salt}`;

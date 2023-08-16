@@ -21,7 +21,6 @@ const AdminRules_1 = require("../Validation/AdminRules");
 const validateAdmin_1 = require("../middlewares/validateAdmin");
 const Valiadtor_1 = __importDefault(require("../utils/Valiadtor"));
 const BadRequestError_1 = __importDefault(require("../Classes/Errors/BadRequestError"));
-const ForbidenError_1 = __importDefault(require("../Classes/Errors/ForbidenError"));
 const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError"));
 const adminRoute = express_1.default.Router();
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
@@ -46,14 +45,6 @@ adminRoute.post("/edit/:id", validateAdmin_1.isSuperAdmin, [...AdminRules_1.admi
 }));
 adminRoute.post("/new", validateAdmin_1.isSuperAdmin, [...AdminRules_1.adminCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
-    const authHeader = req.headers.authorization;
-    //@ts-ignore
-    const author = jsonwebtoken_1.default.verify(authHeader, jwtKey);
-    const superAdmin = yield Admin_1.default.findById(author.id);
-    if (!superAdmin)
-        throw new BadRequestError_1.default("Invalid Crtedentials");
-    if (!superAdmin.super)
-        throw new ForbidenError_1.default("Access Denied");
     const admin = Admin_1.default.build(req.body);
     const hash = yield Password_1.default.hashPassword(req.body.password);
     admin.password = `${hash.buff}.${hash.salt}`;
