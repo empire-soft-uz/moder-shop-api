@@ -61,14 +61,14 @@ subcatRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function
     });
     let temp = {};
     subcategory === null || subcategory === void 0 ? void 0 : subcategory.props.map((p, i) => {
+        delete p.prop;
         if (temp[p.prop.name]) {
-            temp[p.prop.name] = [...temp[p.prop.name], p];
+            temp[p.prop.name].props.push(p);
         }
         else {
-            temp[p.prop.name] = [p];
+            temp[p.prop.name] = { id: p.prop.id, label: p.prop.label, props: [p] };
         }
     });
-    //console.log(temp);
     res.send(subcategory
         ? { id: subcategory.id, name: subcategory.name, props: temp }
         : {});

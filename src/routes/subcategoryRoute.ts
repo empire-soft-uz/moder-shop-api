@@ -46,6 +46,7 @@ subcatRoute.get("/", async (req: Request, res: Response) => {
   const subCts = await Subcategory.find();
   res.send(subCts);
 });
+
 subcatRoute.get("/:id", async (req: Request, res: Response) => {
   //
   const subcategory = await Subcategory.findById(req.params.id).populate({
@@ -55,13 +56,14 @@ subcatRoute.get("/:id", async (req: Request, res: Response) => {
   });
   let temp = {};
   subcategory?.props.map((p, i) => {
+    delete p.prop;
+
     if (temp[p.prop.name]) {
-      temp[p.prop.name] = [...temp[p.prop.name], p];
+      temp[p.prop.name].props.push(p);
     } else {
-      temp[p.prop.name] = [p];
+      temp[p.prop.name] = { id: p.prop.id, label: p.prop.label, props: [p] };
     }
   });
-  //console.log(temp);
   res.send(
     subcategory
       ? { id: subcategory.id, name: subcategory.name, props: temp }
