@@ -13,6 +13,7 @@ import PropValue from "./PropValue";
 import Admin from "./Admin";
 import NotFoundError from "../Classes/Errors/NotFoundError";
 import User from "./User";
+import { IPropValue } from "../Interfaces/Product/IPropValue";
 interface product {
   vendorId: IVendor["id"];
   name: string;
@@ -36,7 +37,7 @@ interface ProductDoc extends Document {
   author: string;
   price: Array<IPrice>;
   media: Array<IProductMedia> | undefined;
-  props: Array<string>;
+  props: Array<IPropValue>;
   likes: Array<string>;
   video: IProductMedia | undefined;
   reviews: Array<IReview>;

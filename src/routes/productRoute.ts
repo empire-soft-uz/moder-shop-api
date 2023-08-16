@@ -116,7 +116,16 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
   if (!product) throw new NotFoundError("Product Not Found");
   product.viewCount += 1;
   await product.save();
-  res.send(product);
+  let temp = {};
+  product.props.map((p, i) => {
+    if (temp[p.prop.name]) {
+      temp[p.prop.name].props.push(p);
+    } else {
+      temp[p.prop.name] = { id: p.prop.id, label: p.prop.label, props: [p] };
+    }
+    delete p.prop;
+  });
+  res.send({ ...product.toObject(), props: temp });
 });
 productRouter.put(
   "/like/:id",

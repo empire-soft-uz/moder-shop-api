@@ -3,6 +3,7 @@ import IVendor from "../Interfaces/Vendor/IVendor";
 import IPrice from "../Interfaces/Product/IPrice";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
 import IReview from "../Interfaces/Review/IReview";
+import { IPropValue } from "../Interfaces/Product/IPropValue";
 interface product {
     vendorId: IVendor["id"];
     name: string;
@@ -25,7 +26,7 @@ interface ProductDoc extends Document {
     author: string;
     price: Array<IPrice>;
     media: Array<IProductMedia> | undefined;
-    props: Array<string>;
+    props: Array<IPropValue>;
     likes: Array<string>;
     video: IProductMedia | undefined;
     reviews: Array<IReview>;

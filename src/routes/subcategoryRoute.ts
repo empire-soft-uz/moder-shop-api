@@ -48,16 +48,18 @@ subcatRoute.get("/", async (req: Request, res: Response) => {
 });
 
 subcatRoute.get("/:id", async (req: Request, res: Response) => {
-  //
+  const { admin } = req.query;
   const subcategory = await Subcategory.findById(req.params.id).populate({
     path: "props",
     model: "PropValue",
     populate: { path: "prop", model: "Prop" },
   });
+  if (admin) {
+    res.send(subcategory);
+    return;
+  }
   let temp = {};
   subcategory?.props.map((p, i) => {
-    delete p.prop;
-
     if (temp[p.prop.name]) {
       temp[p.prop.name].props.push(p);
     } else {

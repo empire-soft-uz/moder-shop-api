@@ -53,15 +53,18 @@ subcatRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* (
     res.send(subCts);
 }));
 subcatRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    //
+    const { admin } = req.query;
     const subcategory = yield Subcateygory_1.default.findById(req.params.id).populate({
         path: "props",
         model: "PropValue",
         populate: { path: "prop", model: "Prop" },
     });
+    if (admin) {
+        res.send(subcategory);
+        return;
+    }
     let temp = {};
     subcategory === null || subcategory === void 0 ? void 0 : subcategory.props.map((p, i) => {
-        delete p.prop;
         if (temp[p.prop.name]) {
             temp[p.prop.name].props.push(p);
         }

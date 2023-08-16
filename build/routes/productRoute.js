@@ -103,7 +103,17 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
         throw new NotFoundError_1.default("Product Not Found");
     product.viewCount += 1;
     yield product.save();
-    res.send(product);
+    let temp = {};
+    product.props.map((p, i) => {
+        if (temp[p.prop.name]) {
+            temp[p.prop.name].props.push(p);
+        }
+        else {
+            temp[p.prop.name] = { id: p.prop.id, label: p.prop.label, props: [p] };
+        }
+        delete p.prop;
+    });
+    res.send(Object.assign(Object.assign({}, product.toObject()), { props: temp }));
 }));
 productRouter.put("/like/:id", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT || "");
