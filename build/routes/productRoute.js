@@ -105,13 +105,13 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
     yield product.save();
     let temp = {};
     product.props.map((p, i) => {
-        if (temp[p.prop.name]) {
-            temp[p.prop.name].props.push(p);
+        const name = p.prop.name.split(" ").join("_");
+        if (temp[name]) {
+            temp[name].props.push(p);
         }
         else {
-            temp[p.prop.name] = { id: p.prop.id, label: p.prop.label, props: [p] };
+            temp[name] = { id: p.prop.id, label: p.prop.label, props: [p] };
         }
-        delete p.prop;
     });
     res.send(Object.assign(Object.assign({}, product.toObject()), { props: temp }));
 }));

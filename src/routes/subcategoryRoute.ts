@@ -60,10 +60,11 @@ subcatRoute.get("/:id", async (req: Request, res: Response) => {
   }
   let temp = {};
   subcategory?.props.map((p, i) => {
-    if (temp[p.prop.name]) {
-      temp[p.prop.name].props.push(p);
+    const name = p.prop.name.split(" ").join("_");
+    if (temp[name]) {
+      temp[name].props.push(p);
     } else {
-      temp[p.prop.name] = { id: p.prop.id, label: p.prop.label, props: [p] };
+      temp[name] = { id: p.prop.id, label: p.prop.label, props: [p] };
     }
   });
   res.send(

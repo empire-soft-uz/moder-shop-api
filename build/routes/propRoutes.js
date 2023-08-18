@@ -52,6 +52,12 @@ propRoutes.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         throw new NotFoundError_1.default("Properties not found");
     res.send(properties);
 }));
+propRoutes.get("/values", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const properties = yield PropValue_1.default.find().populate("prop");
+    if (!properties)
+        throw new NotFoundError_1.default("Properties not found");
+    res.send(properties);
+}));
 propRoutes.post("/new", validateAdmin_1.isSuperAdmin, [...PropRules_1.propCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const { name, label } = req.body;

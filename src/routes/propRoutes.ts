@@ -15,6 +15,12 @@ propRoutes.get("/", async (req: Request, res: Response) => {
   if (!properties) throw new NotFoundError("Properties not found");
   res.send(properties);
 });
+propRoutes.get("/values", async (req: Request, res: Response) => {
+  const properties = await PropValue.find().populate("prop");
+  if (!properties) throw new NotFoundError("Properties not found");
+  res.send(properties);
+});
+
 propRoutes.post(
   "/new",
   isSuperAdmin,
