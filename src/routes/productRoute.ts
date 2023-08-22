@@ -16,6 +16,8 @@ import IAdmin from "../Interfaces/IAdmin";
 import validateUser from "../middlewares/validateUser";
 import IUserPayload from "../Interfaces/IUserPayload";
 import IPrice from "../Interfaces/Product/IPrice";
+import Admin from "../Models/Admin";
+import ForbidenError from "../Classes/Errors/ForbidenError";
 
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
@@ -126,9 +128,14 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
 
   product.props.map((p, i) => {
     const name = p.prop.name.split(" ").join("_");
+    //@ts-ignore
     if (temp[name]) {
+      //@ts-ignore
+
       temp[name].props.push(p);
     } else {
+      //@ts-ignore
+
       temp[name] = { id: p.prop.id, label: p.prop.label, props: [p] };
     }
   });
@@ -159,6 +166,8 @@ productRouter.post(
 
     const { files } = req;
     const { prices } = req.body;
+    //@ts-ignore
+
     let temp = [];
     Array.isArray(prices) && prices.map((p) => temp.push(JSON.parse(p)));
     const product = Product.build({ ...req.body, price: temp });
@@ -192,8 +201,8 @@ productRouter.post(
       }
     }
     product.author = admin.id;
-     await product.save();
-    
+    await product.save();
+
     res.send(product);
   }
 );
@@ -254,20 +263,40 @@ productRouter.put(
   }
 );
 
-productRouter.delete("/delete/:id", async (req: Request, res: Response) => {
-  const deletedProduct = await Product.findByIdAndDelete(req.params.id);
-  if (!deletedProduct) throw new NotFoundError("Product Not Found");
-  await Vendor.findByIdAndUpdate(deletedProduct.vendorId, {
-    $pull: { products: req.params.id },
-  });
-  if (deletedProduct.media && deletedProduct.media.length > 0) {
-    deletedProduct.media.forEach(async (i) => {
-      await MediaManager.deletefiles(i);
-    });
+productRouter.delete(
+  "/delete/:id",
+  validateAdmin,
+  async (req: Request, res: Response) => {
+    console.log("deleteing");
+
+    const [deletedProduct, admin] = await Promise.all([
+      Product.findById(req.params.id),
+      Admin.findById(JWTDecrypter.decryptUser<IAdmin>(req, jwtKey).id),
+    ]);
+    if (!admin) throw new ForbidenError("Access denied");
+    if (!deletedProduct) throw new NotFoundError("Product Not Found");
+    if (deletedProduct.author != admin.id || !admin.super)
+      throw new ForbidenError("Access denied");
+    const fns = [
+      deletedProduct.deleteOne(),
+      Vendor.findByIdAndUpdate(deletedProduct.vendorId, {
+        $pull: { products: req.params.id },
+      }),
+    ];
+
+    if (deletedProduct.media && deletedProduct.media.length > 0) {
+      deletedProduct.media.forEach((i) => {
+       
+ //@ts-ignore
+        fns.push(MediaManager.deletefiles(i));
+      });
+    }
+    if (deletedProduct.video) { //@ts-ignore
+      fns.push(MediaManager.deletefiles(deletedProduct.video));
+    }
+    const [pr] = await Promise.all(fns);
+    console.log(pr);
+    res.send({ deletedProduct });
   }
-  if (deletedProduct.video) {
-    await MediaManager.deletefiles(deletedProduct.video);
-  }
-  res.send({ deletedProduct });
-});
+);
 export default productRouter;

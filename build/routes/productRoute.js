@@ -24,6 +24,8 @@ const MediaManager_1 = __importDefault(require("../utils/MediaManager"));
 const validateAdmin_1 = __importDefault(require("../middlewares/validateAdmin"));
 const JWTDecrypter_1 = __importDefault(require("../utils/JWTDecrypter"));
 const validateUser_1 = __importDefault(require("../middlewares/validateUser"));
+const Admin_1 = __importDefault(require("../Models/Admin"));
+const ForbidenError_1 = __importDefault(require("../Classes/Errors/ForbidenError"));
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage: storage, limits: { fileSize: 50 * 1048576 } });
@@ -111,10 +113,13 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
     let temp = {};
     product.props.map((p, i) => {
         const name = p.prop.name.split(" ").join("_");
+        //@ts-ignore
         if (temp[name]) {
+            //@ts-ignore
             temp[name].props.push(p);
         }
         else {
+            //@ts-ignore
             temp[name] = { id: p.prop.id, label: p.prop.label, props: [p] };
         }
     });
@@ -131,6 +136,7 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
     Valiadtor_1.default.validate(req);
     const { files } = req;
     const { prices } = req.body;
+    //@ts-ignore
     let temp = [];
     Array.isArray(prices) && prices.map((p) => temp.push(JSON.parse(p)));
     const product = Product_1.default.build(Object.assign(Object.assign({}, req.body), { price: temp }));
@@ -214,21 +220,35 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
     yield product.save();
     res.send(product);
 }));
-productRouter.delete("/delete/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const deletedProduct = yield Product_1.default.findByIdAndDelete(req.params.id);
+productRouter.delete("/delete/:id", validateAdmin_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("deleteing");
+    const [deletedProduct, admin] = yield Promise.all([
+        Product_1.default.findById(req.params.id),
+        Admin_1.default.findById(JWTDecrypter_1.default.decryptUser(req, jwtKey).id),
+    ]);
+    if (!admin)
+        throw new ForbidenError_1.default("Access denied");
     if (!deletedProduct)
         throw new NotFoundError_1.default("Product Not Found");
-    yield Vendor_1.default.findByIdAndUpdate(deletedProduct.vendorId, {
-        $pull: { products: req.params.id },
-    });
+    if (deletedProduct.author != admin.id || !admin.super)
+        throw new ForbidenError_1.default("Access denied");
+    const fns = [
+        deletedProduct.deleteOne(),
+        Vendor_1.default.findByIdAndUpdate(deletedProduct.vendorId, {
+            $pull: { products: req.params.id },
+        }),
+    ];
     if (deletedProduct.media && deletedProduct.media.length > 0) {
-        deletedProduct.media.forEach((i) => __awaiter(void 0, void 0, void 0, function* () {
-            yield MediaManager_1.default.deletefiles(i);
-        }));
+        deletedProduct.media.forEach((i) => {
+            //@ts-ignore
+            fns.push(MediaManager_1.default.deletefiles(i));
+        });
     }
-    if (deletedProduct.video) {
-        yield MediaManager_1.default.deletefiles(deletedProduct.video);
+    if (deletedProduct.video) { //@ts-ignore
+        fns.push(MediaManager_1.default.deletefiles(deletedProduct.video));
     }
+    const [pr] = yield Promise.all(fns);
+    console.log(pr);
     res.send({ deletedProduct });
 }));
 exports.default = productRouter;
