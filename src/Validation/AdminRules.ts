@@ -7,6 +7,6 @@ export const adminCreation = [
     .withMessage("Password is required")
     .isLength({ min: 8, max: 20 })
     .withMessage(
-      "Password length shoulr be between 4 and 20 characters cantaining capital and lower case letters with numbers"
+      "Password length should be between 8 and 20 characters containing capital and lower case letters with numbers"
     ),
 ];

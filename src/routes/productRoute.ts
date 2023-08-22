@@ -98,6 +98,11 @@ productRouter.get(
 productRouter.get("/:id", async (req: Request, res: Response) => {
   const product = await Product.findById(req.params.id)
     .populate({
+      path: "category",
+      model: "Category",
+      select: "id name",
+    })
+    .populate({
       path: "reviews",
       model: "Review",
       populate: {
@@ -106,8 +111,9 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
         select: "id fullName phoneNumber",
       },
     })
-    .populate("category", "name id")
+
     .populate("subcategory", "name id")
+    .populate("author", "id email")
     .populate({
       path: "props",
       model: "PropValue",
@@ -117,6 +123,7 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
   product.viewCount += 1;
   await product.save();
   let temp = {};
+
   product.props.map((p, i) => {
     const name = p.prop.name.split(" ").join("_");
     if (temp[name]) {
@@ -125,8 +132,9 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
       temp[name] = { id: p.prop.id, label: p.prop.label, props: [p] };
     }
   });
-
-  res.send({ ...product.toObject(), props: temp });
+  const obj = { id: product.id, ...product.toObject(), props: temp };
+  delete obj._id;
+  res.send(obj);
 });
 productRouter.put(
   "/like/:id",
@@ -148,21 +156,12 @@ productRouter.post(
   [...productCreation],
   async (req: Request, res: Response) => {
     Validator.validate(req);
-    const { qtyMin, qtyMax, price, oldPrice } = req.body;
-    console.log(req.body);
-    const prices: IPrice[] = [];
-    price.forEach((p, i) => {
-      prices.push({
-        price: Number(p),
-        qtyMax: Number(qtyMin[i]) || 1,
-        qtyMin: Number(qtyMax[i]) || 1,
-        oldPrice: Number(oldPrice[i]) || 0,
-      });
-    });
 
     const { files } = req;
-
-    const product = Product.build({ ...req.body });
+    const { prices } = req.body;
+    let temp = [];
+    Array.isArray(prices) && prices.map((p) => temp.push(JSON.parse(p)));
+    const product = Product.build({ ...req.body, price: temp });
     const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
     if (admin.vendorId) {
       const vendor = await Vendor.findByIdAndUpdate(req.body.vendorId, {
@@ -192,10 +191,9 @@ productRouter.post(
         }
       }
     }
-    product.price = prices;
     product.author = admin.id;
-    await product.save();
-
+     await product.save();
+    
     res.send(product);
   }
 );

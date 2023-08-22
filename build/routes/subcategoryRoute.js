@@ -24,11 +24,11 @@ const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError
 const subcatRoute = (0, express_1.Router)();
 subcatRoute.post("/new", [...SubcatRules_1.subcatCreation], validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
-    const { name, props, category } = req.body;
+    const { name, newProps, category } = req.body;
     const parentCat = yield Category_1.default.findById(category);
     if (!parentCat)
         throw new BadRequestError_1.default("Invalid category is provided");
-    const subCt = Subcateygory_1.default.build(req.body);
+    const subCt = Subcateygory_1.default.build({ name, props: newProps.map(p => p.id), });
     yield subCt.save();
     parentCat.subcategories.push(subCt.id);
     yield parentCat.save();
@@ -78,27 +78,22 @@ subcatRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function
         : {});
 }));
 subcatRoute.put("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, removedProps, newProps } = req.body;
-    const subcategory = yield Subcateygory_1.default.findById(req.params.id);
-    if (!subcategory)
-        throw new NotFoundError_1.default("Subcategory Not Found");
-    if (name) {
-        subcategory.name = name;
-    }
-    let tempProps = [];
-    if (removedProps && removedProps.length > 0) {
-        tempProps = subcategory.props.filter((p) => {
-            if (!removedProps.find((r) => r === p)) {
-                return p;
-            }
+    const { name, subctProps, newProps } = req.body;
+    const temp = [];
+    if (Array.isArray(subctProps)) {
+        subctProps.forEach((e) => {
+            temp.push(e.id);
         });
     }
-    if (newProps && newProps.length > 0) {
-        tempProps.push(...newProps);
+    if (Array.isArray(newProps)) {
+        newProps.forEach((e) => {
+            temp.push(e.id);
+        });
     }
-    const uniqueProps = new Set(tempProps);
-    subcategory.props = Array.from(uniqueProps);
-    yield subcategory.save();
+    const props = [...new Set(temp)];
+    const subcategory = yield Subcateygory_1.default.findByIdAndUpdate(req.params.id, { name, props });
+    if (!subcategory)
+        throw new NotFoundError_1.default("Subcategory Not Found");
     res.send(subcategory);
 }));
 exports.default = subcatRoute;

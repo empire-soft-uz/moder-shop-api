@@ -84,6 +84,11 @@ productRouter.get("/liked", validateUser_1.default, (req, res) => __awaiter(void
 productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const product = yield Product_1.default.findById(req.params.id)
         .populate({
+        path: "category",
+        model: "Category",
+        select: "id name",
+    })
+        .populate({
         path: "reviews",
         model: "Review",
         populate: {
@@ -92,8 +97,8 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
             select: "id fullName phoneNumber",
         },
     })
-        .populate("category", "name id")
         .populate("subcategory", "name id")
+        .populate("author", "id email")
         .populate({
         path: "props",
         model: "PropValue",
@@ -113,7 +118,9 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
             temp[name] = { id: p.prop.id, label: p.prop.label, props: [p] };
         }
     });
-    res.send(Object.assign(Object.assign({}, product.toObject()), { props: temp }));
+    const obj = Object.assign(Object.assign({ id: product.id }, product.toObject()), { props: temp });
+    delete obj._id;
+    res.send(obj);
 }));
 productRouter.put("/like/:id", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT || "");
@@ -122,19 +129,11 @@ productRouter.put("/like/:id", validateUser_1.default, (req, res) => __awaiter(v
 }));
 productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [...ProductRules_1.productCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
-    const { qtyMin, qtyMax, price, oldPrice } = req.body;
-    console.log(req.body);
-    const prices = [];
-    price.forEach((p, i) => {
-        prices.push({
-            price: Number(p),
-            qtyMax: Number(qtyMin[i]) || 1,
-            qtyMin: Number(qtyMax[i]) || 1,
-            oldPrice: Number(oldPrice[i]) || 0,
-        });
-    });
     const { files } = req;
-    const product = Product_1.default.build(Object.assign({}, req.body));
+    const { prices } = req.body;
+    let temp = [];
+    Array.isArray(prices) && prices.map((p) => temp.push(JSON.parse(p)));
+    const product = Product_1.default.build(Object.assign(Object.assign({}, req.body), { price: temp }));
     const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
     if (admin.vendorId) {
         const vendor = yield Vendor_1.default.findByIdAndUpdate(req.body.vendorId, {
@@ -166,7 +165,6 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
             }
         }
     }
-    product.price = prices;
     product.author = admin.id;
     yield product.save();
     res.send(product);

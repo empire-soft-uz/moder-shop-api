@@ -22,7 +22,14 @@ adminRoute.get("/", isSuperAdmin, async (req: Request, res: Response) => {
   });
   res.send(admins);
 });
-adminRoute.post(
+adminRoute.get("/:id", isSuperAdmin, async (req: Request, res: Response) => {
+  const admins = await Admin.findById(req.params.id, { password: 0 }).populate({
+    path: "vendorId",
+    select: "id name contacts",
+  });
+  res.send(admins);
+});
+adminRoute.put(
   "/edit/:id",
   isSuperAdmin,
   [...adminCreation],
@@ -43,6 +50,8 @@ adminRoute.post(
       },
       jwtKey
     );
+  
+
     res.send({ id: admin.id, email: admin.email, token });
   }
 );
@@ -52,6 +61,7 @@ adminRoute.post(
   [...adminCreation],
   async (req: Request, res: Response) => {
     Validator.validate(req);
+
 
     const admin = Admin.build(req.body);
     const hash = await Password.hashPassword(req.body.password);

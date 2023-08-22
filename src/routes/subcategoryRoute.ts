@@ -15,13 +15,14 @@ subcatRoute.post(
   isSuperAdmin,
   async (req: Request, res: Response) => {
     Validator.validate(req);
-    const { name, props, category } = req.body;
+    const { name, newProps, category } = req.body;
     const parentCat = await Category.findById(category);
     if (!parentCat) throw new BadRequestError("Invalid category is provided");
-    const subCt = Subcategory.build(req.body);
+    const subCt = Subcategory.build({name,props:newProps.map(p=>p.id),});
     await subCt.save();
     parentCat.subcategories.push(subCt.id);
     await parentCat.save();
+    
     res.send(subCt);
   }
 );
@@ -74,28 +75,25 @@ subcatRoute.get("/:id", async (req: Request, res: Response) => {
   );
 });
 subcatRoute.put("/:id", isSuperAdmin, async (req: Request, res: Response) => {
-  const { name, removedProps, newProps } = req.body;
-
-  const subcategory = await Subcategory.findById(req.params.id);
-  if (!subcategory) throw new NotFoundError("Subcategory Not Found");
-  if (name) {
-    subcategory.name = name;
-  }
-  let tempProps: string[] = [];
-  if (removedProps && removedProps.length > 0) {
-    tempProps = subcategory.props.filter((p) => {
-      if (!removedProps.find((r: string) => r === p)) {
-        return p;
-      }
+  const { name, subctProps, newProps } = req.body;
+  const temp: string[] = [];
+  if (Array.isArray(subctProps)) {
+    subctProps.forEach((e) => {
+      temp.push(e.id);
     });
   }
-  if (newProps && newProps.length > 0) {
-    tempProps.push(...newProps);
+  if (Array.isArray(newProps)) {
+    newProps.forEach((e) => {
+      temp.push(e.id);
+    });
   }
-  const uniqueProps = new Set(tempProps);
-  subcategory.props = Array.from(uniqueProps);
-  await subcategory.save();
-  res.send(subcategory);
+
+  const props = [...new Set(temp)];
+  
+   const subcategory = await Subcategory.findByIdAndUpdate(req.params.id, {name, props});
+   if (!subcategory) throw new NotFoundError("Subcategory Not Found");
+
+   res.send(subcategory);
 });
 
 export default subcatRoute;
