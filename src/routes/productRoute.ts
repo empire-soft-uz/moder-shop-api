@@ -122,6 +122,10 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
       populate: { path: "prop", model: "Prop" },
     });
   if (!product) throw new NotFoundError("Product Not Found");
+  if (req.query.admin) {
+    res.send(product);
+    return;
+  }
   product.viewCount += 1;
   await product.save();
   let temp = {};
@@ -213,31 +217,34 @@ productRouter.put(
   upload.array("media", 4),
 
   async (req: Request, res: Response) => {
-    Validator.validate(req);
+    // Validator.validate(req);
+    console.log(req.body);
+    console.log("---------------");
+    console.log(req.files, req.body.delFiles);
 
+    const { remainingProps, newProps, prices } = req.body;
     const { files } = req;
-    let tempProps = [];
-    if (req.body.props && req.body.props.length > 0) {
-      tempProps.push(...req.body.props);
-    }
-    const newData = { ...req.body };
-    delete newData.props;
-    // console.log(newData, tempProps, req.body);
-    // res.send({ newData, tempProps, body: req.body });
-    const product = await Product.findByIdAndUpdate(req.params.id, {
-      ...newData,
-      $push: { props: { $each: tempProps } },
-    });
-
+    const product = await Product.findById(req.params.id);
     if (!product) throw new NotFoundError("Product Not Found");
-    if (req.body.vendorId) {
-      const vendor = await Vendor.findByIdAndUpdate(req.body.vendorId, {
+
+    const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
+    const fns = [];
+    req.body.delFiles &&
+      req.body.delFiles.map((f) => fns.push(MediaManager.deletefiles(f)));
+    if (admin.vendorId) {
+      const vendor = await Vendor.findByIdAndUpdate(admin.vendorId, {
         $push: { products: product.id },
       });
       if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
-      await vendor.save();
     }
-    if (files) {
+    let tempProps = [...new Set(req.body.props)];
+    const newData = { ...req.body, video: {}, media: [], price: [] };
+    Array.isArray(prices) &&
+      prices.map((p) => newData.price.push(JSON.parse(p)));
+
+    delete newData.props;
+    //@ts-ignore
+    if (files && files.length > 0) {
       const video = [
         "video/mp4",
         "video/webm",
@@ -249,17 +256,28 @@ productRouter.put(
         //@ts-ignore
         if (video.find((e) => e === files[i].mimetype)) {
           //@ts-ignore
-          product.video = await MediaManager.uploadFile(files[i]);
+          newData.video = await MediaManager.uploadFile(files[i]);
         }
         //@ts-ignore
         const img = await MediaManager.uploadFile(files[i]);
         //@ts-ignore
-        product.media.push(img);
+        newData.media.push(img);
       }
     }
     await product.save();
-
-    res.send(product);
+    const [newPr] = await Promise.all([
+      Product.findByIdAndUpdate(
+        product.id,
+        {
+          ...newData,
+          props: tempProps,
+        },
+        { new: true }
+      ),
+      ...fns,
+    ]);
+    console.log(newPr);
+    res.send(newPr);
   }
 );
 
@@ -267,8 +285,6 @@ productRouter.delete(
   "/delete/:id",
   validateAdmin,
   async (req: Request, res: Response) => {
-    console.log("deleteing");
-
     const [deletedProduct, admin] = await Promise.all([
       Product.findById(req.params.id),
       Admin.findById(JWTDecrypter.decryptUser<IAdmin>(req, jwtKey).id),
@@ -286,16 +302,16 @@ productRouter.delete(
 
     if (deletedProduct.media && deletedProduct.media.length > 0) {
       deletedProduct.media.forEach((i) => {
-       
- //@ts-ignore
+        //@ts-ignore
         fns.push(MediaManager.deletefiles(i));
       });
     }
-    if (deletedProduct.video) { //@ts-ignore
+    if (deletedProduct.video) {
+      //@ts-ignore
       fns.push(MediaManager.deletefiles(deletedProduct.video));
     }
     const [pr] = await Promise.all(fns);
-    console.log(pr);
+
     res.send({ deletedProduct });
   }
 );

@@ -108,6 +108,10 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
     });
     if (!product)
         throw new NotFoundError_1.default("Product Not Found");
+    if (req.query.admin) {
+        res.send(product);
+        return;
+    }
     product.viewCount += 1;
     yield product.save();
     let temp = {};
@@ -176,28 +180,33 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
     res.send(product);
 }));
 productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    Valiadtor_1.default.validate(req);
+    // Validator.validate(req);
+    console.log(req.body);
+    console.log("---------------");
+    console.log(req.files, req.body.delFiles);
+    const { remainingProps, newProps, prices } = req.body;
     const { files } = req;
-    let tempProps = [];
-    if (req.body.props && req.body.props.length > 0) {
-        tempProps.push(...req.body.props);
-    }
-    const newData = Object.assign({}, req.body);
-    delete newData.props;
-    // console.log(newData, tempProps, req.body);
-    // res.send({ newData, tempProps, body: req.body });
-    const product = yield Product_1.default.findByIdAndUpdate(req.params.id, Object.assign(Object.assign({}, newData), { $push: { props: { $each: tempProps } } }));
+    const product = yield Product_1.default.findById(req.params.id);
     if (!product)
         throw new NotFoundError_1.default("Product Not Found");
-    if (req.body.vendorId) {
-        const vendor = yield Vendor_1.default.findByIdAndUpdate(req.body.vendorId, {
+    const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    const fns = [];
+    req.body.delFiles &&
+        req.body.delFiles.map((f) => fns.push(MediaManager_1.default.deletefiles(f)));
+    if (admin.vendorId) {
+        const vendor = yield Vendor_1.default.findByIdAndUpdate(admin.vendorId, {
             $push: { products: product.id },
         });
         if (!vendor)
             throw new NotFoundError_1.default(`Vendor with given id not found`);
-        yield vendor.save();
     }
-    if (files) {
+    let tempProps = [...new Set(req.body.props)];
+    const newData = Object.assign(Object.assign({}, req.body), { video: {}, media: [], price: [] });
+    Array.isArray(prices) &&
+        prices.map((p) => newData.price.push(JSON.parse(p)));
+    delete newData.props;
+    //@ts-ignore
+    if (files && files.length > 0) {
         const video = [
             "video/mp4",
             "video/webm",
@@ -209,19 +218,23 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
             //@ts-ignore
             if (video.find((e) => e === files[i].mimetype)) {
                 //@ts-ignore
-                product.video = yield MediaManager_1.default.uploadFile(files[i]);
+                newData.video = yield MediaManager_1.default.uploadFile(files[i]);
             }
             //@ts-ignore
             const img = yield MediaManager_1.default.uploadFile(files[i]);
             //@ts-ignore
-            product.media.push(img);
+            newData.media.push(img);
         }
     }
     yield product.save();
-    res.send(product);
+    const [newPr] = yield Promise.all([
+        Product_1.default.findByIdAndUpdate(product.id, Object.assign(Object.assign({}, newData), { props: tempProps }), { new: true }),
+        ...fns,
+    ]);
+    console.log(newPr);
+    res.send(newPr);
 }));
 productRouter.delete("/delete/:id", validateAdmin_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("deleteing");
     const [deletedProduct, admin] = yield Promise.all([
         Product_1.default.findById(req.params.id),
         Admin_1.default.findById(JWTDecrypter_1.default.decryptUser(req, jwtKey).id),
@@ -244,11 +257,11 @@ productRouter.delete("/delete/:id", validateAdmin_1.default, (req, res) => __awa
             fns.push(MediaManager_1.default.deletefiles(i));
         });
     }
-    if (deletedProduct.video) { //@ts-ignore
+    if (deletedProduct.video) {
+        //@ts-ignore
         fns.push(MediaManager_1.default.deletefiles(deletedProduct.video));
     }
     const [pr] = yield Promise.all(fns);
-    console.log(pr);
     res.send({ deletedProduct });
 }));
 exports.default = productRouter;
