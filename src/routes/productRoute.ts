@@ -26,7 +26,7 @@ const upload = multer({ storage: storage, limits: { fileSize: 50 * 1048576 } });
 const productRouter = Router();
 
 productRouter.get("/", async (req: Request, res: Response) => {
-  console.log(req.query);
+  
   const {
     page,
     limit,
@@ -83,7 +83,29 @@ productRouter.get("/", async (req: Request, res: Response) => {
   const totalCount = await Product.count(query);
   res.send({ page: page || 1, limit, totalCount, products });
 });
-
+productRouter.get("/admin",validateAdmin, async (req: Request, res: Response) => {
+ const admin =JWTDecrypter.decryptUser<IAdmin>(req, jwtKey)
+ const {page,limit}=req.query
+ let query={}
+ if(!admin.super){
+  query={author:admin.id}
+ }
+  const products = await Product.find(query)
+    //@ts-ignore
+    .skip(page * limit)
+    //@ts-ignore
+    .limit(limit)
+    .populate("vendorId", "name")
+    .populate("category", "name id")
+    .populate("subcategory", "name id")
+    .populate({
+      path: "props",
+      model: "PropValue",
+      populate: { path: "prop", model: "Prop" },
+    });
+  const totalCount = await Product.count(query);
+  res.send({ page: page || 1, limit, totalCount, products });
+});
 productRouter.get(
   "/liked",
   validateUser,
@@ -215,12 +237,9 @@ productRouter.put(
   "/edit/:id",
   validateAdmin,
   upload.array("media", 4),
-
+  [...productCreation],
   async (req: Request, res: Response) => {
-    // Validator.validate(req);
-    console.log(req.body);
-    console.log("---------------");
-    console.log(req.files, req.body.delFiles);
+     Validator.validate(req);
 
     const { remainingProps, newProps, prices } = req.body;
     const { files } = req;
@@ -238,7 +257,12 @@ productRouter.put(
       if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
     }
     let tempProps = [...new Set(req.body.props)];
-    const newData = { ...req.body, video: {}, media: [], price: [] };
+    const newData = {
+      ...req.body,
+      video: product.video,
+      media: product.media,
+      price: [],
+    };
     Array.isArray(prices) &&
       prices.map((p) => newData.price.push(JSON.parse(p)));
 

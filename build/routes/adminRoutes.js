@@ -59,8 +59,9 @@ adminRoute.post("/new", validateAdmin_1.isSuperAdmin, [...AdminRules_1.adminCrea
     const token = jsonwebtoken_1.default.sign({
         id: admin.id,
         email: admin.email,
+        super: admin.super
     }, jwtKey);
-    res.send({ id: admin.id, email: admin.email, token });
+    res.send({ id: admin.id, email: admin.email, token, super: admin.super });
 }));
 adminRoute.post("/login", [...AdminRules_1.adminCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
@@ -76,7 +77,8 @@ adminRoute.post("/login", [...AdminRules_1.adminCreation], (req, res) => __await
     const token = jsonwebtoken_1.default.sign({
         id: admin.id,
         email: admin.email,
+        super: admin.super
     }, jwtKey);
-    res.send({ id: admin.id, email: admin.email, token });
+    res.send({ id: admin.id, email: admin.email, token, super: admin.super });
 }));
 exports.default = adminRoute;

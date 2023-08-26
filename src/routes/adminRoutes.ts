@@ -71,10 +71,11 @@ adminRoute.post(
       {
         id: admin.id,
         email: admin.email,
+        super:admin.super
       },
       jwtKey
     );
-    res.send({ id: admin.id, email: admin.email, token });
+    res.send({ id: admin.id, email: admin.email, token , super:admin.super});
   }
 );
 adminRoute.post(
@@ -96,11 +97,12 @@ adminRoute.post(
       {
         id: admin.id,
         email: admin.email,
+        super:admin.super
       },
       jwtKey
     );
 
-    res.send({ id: admin.id, email: admin.email, token });
+    res.send({ id: admin.id, email: admin.email, token,super:admin.super });
   }
 );
 export default adminRoute;

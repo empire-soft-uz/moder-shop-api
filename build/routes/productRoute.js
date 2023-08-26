@@ -31,7 +31,6 @@ const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage: storage, limits: { fileSize: 50 * 1048576 } });
 const productRouter = (0, express_1.Router)();
 productRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.query);
     const { page, limit, name, priceMax, priceMin, category, subcategory, popularProducts, props, } = req.query;
     let query = {};
     if (name) {
@@ -63,6 +62,29 @@ productRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
     const products = yield Product_1.default.find(query)
         .sort(sort)
+        //@ts-ignore
+        .skip(page * limit)
+        //@ts-ignore
+        .limit(limit)
+        .populate("vendorId", "name")
+        .populate("category", "name id")
+        .populate("subcategory", "name id")
+        .populate({
+        path: "props",
+        model: "PropValue",
+        populate: { path: "prop", model: "Prop" },
+    });
+    const totalCount = yield Product_1.default.count(query);
+    res.send({ page: page || 1, limit, totalCount, products });
+}));
+productRouter.get("/admin", validateAdmin_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    const { page, limit } = req.query;
+    let query = {};
+    if (!admin.super) {
+        query = { author: admin.id };
+    }
+    const products = yield Product_1.default.find(query)
         //@ts-ignore
         .skip(page * limit)
         //@ts-ignore
@@ -179,11 +201,8 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
     yield product.save();
     res.send(product);
 }));
-productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // Validator.validate(req);
-    console.log(req.body);
-    console.log("---------------");
-    console.log(req.files, req.body.delFiles);
+productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4), [...ProductRules_1.productCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    Valiadtor_1.default.validate(req);
     const { remainingProps, newProps, prices } = req.body;
     const { files } = req;
     const product = yield Product_1.default.findById(req.params.id);
@@ -201,7 +220,7 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
             throw new NotFoundError_1.default(`Vendor with given id not found`);
     }
     let tempProps = [...new Set(req.body.props)];
-    const newData = Object.assign(Object.assign({}, req.body), { video: {}, media: [], price: [] });
+    const newData = Object.assign(Object.assign({}, req.body), { video: product.video, media: product.media, price: [] });
     Array.isArray(prices) &&
         prices.map((p) => newData.price.push(JSON.parse(p)));
     delete newData.props;
