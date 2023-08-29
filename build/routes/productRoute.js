@@ -26,6 +26,7 @@ const JWTDecrypter_1 = __importDefault(require("../utils/JWTDecrypter"));
 const validateUser_1 = __importDefault(require("../middlewares/validateUser"));
 const Admin_1 = __importDefault(require("../Models/Admin"));
 const ForbidenError_1 = __importDefault(require("../Classes/Errors/ForbidenError"));
+const PropFormater_1 = __importDefault(require("../utils/PropFormater"));
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage: storage, limits: { fileSize: 50 * 1048576 } });
@@ -136,20 +137,8 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
     product.viewCount += 1;
     yield product.save();
-    let temp = {};
-    product.props.map((p, i) => {
-        const name = p.prop.name.split(" ").join("_");
-        //@ts-ignore
-        if (temp[name]) {
-            //@ts-ignore
-            temp[name].props.push(p);
-        }
-        else {
-            //@ts-ignore
-            temp[name] = { id: p.prop.id, label: p.prop.label, props: [p] };
-        }
-    });
-    const obj = Object.assign(Object.assign({ id: product.id }, product.toObject()), { props: temp });
+    const fProps = PropFormater_1.default.format(product.props);
+    const obj = Object.assign(Object.assign({ id: product.id }, product.toObject()), { props: fProps });
     delete obj._id;
     res.send(obj);
 }));

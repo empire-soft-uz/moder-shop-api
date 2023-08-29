@@ -7,6 +7,7 @@ import Subcategory from "../Models/Subcateygory";
 import Category from "../Models/Category";
 import BadRequestError from "../Classes/Errors/BadRequestError";
 import NotFoundError from "../Classes/Errors/NotFoundError";
+import PropFormater from "../utils/PropFormater";
 
 const subcatRoute = Router();
 subcatRoute.post(
@@ -55,23 +56,16 @@ subcatRoute.get("/:id", async (req: Request, res: Response) => {
     model: "PropValue",
     populate: { path: "prop", model: "Prop" },
   });
+  if(!subcategory) throw new NotFoundError("Subcategory Not Foound")
   if (admin) {
     res.send(subcategory);
     return;
   }
-  let temp = {};
-  subcategory?.props.map((p, i) => {
-    const name = p.prop.name.split(" ").join("_");
-    if (temp[name]) {
-      temp[name].props.push(p);
-    } else {
-      temp[name] = { id: p.prop.id, label: p.prop.label, props: [p] };
-    }
-  });
+  const fProps = PropFormater.format(subcategory.props);
+
   res.send(
-    subcategory
-      ? { id: subcategory.id, name: subcategory.name, props: temp }
-      : {}
+     { id: subcategory.id, name: subcategory.name, props: fProps }
+
   );
 });
 subcatRoute.put("/:id", isSuperAdmin, async (req: Request, res: Response) => {

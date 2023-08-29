@@ -8,6 +8,7 @@ import Subcategory from "../Models/Subcateygory";
 import NotFoundError from "../Classes/Errors/NotFoundError";
 import BadRequestError from "../Classes/Errors/BadRequestError";
 import PropValue from "../Models/PropValue";
+import PropFormater from "../utils/PropFormater";
 
 const propRoutes = Router();
 propRoutes.get("/", async (req: Request, res: Response) => {
@@ -90,11 +91,11 @@ propRoutes.put(
   }
 );
 propRoutes.get("/:propId", async (req: Request, res: Response) => {
-  const [prop, vals] = await Promise.all([
-    Prop.findById(req.params.propId),
-    PropValue.find({ prop: req.params.propId }),
-  ]);
-  res.send({ prop, values: vals });
+
+  const props=await PropValue.find({ prop: req.params.propId }).populate('prop')
+ if(!props) throw new NotFoundError('Property Not Found')
+  const formatedProps=PropFormater.format(props)
+  res.send(formatedProps[0]);
 });
 
 propRoutes.get("/values/:valueId", async (req: Request, res: Response) => {

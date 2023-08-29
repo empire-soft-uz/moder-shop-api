@@ -21,6 +21,7 @@ const Subcateygory_1 = __importDefault(require("../Models/Subcateygory"));
 const Category_1 = __importDefault(require("../Models/Category"));
 const BadRequestError_1 = __importDefault(require("../Classes/Errors/BadRequestError"));
 const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError"));
+const PropFormater_1 = __importDefault(require("../utils/PropFormater"));
 const subcatRoute = (0, express_1.Router)();
 subcatRoute.post("/new", [...SubcatRules_1.subcatCreation], validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
@@ -59,23 +60,14 @@ subcatRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function
         model: "PropValue",
         populate: { path: "prop", model: "Prop" },
     });
+    if (!subcategory)
+        throw new NotFoundError_1.default("Subcategory Not Foound");
     if (admin) {
         res.send(subcategory);
         return;
     }
-    let temp = {};
-    subcategory === null || subcategory === void 0 ? void 0 : subcategory.props.map((p, i) => {
-        const name = p.prop.name.split(" ").join("_");
-        if (temp[name]) {
-            temp[name].props.push(p);
-        }
-        else {
-            temp[name] = { id: p.prop.id, label: p.prop.label, props: [p] };
-        }
-    });
-    res.send(subcategory
-        ? { id: subcategory.id, name: subcategory.name, props: temp }
-        : {});
+    const fProps = PropFormater_1.default.format(subcategory.props);
+    res.send({ id: subcategory.id, name: subcategory.name, props: fProps });
 }));
 subcatRoute.put("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, subctProps, newProps } = req.body;

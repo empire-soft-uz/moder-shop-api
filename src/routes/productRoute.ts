@@ -18,6 +18,7 @@ import IUserPayload from "../Interfaces/IUserPayload";
 import IPrice from "../Interfaces/Product/IPrice";
 import Admin from "../Models/Admin";
 import ForbidenError from "../Classes/Errors/ForbidenError";
+import PropFormater from "../utils/PropFormater";
 
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
@@ -26,7 +27,6 @@ const upload = multer({ storage: storage, limits: { fileSize: 50 * 1048576 } });
 const productRouter = Router();
 
 productRouter.get("/", async (req: Request, res: Response) => {
-  
   const {
     page,
     limit,
@@ -83,29 +83,33 @@ productRouter.get("/", async (req: Request, res: Response) => {
   const totalCount = await Product.count(query);
   res.send({ page: page || 1, limit, totalCount, products });
 });
-productRouter.get("/admin",validateAdmin, async (req: Request, res: Response) => {
- const admin =JWTDecrypter.decryptUser<IAdmin>(req, jwtKey)
- const {page,limit}=req.query
- let query={}
- if(!admin.super){
-  query={author:admin.id}
- }
-  const products = await Product.find(query)
-    //@ts-ignore
-    .skip(page * limit)
-    //@ts-ignore
-    .limit(limit)
-    .populate("vendorId", "name")
-    .populate("category", "name id")
-    .populate("subcategory", "name id")
-    .populate({
-      path: "props",
-      model: "PropValue",
-      populate: { path: "prop", model: "Prop" },
-    });
-  const totalCount = await Product.count(query);
-  res.send({ page: page || 1, limit, totalCount, products });
-});
+productRouter.get(
+  "/admin",
+  validateAdmin,
+  async (req: Request, res: Response) => {
+    const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
+    const { page, limit } = req.query;
+    let query = {};
+    if (!admin.super) {
+      query = { author: admin.id };
+    }
+    const products = await Product.find(query)
+      //@ts-ignore
+      .skip(page * limit)
+      //@ts-ignore
+      .limit(limit)
+      .populate("vendorId", "name")
+      .populate("category", "name id")
+      .populate("subcategory", "name id")
+      .populate({
+        path: "props",
+        model: "PropValue",
+        populate: { path: "prop", model: "Prop" },
+      });
+    const totalCount = await Product.count(query);
+    res.send({ page: page || 1, limit, totalCount, products });
+  }
+);
 productRouter.get(
   "/liked",
   validateUser,
@@ -150,22 +154,10 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
   }
   product.viewCount += 1;
   await product.save();
-  let temp = {};
-
-  product.props.map((p, i) => {
-    const name = p.prop.name.split(" ").join("_");
-    //@ts-ignore
-    if (temp[name]) {
-      //@ts-ignore
-
-      temp[name].props.push(p);
-    } else {
-      //@ts-ignore
-
-      temp[name] = { id: p.prop.id, label: p.prop.label, props: [p] };
-    }
-  });
-  const obj = { id: product.id, ...product.toObject(), props: temp };
+  
+  const fProps = PropFormater.format(product.props);
+  
+  const obj = { id: product.id, ...product.toObject(), props: fProps };
   delete obj._id;
   res.send(obj);
 });
@@ -239,7 +231,7 @@ productRouter.put(
   upload.array("media", 4),
   [...productCreation],
   async (req: Request, res: Response) => {
-     Validator.validate(req);
+    Validator.validate(req);
 
     const { remainingProps, newProps, prices } = req.body;
     const { files } = req;

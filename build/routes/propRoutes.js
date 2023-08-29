@@ -45,6 +45,7 @@ const Subcateygory_1 = __importDefault(require("../Models/Subcateygory"));
 const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError"));
 const BadRequestError_1 = __importDefault(require("../Classes/Errors/BadRequestError"));
 const PropValue_1 = __importDefault(require("../Models/PropValue"));
+const PropFormater_1 = __importDefault(require("../utils/PropFormater"));
 const propRoutes = (0, express_1.Router)();
 propRoutes.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const properties = yield Prop_1.default.find();
@@ -97,11 +98,11 @@ propRoutes.put("/edit/:propId", validateAdmin_1.default, (req, res) => __awaiter
     res.send(updatedProp);
 }));
 propRoutes.get("/:propId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const [prop, vals] = yield Promise.all([
-        Prop_1.default.findById(req.params.propId),
-        PropValue_1.default.find({ prop: req.params.propId }),
-    ]);
-    res.send({ prop, values: vals });
+    const props = yield PropValue_1.default.find({ prop: req.params.propId }).populate('prop');
+    if (!props)
+        throw new NotFoundError_1.default('Property Not Found');
+    const formatedProps = PropFormater_1.default.format(props);
+    res.send(formatedProps[0]);
 }));
 propRoutes.get("/values/:valueId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const value = yield PropValue_1.default.findById(req.params.valueId);

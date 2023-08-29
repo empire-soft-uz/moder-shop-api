@@ -1,6 +1,9 @@
 import { Model, Schema, model, Document } from "mongoose";
 import User from "./User";
 import Chat from "./Chat";
+import IChat from "../Interfaces/IChat";
+import IAdmin from "../Interfaces/IAdmin";
+import IUser from "../Interfaces/IUser";
 
 interface message {
   sender: string;
@@ -10,9 +13,9 @@ interface message {
   file: string;
 }
 interface MessageDoc extends Document {
-  sender: string;
-  reciever: string;
-  chat: string;
+  sender: IUser|IAdmin;
+  reciever: IUser|IAdmin;
+  chat: IChat;
   message: string;
   file: string;
 }
