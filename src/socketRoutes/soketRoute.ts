@@ -48,10 +48,11 @@ const startSocketServer = () => {
         newMsg.file = newMsg.id + msg.file.originalName;
       }
       await newMsg.save();
+      console.log(newMsg)
+
       //@ts-ignore
       io.to(newMsg.chat.toString()).emit("sendMessage", newMsg);
 
-      //socket.to(msg.reciever.socketId).emit("sendMessage", msg);
     });
 
     socket.on("getChatMessages", async (user) => {

@@ -5,4 +5,5 @@ export default interface IMessage {
   message: string;
   chat: string;
   file: { buffer: Buffer; type: string; originalName: string };
+  viewed:boolean
 }

@@ -50,9 +50,9 @@ const startSocketServer = () => {
                 newMsg.file = newMsg.id + msg.file.originalName;
             }
             yield newMsg.save();
+            console.log(newMsg);
             //@ts-ignore
             io.to(newMsg.chat.toString()).emit("sendMessage", newMsg);
-            //socket.to(msg.reciever.socketId).emit("sendMessage", msg);
         }));
         socket.on("getChatMessages", (user) => __awaiter(void 0, void 0, void 0, function* () {
             const existingChat = yield Chat_1.default.findOne({

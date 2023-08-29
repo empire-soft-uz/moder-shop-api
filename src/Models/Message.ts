@@ -11,6 +11,7 @@ interface message {
   chat: string;
   message: string;
   file: string;
+  viewed:boolean
 }
 interface MessageDoc extends Document {
   sender: IUser|IAdmin;
@@ -18,6 +19,7 @@ interface MessageDoc extends Document {
   chat: IChat;
   message: string;
   file: string;
+  viewed:boolean
 }
 interface MessageModel extends Model<MessageDoc> {
   build(attrs: message): MessageDoc;
@@ -30,6 +32,7 @@ const messageSchema = new Schema(
     chat: { type: Schema.Types.ObjectId, required: true, reg: Chat },
     message: String,
     file: String,
+    viewed:Boolean
   },
   {
     toJSON: {

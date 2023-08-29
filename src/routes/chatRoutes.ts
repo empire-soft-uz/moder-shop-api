@@ -9,6 +9,7 @@ import "express-async-errors";
 import validateUser from "../middlewares/validateUser";
 import validateAdmin from "../middlewares/validateAdmin";
 import IAdmin from "../Interfaces/IAdmin";
+import IChat from "../Interfaces/IChat";
 const chatRouter = Router();
 interface UserPayload {
   id: string;
@@ -35,11 +36,13 @@ chatRouter.get(
     const id = new mongoose.Types.ObjectId(req.params.chatId);
     const msgs = await Message.find({
       chat: id,
-    });
-
+    })
+    //.populate('user');
     res.send({ messages: msgs });
   }
 );
+
+
 chatRouter.get(
   "/user",
   validateUser,
@@ -53,13 +56,35 @@ chatRouter.get(
     res.send(chats);
   }
 );
+chatRouter.get(
+  "/user/:chatId",
+  validateUser,
+  async (req: Request, res: Response, next: NextFunction) => {
+    const id = new mongoose.Types.ObjectId(req.params.chatId);
+    const msgs = await Message.find({
+      chat: id,
+    })
+    // .populate({
+    //   path:"admin",
+    //   select:"id email"
+    // });
+    res.send({ messages: msgs });
+  }
+);
 chatRouter.post(
   "/new",
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
     const validUser = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT);
-    const { admin } = req.body;
-    const chat = await Chat.create({ user: validUser.id, admin });
+    const { author,product } = req.body;
+    let chat;
+    const data={user:validUser.id, admin:author, product}
+    chat= await Chat.findOne(data)
+    if(!chat){
+
+      chat = Chat.build(data);
+      await chat.save()
+    }
     res.send(chat);
   }
 );
@@ -68,10 +93,10 @@ chatRouter.get(
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
     const id = new mongoose.Types.ObjectId(req.params.chatId);
-    const msgs = await Message.find({
+    const msgs = await Message.updateMany({
       chat: id,
-    });
-
+    },{viewed:true});
+console.log(msgs)
     res.send({ messages: msgs });
   }
 );

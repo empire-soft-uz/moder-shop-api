@@ -10,4 +10,5 @@ export default interface IMessage {
         type: string;
         originalName: string;
     };
+    viewed: boolean;
 }

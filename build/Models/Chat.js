@@ -6,9 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const User_1 = __importDefault(require("./User"));
 const Admin_1 = __importDefault(require("./Admin"));
+const Product_1 = __importDefault(require("./Product"));
 const chatSchema = new mongoose_1.Schema({
     user: { type: mongoose_1.Schema.Types.ObjectId, ref: User_1.default },
     admin: { type: mongoose_1.Schema.Types.ObjectId, ref: Admin_1.default },
+    product: { type: mongoose_1.Schema.Types.ObjectId, ref: Product_1.default },
 }, {
     toJSON: {
         transform(doc, ret) {
