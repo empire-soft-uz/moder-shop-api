@@ -52,6 +52,9 @@ chatRouter.get(
     const chats = await Chat.find({ user: user.id }).populate({
       path: "admin",
       select: "id email",
+    }).populate({
+      path:'user',
+      select:"id fullName phoneNumber"
     });
     res.send(chats);
   }
@@ -78,7 +81,7 @@ chatRouter.post(
     const validUser = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT);
     const { author,product } = req.body;
     let chat;
-    const data={user:validUser.id, admin:author, product}
+    const data={user:validUser.id, admin:author}
     chat= await Chat.findOne(data)
     if(!chat){
 
@@ -96,7 +99,7 @@ chatRouter.get(
     const msgs = await Message.updateMany({
       chat: id,
     },{viewed:true});
-console.log(msgs)
+
     res.send({ messages: msgs });
   }
 );

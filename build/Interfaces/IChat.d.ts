@@ -4,6 +4,6 @@ import IProduct from "./Product/IProduct";
 export default interface IChat {
     user: IUser;
     admin: IAdmin;
-    id?: string;
+    id: string;
     product: IProduct;
 }

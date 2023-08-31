@@ -42,6 +42,9 @@ chatRouter.get("/user", validateUser_1.default, (req, res, next) => __awaiter(vo
     const chats = yield Chat_1.default.find({ user: user.id }).populate({
         path: "admin",
         select: "id email",
+    }).populate({
+        path: 'user',
+        select: "id fullName phoneNumber"
     });
     res.send(chats);
 }));
@@ -60,7 +63,7 @@ chatRouter.post("/new", validateUser_1.default, (req, res, next) => __awaiter(vo
     const validUser = JWTDecrypter_1.default.decryptUser(req, process.env.JWT);
     const { author, product } = req.body;
     let chat;
-    const data = { user: validUser.id, admin: author, product };
+    const data = { user: validUser.id, admin: author };
     chat = yield Chat_1.default.findOne(data);
     if (!chat) {
         chat = Chat_1.default.build(data);
@@ -73,7 +76,6 @@ chatRouter.get("/:chatId", validateUser_1.default, (req, res, next) => __awaiter
     const msgs = yield Message_1.default.updateMany({
         chat: id,
     }, { viewed: true });
-    console.log(msgs);
     res.send({ messages: msgs });
 }));
 exports.default = chatRouter;

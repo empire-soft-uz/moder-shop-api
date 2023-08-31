@@ -18,21 +18,27 @@ const io = SoketServer_1.default.getInstance;
 const path_1 = __importDefault(require("path"));
 const Chat_1 = __importDefault(require("../Models/Chat"));
 const Message_1 = __importDefault(require("../Models/Message"));
+let usrs = [];
 const startSocketServer = () => {
     console.log("Starting Socket Server");
     io.on("connection", (socket) => {
         console.log("New user connected", socket.id);
         socket.on("newUser", (msg) => {
-            socket.data.user = Object.assign(Object.assign({}, JSON.parse(msg)), { socketId: socket.id });
-            const users = [];
-            io.sockets.sockets.forEach((value, key, map) => {
-                users.push(value.data.user);
-            });
-            io.emit("activeUsers", users);
+            console.log("new user");
+            let user = Object.assign(Object.assign({}, JSON.parse(msg)), { socketId: socket.id });
+            usrs.push({ socketId: socket.id, id: user.id });
+            console.log(usrs);
         });
         socket.on("chatSelected", (chat) => {
+            console.log(chat);
+            const u = usrs.find((U) => U.id === chat.admin.id || chat.user.id);
             socket.join(chat.id.toString());
-            console.log("joined room", chat.id.toString());
+            if (u) {
+                //@ts-ignore
+                io.sockets.sockets.get(u.socketId).join(chat.id);
+                //@ts-ignore
+                io.sockets.sockets.get(u.socketId).emit('newChatAdminNotification', chat);
+            }
         });
         socket.on("recieveMsg", (msg) => __awaiter(void 0, void 0, void 0, function* () {
             let m = {
@@ -50,7 +56,6 @@ const startSocketServer = () => {
                 newMsg.file = newMsg.id + msg.file.originalName;
             }
             yield newMsg.save();
-            console.log(newMsg);
             //@ts-ignore
             io.to(newMsg.chat.toString()).emit("sendMessage", newMsg);
         }));
@@ -67,11 +72,7 @@ const startSocketServer = () => {
         //     // Handle disconnection
         socket.on("disconnect", () => {
             console.log("User disconnected");
-            const users = [];
-            io.sockets.sockets.forEach((value, key, map) => {
-                users.push(value.data.user);
-            });
-            io.emit("activeUsers", users);
+            usrs = usrs.filter((u) => u.socketId != socket.id);
         });
     });
 };
