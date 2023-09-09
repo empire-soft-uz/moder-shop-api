@@ -9,6 +9,7 @@ interface AdminDoc extends Document {
   password: string;
   vendorId: string;
   super: boolean;
+  online: boolean;
 }
 interface AdminModel extends Model<AdminDoc> {
   build(attrs: admin): AdminDoc;
@@ -19,6 +20,7 @@ const adminSchema = new Schema(
     email: String,
     password: String,
     vendorId: { type: Schema.Types.ObjectId, ref: "Vendor" },
+    online:{type:Boolean, default:false},
     super: { type: Boolean, default: false },
   },
   {

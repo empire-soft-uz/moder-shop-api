@@ -1,3 +1,6 @@
+import IMessage from "../IMessage";
+
 export default interface InterServerEvents {
-  ping: () => void;
+  getViewedMsg: (msg: IMessage) => void;
+
 }

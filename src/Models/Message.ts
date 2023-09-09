@@ -32,7 +32,7 @@ const messageSchema = new Schema(
     chat: { type: Schema.Types.ObjectId, required: true, reg: Chat },
     message: String,
     file: String,
-    viewed:Boolean
+    viewed:{type:Boolean, default:false}
   },
   {
     toJSON: {

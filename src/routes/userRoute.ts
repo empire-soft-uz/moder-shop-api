@@ -13,6 +13,7 @@ import OTP from "../Models/OTP";
 import JWTDecrypter from "../utils/JWTDecrypter";
 import IUserPayload from "../Interfaces/IUserPayload";
 import verifyUser from "../middlewares/verifyUser";
+import NotFoundError from "../Classes/Errors/NotFoundError";
 const expiresAt = parseInt(process.env.EXPIRATION || "5");
 const jwtKey = process.env.JWT || "SomeJwT_keY";
 userRoute.post(
@@ -160,7 +161,32 @@ userRoute.put(
     res.send(user);
   }
 );
-
+userRoute.put('/basket/add/:id', validateUser, async (req: Request, res: Response) => {
+  const author = JWTDecrypter.decryptUser<IUserPayload>(req, jwtKey);
+  const user=await User.findByIdAndUpdate(author.id,{
+    $push:{basket:req.params.id}
+  },{new:true, fields:{
+    "id":1,
+    "fullName":1,
+    'phoneNumber':1,
+    'basket':1,
+  }}).populate('basket')
+  if(!user) throw new NotFoundError('User Not Found')
+  res.send(user);
+} )
+userRoute.put('/basket/remove/:id', validateUser, async (req: Request, res: Response) => {
+  const author = JWTDecrypter.decryptUser<IUserPayload>(req, jwtKey);
+  const user=await User.findByIdAndUpdate(author.id,{
+    $pull:{basket:req.params.id}
+  },{new:true, fields:{
+    "id":1,
+    "fullName":1,
+    'phoneNumber':1,
+    'basket':1,
+  }}).populate('basket')
+  if(!user) throw new NotFoundError('User Not Found')
+  res.send(user);
+} )
 userRoute.get("/current", validateUser, async (req: Request, res: Response) => {
   const author = JWTDecrypter.decryptUser<IUserPayload>(req, jwtKey);
   const user = await User.findOne({ _id: author.id }, { password: 0 });

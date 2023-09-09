@@ -1,4 +1,6 @@
 import { Model, Document, Schema, model } from "mongoose";
+import IProduct from "../Interfaces/Product/IProduct";
+import Product from "./Product";
 
 interface user {
   fullName: string;
@@ -17,6 +19,8 @@ interface UserDoc extends Document {
   avatar: string;
   gender: string;
   birthdate: Date;
+  basket:IProduct[];
+  online:boolean;
 }
 interface UserModel extends Model<UserDoc> {
   build(attrs: user): UserDoc;
@@ -30,6 +34,8 @@ const userSchema = new Schema(
     avatar: String,
     gender: String,
     birthdate: Date,
+    online:{type:Boolean, default:false},
+    basket:{type:[Schema.Types.ObjectId], ref:Product}
   },
   {
     toJSON: {

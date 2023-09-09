@@ -3,10 +3,9 @@ import SocketServer from "../SoketServer";
 import fs from "node:fs";
 const io = SocketServer.getInstance;
 import path from "path";
-import IUser from "../Interfaces/IUser";
 import Chat from "../Models/Chat";
 import Message from "../Models/Message";
-import IChat from "../Interfaces/IChat";
+import IMessage from "../Interfaces/IMessage";
 
 let usrs: Array<{ socketId: string; id: string }> = [];
 const startSocketServer = () => {
@@ -15,23 +14,20 @@ const startSocketServer = () => {
     console.log("New user connected", socket.id);
 
     socket.on("newUser", (msg) => {
-      console.log("new user");
       let user = { ...JSON.parse(msg), socketId: socket.id };
       usrs.push({ socketId: socket.id, id: user.id });
-
-      console.log(usrs);
     });
 
     socket.on("chatSelected", (chat) => {
-      console.log(chat)
       const u = usrs.find((U) => U.id === chat.admin.id || chat.user.id);
       socket.join(chat.id.toString());
       if (u) {
-       
         //@ts-ignore
         io.sockets.sockets.get(u.socketId).join(chat.id);
         //@ts-ignore
-        io.sockets.sockets.get(u.socketId).emit('newChatAdminNotification',chat);
+        io.sockets.sockets
+          .get(u.socketId)
+          .emit("newChatAdminNotification", chat);
       }
     });
     socket.on("recieveMsg", async (msg) => {
@@ -40,12 +36,22 @@ const startSocketServer = () => {
         reciever: msg.reciever,
         chat: msg.chat,
       };
-
+      //@ts-ignore
+      // var room = io.in(msg.chat);
+      // console.log([...room.adapter.rooms], msg.chat);
       if (msg.message) {
         m = { ...m, message: msg.message };
       }
       const newMsg = Message.build(m);
-
+      // if (
+      //   usrs.find((u) => {
+      //     if (u.id === msg.reciever) {
+      //       return u;
+      //     }
+      //   })
+      // ) {
+      //   newMsg.viewed = true;
+      // }
       if (msg.file) {
         const filePath = path.join(
           __dirname,
@@ -62,7 +68,17 @@ const startSocketServer = () => {
       //@ts-ignore
       io.to(newMsg.chat.toString()).emit("sendMessage", newMsg);
     });
-
+    socket.on("messageViewed", async (msg) => {
+      
+      const m = await Message.findByIdAndUpdate(msg.id, { viewed: true }, {new:true})as IMessage;
+      if(!m){
+        return;
+      }
+    //@ts-ignore
+      io.to(m.chat.toString()).emit(String(m.id),m )
+      console.log(m)
+    });
+    
     socket.on("getChatMessages", async (user) => {
       const existingChat = await Chat.findOne({
         users: { $in: [socket.data.user.id, user.id] },
@@ -74,10 +90,12 @@ const startSocketServer = () => {
       }
     });
 
-    //     // Handle disconnection
+
+    //  Handle disconnection
     socket.on("disconnect", () => {
       console.log("User disconnected");
       usrs = usrs.filter((u) => u.socketId != socket.id);
+      io.emit("userDisconnected", socket.data.user);
     });
   });
 };

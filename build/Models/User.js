@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
+const Product_1 = __importDefault(require("./Product"));
 const userSchema = new mongoose_1.Schema({
     fullName: String,
     password: String,
@@ -8,6 +12,8 @@ const userSchema = new mongoose_1.Schema({
     avatar: String,
     gender: String,
     birthdate: Date,
+    online: { type: Boolean, default: false },
+    basket: { type: [mongoose_1.Schema.Types.ObjectId], ref: Product_1.default }
 }, {
     toJSON: {
         transform(doc, ret) {

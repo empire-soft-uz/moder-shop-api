@@ -31,25 +31,35 @@ chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(
 }));
 chatRouter.get("/admin/:chatId", validateAdmin_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const id = new mongoose_1.default.Types.ObjectId(req.params.chatId);
-    const msgs = yield Message_1.default.find({
+    const admin = JWTDecrypter_1.default.decryptUser(req, process.env.JWT_ADMIN);
+    const viewedMsgs = yield Message_1.default.updateMany({
         chat: id,
-    });
+        reciever: admin.id,
+    }, { viewed: true });
+    const msgs = yield Message_1.default.find({ chat: id });
     //.populate('user');
     res.send({ messages: msgs });
 }));
 chatRouter.get("/user", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT);
-    const chats = yield Chat_1.default.find({ user: user.id }).populate({
+    const chats = yield Chat_1.default.find({ user: user.id })
+        .populate({
         path: "admin",
         select: "id email",
-    }).populate({
-        path: 'user',
-        select: "id fullName phoneNumber"
+    })
+        .populate({
+        path: "user",
+        select: "id fullName phoneNumber",
     });
     res.send(chats);
 }));
 chatRouter.get("/user/:chatId", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const id = new mongoose_1.default.Types.ObjectId(req.params.chatId);
+    const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT);
+    const viewedMsgs = yield Message_1.default.updateMany({
+        chat: id,
+        reciever: user.id,
+    }, { viewed: true });
     const msgs = yield Message_1.default.find({
         chat: id,
     });

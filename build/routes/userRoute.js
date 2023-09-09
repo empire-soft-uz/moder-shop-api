@@ -26,6 +26,7 @@ const validateUser_1 = __importDefault(require("../middlewares/validateUser"));
 const OTP_1 = __importDefault(require("../Models/OTP"));
 const JWTDecrypter_1 = __importDefault(require("../utils/JWTDecrypter"));
 const verifyUser_1 = __importDefault(require("../middlewares/verifyUser"));
+const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError"));
 const expiresAt = parseInt(process.env.EXPIRATION || "5");
 const jwtKey = process.env.JWT || "SomeJwT_keY";
 userRoute.post("/get-code", [...UserRules_1.userRegistrationRules], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -134,6 +135,34 @@ userRoute.put("/update", [...UserRules_1.userRegistrationRules], verifyUser_1.de
     const user = yield User_1.default.findOneAndUpdate(query, update);
     //@ts-ignore
     user === null || user === void 0 ? void 0 : user.password = undefined;
+    res.send(user);
+}));
+userRoute.put('/basket/add/:id', validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const author = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    const user = yield User_1.default.findByIdAndUpdate(author.id, {
+        $push: { basket: req.params.id }
+    }, { new: true, fields: {
+            "id": 1,
+            "fullName": 1,
+            'phoneNumber': 1,
+            'basket': 1,
+        } }).populate('basket');
+    if (!user)
+        throw new NotFoundError_1.default('User Not Found');
+    res.send(user);
+}));
+userRoute.put('/basket/remove/:id', validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const author = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    const user = yield User_1.default.findByIdAndUpdate(author.id, {
+        $pull: { basket: req.params.id }
+    }, { new: true, fields: {
+            "id": 1,
+            "fullName": 1,
+            'phoneNumber': 1,
+            'basket': 1,
+        } }).populate('basket');
+    if (!user)
+        throw new NotFoundError_1.default('User Not Found');
     res.send(user);
 }));
 userRoute.get("/current", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {

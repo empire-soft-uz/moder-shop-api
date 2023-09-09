@@ -5,6 +5,7 @@ const adminSchema = new mongoose_1.Schema({
     email: String,
     password: String,
     vendorId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Vendor" },
+    online: { type: Boolean, default: false },
     super: { type: Boolean, default: false },
 }, {
     toJSON: {

@@ -12,7 +12,7 @@ const messageSchema = new mongoose_1.Schema({
     chat: { type: mongoose_1.Schema.Types.ObjectId, required: true, reg: Chat_1.default },
     message: String,
     file: String,
-    viewed: Boolean
+    viewed: { type: Boolean, default: false }
 }, {
     toJSON: {
         transform(doc, ret) {

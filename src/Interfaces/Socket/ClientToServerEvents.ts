@@ -7,4 +7,5 @@ export default interface ClientToServerEvents {
   recieveMsg: (msg: IMessage) => void;
   chatSelected: (msg: IChat) => void;
   getChatMessages: (chat: IUser) => void;
+  messageViewed:(msg:IMessage)=>void
 }

@@ -9,6 +9,7 @@ interface AdminDoc extends Document {
     password: string;
     vendorId: string;
     super: boolean;
+    online: boolean;
 }
 interface AdminModel extends Model<AdminDoc> {
     build(attrs: admin): AdminDoc;

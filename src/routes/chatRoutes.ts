@@ -34,14 +34,20 @@ chatRouter.get(
   validateAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     const id = new mongoose.Types.ObjectId(req.params.chatId);
-    const msgs = await Message.find({
-      chat: id,
-    })
+    const admin = JWTDecrypter.decryptUser<IAdmin>(req, process.env.JWT_ADMIN);
+
+    const viewedMsgs = await Message.updateMany(
+      {
+        chat: id,
+        reciever: admin.id,
+      },
+      { viewed: true }
+    );
+    const msgs = await Message.find({chat:id})
     //.populate('user');
     res.send({ messages: msgs });
   }
 );
-
 
 chatRouter.get(
   "/user",
@@ -49,13 +55,15 @@ chatRouter.get(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT);
 
-    const chats = await Chat.find({ user: user.id }).populate({
-      path: "admin",
-      select: "id email",
-    }).populate({
-      path:'user',
-      select:"id fullName phoneNumber"
-    });
+    const chats = await Chat.find({ user: user.id })
+      .populate({
+        path: "admin",
+        select: "id email",
+      })
+      .populate({
+        path: "user",
+        select: "id fullName phoneNumber",
+      });
     res.send(chats);
   }
 );
@@ -64,9 +72,17 @@ chatRouter.get(
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
     const id = new mongoose.Types.ObjectId(req.params.chatId);
+    const user=JWTDecrypter.decryptUser<IUser>(req, process.env.JWT);
+    const viewedMsgs = await Message.updateMany(
+      {
+        chat: id,
+        reciever: user.id,
+      },
+      { viewed: true }
+    );
     const msgs = await Message.find({
       chat: id,
-    })
+    });
     // .populate({
     //   path:"admin",
     //   select:"id email"
@@ -79,14 +95,13 @@ chatRouter.post(
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
     const validUser = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT);
-    const { author,product } = req.body;
+    const { author, product } = req.body;
     let chat;
-    const data={user:validUser.id, admin:author}
-    chat= await Chat.findOne(data)
-    if(!chat){
-
+    const data = { user: validUser.id, admin: author };
+    chat = await Chat.findOne(data);
+    if (!chat) {
       chat = Chat.build(data);
-      await chat.save()
+      await chat.save();
     }
     res.send(chat);
   }
@@ -96,9 +111,12 @@ chatRouter.get(
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
     const id = new mongoose.Types.ObjectId(req.params.chatId);
-    const msgs = await Message.updateMany({
-      chat: id,
-    },{viewed:true});
+    const msgs = await Message.updateMany(
+      {
+        chat: id,
+      },
+      { viewed: true }
+    );
 
     res.send({ messages: msgs });
   }
