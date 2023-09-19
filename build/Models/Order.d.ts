@@ -16,6 +16,7 @@ interface OrderDoc extends Document {
     products: Array<IOrderProducts>;
     userId: Schema.Types.ObjectId;
     deliveryAddress: string;
+    total: number;
     status: orderStatus;
 }
 interface OrderModel extends Model<OrderDoc> {

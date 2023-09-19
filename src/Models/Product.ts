@@ -116,7 +116,7 @@ productSchema.statics.likeProduct = async (
   if (
     product.likes.find((l) => {
       if (l.toString() === userId) {
-        return true;
+        return l;
       }
       return false;
     })
@@ -128,5 +128,5 @@ productSchema.statics.likeProduct = async (
   product.likes.push(userId);
   return product.save();
 };
-const Product = model<ProductDoc, ProductModel>("Product", productSchema);
+const Product:ProductModel = model<ProductDoc, ProductModel>("Product", productSchema);
 export default Product;

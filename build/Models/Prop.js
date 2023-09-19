@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const PropValue_1 = __importDefault(require("./PropValue"));
+const Product_1 = __importDefault(require("./Product"));
 const propSchema = new mongoose_1.Schema({
     name: { type: String, unique: true },
     label: String,
@@ -31,7 +32,14 @@ propSchema.post("findOneAndDelete", function (doc) {
             const values = yield PropValue_1.default.find({
                 prop: doc._id,
             }).distinct("_id");
-            console.log(values);
+            const res = yield Promise.all([
+                PropValue_1.default.find({
+                    prop: doc._id,
+                }).distinct("_id"),
+                PropValue_1.default.deleteMany({ prop: doc._id, })
+            ]);
+            const delProduct = yield Product_1.default.deleteMany({ props: { $in: res[0] } });
+            console.log(delProduct);
         }
     });
 });

@@ -11,7 +11,7 @@ export const userRegistrationRules = [
   body("phoneNumber")
     .notEmpty()
     .withMessage("Please provide valid phone number")
-    .isMobilePhone("any")
+    .isMobilePhone('any')
     .withMessage("Please provide valid phone number"),
   // body("fullName").notEmpty().withMessage("Name is required"),
   // body("gender").notEmpty().withMessage("Please provide your gender"),

@@ -9,6 +9,7 @@ import NotFoundError from "../Classes/Errors/NotFoundError";
 import BadRequestError from "../Classes/Errors/BadRequestError";
 import PropValue from "../Models/PropValue";
 import PropFormater from "../utils/PropFormater";
+import Product from "../Models/Product";
 
 const propRoutes = Router();
 propRoutes.get("/", async (req: Request, res: Response) => {
@@ -53,7 +54,7 @@ propRoutes.post("/values/new/many", async (req: Request, res: Response) => {
 
   const propVals = await PropValue.insertMany(values);
   const vals = [];
-  console.log(propVals);
+
   propVals.forEach((v) => vals.push(v.id));
   const subct = await Subcategory.findByIdAndUpdate(req.body.subcategory, {
     $push: { props: { $each: vals } },
@@ -90,12 +91,19 @@ propRoutes.put(
     res.send(updatedProp);
   }
 );
+propRoutes.get("/prop/:propId", async (req: Request, res: Response) => {
+  const props=await PropValue.find({ prop: req.params.propId }).populate('prop')
+  if(!props) throw new NotFoundError('Property Not Found')
+   const formatedProps=PropFormater.format(props)
+
+   res.send(formatedProps[0]);
+});
 propRoutes.get("/:propId", async (req: Request, res: Response) => {
 
-  const props=await PropValue.find({ prop: req.params.propId }).populate('prop')
+  const props=await Prop.findById( req.params.propId )
  if(!props) throw new NotFoundError('Property Not Found')
-  const formatedProps=PropFormater.format(props)
-  res.send(formatedProps[0]);
+ 
+  res.send(props);
 });
 
 propRoutes.get("/values/:valueId", async (req: Request, res: Response) => {
@@ -119,7 +127,7 @@ propRoutes.post(
       vals.push({ value: v, prop: prop.id });
     });
     const newVals = await PropValue.insertMany(vals);
-    console.log(newVals);
+    
     res.send({ values: newVals });
   }
 );
@@ -142,7 +150,7 @@ propRoutes.delete(
   isSuperAdmin,
   async (req: Request, res: Response) => {
     const prop = await Prop.findByIdAndDelete(req.params.id);
-
+    //const delProducts=await Product.deleteMany({prop:{$in:delVals}})
     res.send(prop);
   }
 );

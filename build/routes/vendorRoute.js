@@ -18,6 +18,9 @@ const VendorRules_1 = require("../Validation/VendorRules");
 const Vendor_1 = __importDefault(require("../Models/Vendor"));
 const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError"));
 const validateAdmin_1 = require("../middlewares/validateAdmin");
+const Product_1 = __importDefault(require("../Models/Product"));
+const MediaManager_1 = __importDefault(require("../utils/MediaManager"));
+const Admin_1 = __importDefault(require("../Models/Admin"));
 const vendorRoute = (0, express_1.Router)();
 vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const vendors = yield Vendor_1.default.find().populate({
@@ -42,6 +45,36 @@ vendorRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function
     });
     if (!vendor)
         throw new NotFoundError_1.default("Vendor Not Found");
+    console.log(vendor);
+    res.send(vendor);
+}));
+vendorRoute.delete("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const delVendor = yield Promise.all([
+        Vendor_1.default.findByIdAndDelete(req.params.id),
+        Admin_1.default.findOneAndDelete({ vendorId: req.params.id })
+    ]);
+    const vendor = delVendor[0];
+    if (!vendor)
+        throw new NotFoundError_1.default("Vendor Not Found");
+    const products = yield Product_1.default.find({ vendorId: req.params.id });
+    if (products.length > 0) {
+        const delImages = [];
+        products.forEach((p) => {
+            if (p.media && p.media.length > 0) {
+                p.media.forEach((m) => {
+                    delImages.push(MediaManager_1.default.deletefiles(m));
+                });
+            }
+            if (p.video) {
+                delImages.push(MediaManager_1.default.deletefiles(p.video));
+            }
+        });
+        delImages.push(Product_1.default.deleteMany({ vendorId: req.params.id }));
+        const result = yield Promise.all(delImages);
+        console.log(result);
+        res.send(result);
+        return;
+    }
     res.send(vendor);
 }));
 exports.default = vendorRoute;

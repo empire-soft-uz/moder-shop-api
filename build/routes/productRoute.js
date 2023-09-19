@@ -61,22 +61,29 @@ productRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (popularProducts) {
         sort = { viewCount: -1 };
     }
-    const products = yield Product_1.default.find(query)
-        .sort(sort)
-        //@ts-ignore
-        .skip(page * limit)
-        //@ts-ignore
-        .limit(limit)
-        .populate("vendorId", "name")
-        .populate("category", "name id")
-        .populate("subcategory", "name id")
-        .populate({
-        path: "props",
-        model: "PropValue",
-        populate: { path: "prop", model: "Prop" },
+    const result = yield Promise.all([
+        Product_1.default.find(query)
+            .sort(sort)
+            //@ts-ignore
+            .skip(page * limit)
+            //@ts-ignore
+            .limit(limit)
+            .populate("vendorId", "name")
+            .populate("category", "name id")
+            .populate("subcategory", "name id")
+            .populate({
+            path: "props",
+            model: "PropValue",
+            //populate: { path: "prop", model: "Prop" },
+        }),
+        Product_1.default.count(query),
+    ]);
+    res.send({
+        page: page || 1,
+        limit,
+        totalCount: result[1],
+        products: result[0],
     });
-    const totalCount = yield Product_1.default.count(query);
-    res.send({ page: page || 1, limit, totalCount, products });
 }));
 productRouter.get("/admin", validateAdmin_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
@@ -118,7 +125,7 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
         model: "Review",
         populate: {
             path: "authorId",
-            model: "User",
+            model: "Admin",
             select: "id fullName phoneNumber",
         },
     })
@@ -128,6 +135,10 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
         path: "props",
         model: "PropValue",
         populate: { path: "prop", model: "Prop" },
+    })
+        .populate({
+        path: "vendorId",
+        model: Vendor_1.default,
     });
     if (!product)
         throw new NotFoundError_1.default("Product Not Found");
@@ -138,7 +149,7 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
     product.viewCount += 1;
     yield product.save();
     const fProps = PropFormater_1.default.format(product.props);
-    const obj = Object.assign(Object.assign({ id: product.id }, product.toObject()), { props: fProps });
+    const obj = Object.assign(Object.assign({ id: product.id }, product.toObject()), { props: fProps, author: { id: product.author._id, email: product.author.email } });
     delete obj._id;
     res.send(obj);
 }));
@@ -154,14 +165,16 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
     //@ts-ignore
     let temp = [];
     Array.isArray(prices) && prices.map((p) => temp.push(JSON.parse(p)));
-    const product = Product_1.default.build(Object.assign(Object.assign({}, req.body), { price: temp }));
+    let product;
     const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
     if (admin.vendorId) {
-        const vendor = yield Vendor_1.default.findByIdAndUpdate(req.body.vendorId, {
+        product = Product_1.default.build(Object.assign(Object.assign({}, req.body), { price: temp }));
+        const vendor = yield Vendor_1.default.findByIdAndUpdate(admin.vendorId, {
             $push: { products: product.id },
         });
         if (!vendor)
             throw new NotFoundError_1.default(`Vendor with given id not found`);
+        product.vendorId = vendor.id;
         yield vendor.save();
     }
     if (files) {
@@ -203,10 +216,11 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
         req.body.delFiles.map((f) => fns.push(MediaManager_1.default.deletefiles(f)));
     if (admin.vendorId) {
         const vendor = yield Vendor_1.default.findByIdAndUpdate(admin.vendorId, {
-            $push: { products: product.id },
+            $push: { products: product._id },
         });
         if (!vendor)
             throw new NotFoundError_1.default(`Vendor with given id not found`);
+        yield vendor.save();
     }
     let tempProps = [...new Set(req.body.props)];
     const newData = Object.assign(Object.assign({}, req.body), { video: product.video, media: product.media, price: [] });
@@ -239,20 +253,19 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
         Product_1.default.findByIdAndUpdate(product.id, Object.assign(Object.assign({}, newData), { props: tempProps }), { new: true }),
         ...fns,
     ]);
-    console.log(newPr);
     res.send(newPr);
 }));
 productRouter.delete("/delete/:id", validateAdmin_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const [deletedProduct, admin] = yield Promise.all([
-        Product_1.default.findById(req.params.id),
-        Admin_1.default.findById(JWTDecrypter_1.default.decryptUser(req, jwtKey).id),
-    ]);
+    const admin = yield Admin_1.default.findById(JWTDecrypter_1.default.decryptUser(req, jwtKey).id);
     if (!admin)
         throw new ForbidenError_1.default("Access denied");
+    const deletedProduct = yield Product_1.default.findById(req.params.id);
     if (!deletedProduct)
         throw new NotFoundError_1.default("Product Not Found");
-    if (deletedProduct.author != admin.id || !admin.super)
-        throw new ForbidenError_1.default("Access denied");
+    if (!admin.super) {
+        if (deletedProduct.author.toString() != admin.id)
+            throw new ForbidenError_1.default("Access denied");
+    }
     const fns = [
         deletedProduct.deleteOne(),
         Vendor_1.default.findByIdAndUpdate(deletedProduct.vendorId, {

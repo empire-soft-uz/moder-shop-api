@@ -21,6 +21,9 @@ const mongoose_1 = require("mongoose");
 const BadRequestError_1 = __importDefault(require("../Classes/Errors/BadRequestError"));
 const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError"));
 const ForbidenError_1 = __importDefault(require("../Classes/Errors/ForbidenError"));
+const Product_1 = __importDefault(require("../Models/Product"));
+const validateAdmin_1 = __importDefault(require("../middlewares/validateAdmin"));
+const JWTDecrypter_1 = __importDefault(require("../utils/JWTDecrypter"));
 const orderRoute = (0, express_1.Router)();
 const jwtKey = process.env.JWT || "SomeJwT_keY";
 orderRoute.get("/user", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -39,6 +42,16 @@ orderRoute.get("/user", validateUser_1.default, (req, res) => __awaiter(void 0, 
         throw new NotFoundError_1.default("Order Not Found");
     //@ts-ignore
     res.send(order);
+}));
+orderRoute.get("/vendor", validateAdmin_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const admin = JWTDecrypter_1.default.decryptUser(req, process.env.JWT_ADMIN || "");
+    const products = yield Product_1.default.find({ vendorId: admin.vendorId }).select("id");
+    const prIds = products.map((p) => p.id.toString());
+    console.log(prIds);
+    const orders = yield Order_1.default.find({
+        "products.productId": { $in: [prIds] },
+    });
+    res.send(orders);
 }));
 orderRoute.get("/:id", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const authHeader = req.headers.authorization;
@@ -66,11 +79,34 @@ orderRoute.post("/new", validateUser_1.default, (req, res) => __awaiter(void 0, 
     const authHeader = req.headers.authorization;
     //@ts-ignore
     const author = jsonwebtoken_1.default.verify(authHeader, jwtKey);
-    const order = Order_1.default.build(Object.assign(Object.assign({}, req.body), { userId: author.id }));
+    const orderProducts = req.body.products;
+    const prIds = orderProducts.map((p) => p.productId);
+    const products = yield Product_1.default.find({ _id: { $in: prIds } });
+    const orderProductPrice = [];
+    if (products.length <= 0)
+        throw new NotFoundError_1.default("Products Not Found!");
+    let total = 0;
+    products.forEach((p, i) => {
+        if (orderProducts[i].productId === p.id.toString()) {
+            const pr = p.price.find((pr) => {
+                if (pr.qtyMin <= orderProducts[i].qty &&
+                    orderProducts[i].qty <= pr.qtyMax) {
+                    return pr;
+                }
+            }) || { price: 1 };
+            total += pr.price * orderProducts[i].qty;
+            orderProductPrice.push({
+                productId: p.id,
+                qty: orderProducts[i].qty,
+                price: pr.price * orderProducts[i].qty,
+            });
+        }
+    });
+    const order = Order_1.default.build(Object.assign(Object.assign({}, req.body), { products: orderProductPrice, userId: author.id, total }));
     yield order.save();
     res.send(order);
 }));
-orderRoute.delete("/delete/:id", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+orderRoute.delete("/delete/:id", validateAdmin_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const authHeader = req.headers.authorization;
     const orderId = req.params.id;
     if (!(0, mongoose_1.isValidObjectId)(orderId))

@@ -97,7 +97,8 @@ adminRoute.post(
       {
         id: admin.id,
         email: admin.email,
-        super:admin.super
+        super:admin.super,
+        vendorId:admin.vendorId
       },
       jwtKey
     );

@@ -77,7 +77,8 @@ adminRoute.post("/login", [...AdminRules_1.adminCreation], (req, res) => __await
     const token = jsonwebtoken_1.default.sign({
         id: admin.id,
         email: admin.email,
-        super: admin.super
+        super: admin.super,
+        vendorId: admin.vendorId
     }, jwtKey);
     res.send({ id: admin.id, email: admin.email, token, super: admin.super });
 }));

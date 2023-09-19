@@ -79,7 +79,7 @@ productSchema.statics.likeProduct = (id, userId) => __awaiter(void 0, void 0, vo
         throw new NotFoundError_1.default("Product Not Found");
     if (product.likes.find((l) => {
         if (l.toString() === userId) {
-            return true;
+            return l;
         }
         return false;
     })) {

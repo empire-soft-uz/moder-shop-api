@@ -23,19 +23,45 @@ const validateAdmin_1 = __importDefault(require("../middlewares/validateAdmin"))
 const chatRouter = (0, express_1.Router)();
 chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const admin = JWTDecrypter_1.default.decryptUser(req, process.env.JWT_ADMIN);
-    const chats = yield Chat_1.default.find({ admin: admin.id }).populate({
+    const chats = yield Chat_1.default.find({ admin: admin.id })
+        .populate({
+        path: "admin",
+        select: "id email",
+    })
+        .populate({
         path: "user",
         select: "id fullName phoneNumber",
     });
+    const chatCountFns = [];
+    // const result=[]
+    // if (chats.length > 0) {
+    //   chats.forEach((c) => {
+    //     chatCountFns.push(
+    //       Message.find({
+    //         reciever: admin.id,
+    //         chat: c.id,
+    //         viewed: false,
+    //       }).count()
+    //     );
+    //   });
+    // } 
+    // const counts=await Promise.all(chatCountFns);
+    // chats.forEach((c,i)=>{
+    //   result.push({...c.toObject(),id:c._id, unreadMsgs:counts[i]})
+    // })
+    // console.log(chats)
     res.send(chats);
 }));
 chatRouter.get("/admin/:chatId", validateAdmin_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const id = new mongoose_1.default.Types.ObjectId(req.params.chatId);
     const admin = JWTDecrypter_1.default.decryptUser(req, process.env.JWT_ADMIN);
-    const viewedMsgs = yield Message_1.default.updateMany({
-        chat: id,
-        reciever: admin.id,
-    }, { viewed: true });
+    // const viewedMsgs = await Message.updateMany(
+    //   {
+    //     chat: id,
+    //     reciever: admin.id,
+    //   },
+    //   { viewed: true }
+    // );
     const msgs = yield Message_1.default.find({ chat: id });
     //.populate('user');
     res.send({ messages: msgs });
@@ -56,17 +82,10 @@ chatRouter.get("/user", validateUser_1.default, (req, res, next) => __awaiter(vo
 chatRouter.get("/user/:chatId", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const id = new mongoose_1.default.Types.ObjectId(req.params.chatId);
     const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT);
-    const viewedMsgs = yield Message_1.default.updateMany({
-        chat: id,
-        reciever: user.id,
-    }, { viewed: true });
     const msgs = yield Message_1.default.find({
         chat: id,
     });
-    // .populate({
-    //   path:"admin",
-    //   select:"id email"
-    // });
+    console.log(msgs[msgs.length - 1]);
     res.send({ messages: msgs });
 }));
 chatRouter.post("/new", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {

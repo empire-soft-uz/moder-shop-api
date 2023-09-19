@@ -75,7 +75,6 @@ propRoutes.post("/values/new/many", (req, res) => __awaiter(void 0, void 0, void
     const { values, subcategory } = req.body;
     const propVals = yield PropValue_1.default.insertMany(values);
     const vals = [];
-    console.log(propVals);
     propVals.forEach((v) => vals.push(v.id));
     const subct = yield Subcateygory_1.default.findByIdAndUpdate(req.body.subcategory, {
         $push: { props: { $each: vals } },
@@ -97,12 +96,18 @@ propRoutes.put("/edit/:propId", validateAdmin_1.default, (req, res) => __awaiter
     const updatedProp = yield Prop_1.default.findByIdAndUpdate(req.params.propId, Object.assign({}, req.body), { new: true });
     res.send(updatedProp);
 }));
-propRoutes.get("/:propId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+propRoutes.get("/prop/:propId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const props = yield PropValue_1.default.find({ prop: req.params.propId }).populate('prop');
     if (!props)
         throw new NotFoundError_1.default('Property Not Found');
     const formatedProps = PropFormater_1.default.format(props);
     res.send(formatedProps[0]);
+}));
+propRoutes.get("/:propId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const props = yield Prop_1.default.findById(req.params.propId);
+    if (!props)
+        throw new NotFoundError_1.default('Property Not Found');
+    res.send(props);
 }));
 propRoutes.get("/values/:valueId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const value = yield PropValue_1.default.findById(req.params.valueId);
@@ -122,7 +127,6 @@ propRoutes.post("/values/new/:propId", validateAdmin_1.isSuperAdmin, (req, res) 
         vals.push({ value: v, prop: prop.id });
     });
     const newVals = yield PropValue_1.default.insertMany(vals);
-    console.log(newVals);
     res.send({ values: newVals });
 }));
 propRoutes.delete("/delete/:id/:subcategoryId", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -134,6 +138,7 @@ propRoutes.delete("/delete/:id/:subcategoryId", validateAdmin_1.isSuperAdmin, (r
 }));
 propRoutes.delete("/delete/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const prop = yield Prop_1.default.findByIdAndDelete(req.params.id);
+    //const delProducts=await Product.deleteMany({prop:{$in:delVals}})
     res.send(prop);
 }));
 exports.default = propRoutes;

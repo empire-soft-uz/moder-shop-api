@@ -21,11 +21,36 @@ chatRouter.get(
   validateAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     const admin = JWTDecrypter.decryptUser<IAdmin>(req, process.env.JWT_ADMIN);
-    const chats = await Chat.find({ admin: admin.id }).populate({
+
+    const chats = await Chat.find({ admin: admin.id })
+    .populate({
+      path: "admin",
+      select: "id email",
+    })
+    .populate({
       path: "user",
       select: "id fullName phoneNumber",
     });
-
+   
+    const chatCountFns = [];
+    // const result=[]
+    // if (chats.length > 0) {
+    //   chats.forEach((c) => {
+        
+    //     chatCountFns.push(
+    //       Message.find({
+    //         reciever: admin.id,
+    //         chat: c.id,
+    //         viewed: false,
+    //       }).count()
+    //     );
+    //   });
+    // } 
+    // const counts=await Promise.all(chatCountFns);
+    // chats.forEach((c,i)=>{
+    //   result.push({...c.toObject(),id:c._id, unreadMsgs:counts[i]})
+    // })
+    // console.log(chats)
     res.send(chats);
   }
 );
@@ -36,14 +61,14 @@ chatRouter.get(
     const id = new mongoose.Types.ObjectId(req.params.chatId);
     const admin = JWTDecrypter.decryptUser<IAdmin>(req, process.env.JWT_ADMIN);
 
-    const viewedMsgs = await Message.updateMany(
-      {
-        chat: id,
-        reciever: admin.id,
-      },
-      { viewed: true }
-    );
-    const msgs = await Message.find({chat:id})
+    // const viewedMsgs = await Message.updateMany(
+    //   {
+    //     chat: id,
+    //     reciever: admin.id,
+    //   },
+    //   { viewed: true }
+    // );
+    const msgs = await Message.find({ chat: id });
     //.populate('user');
     res.send({ messages: msgs });
   }
@@ -64,6 +89,7 @@ chatRouter.get(
         path: "user",
         select: "id fullName phoneNumber",
       });
+     
     res.send(chats);
   }
 );
@@ -72,21 +98,13 @@ chatRouter.get(
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
     const id = new mongoose.Types.ObjectId(req.params.chatId);
-    const user=JWTDecrypter.decryptUser<IUser>(req, process.env.JWT);
-    const viewedMsgs = await Message.updateMany(
-      {
-        chat: id,
-        reciever: user.id,
-      },
-      { viewed: true }
-    );
+    const user = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT);
+
+
     const msgs = await Message.find({
       chat: id,
     });
-    // .populate({
-    //   path:"admin",
-    //   select:"id email"
-    // });
+    console.log(msgs[msgs.length - 1]);
     res.send({ messages: msgs });
   }
 );

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { ObjectId } from "mongodb";
 const userRoute = Router();
 import "express-async-errors";
 import jwt from "jsonwebtoken";
@@ -14,6 +15,8 @@ import JWTDecrypter from "../utils/JWTDecrypter";
 import IUserPayload from "../Interfaces/IUserPayload";
 import verifyUser from "../middlewares/verifyUser";
 import NotFoundError from "../Classes/Errors/NotFoundError";
+import Product from "../Models/Product";
+import { model } from "mongoose";
 const expiresAt = parseInt(process.env.EXPIRATION || "5");
 const jwtKey = process.env.JWT || "SomeJwT_keY";
 userRoute.post(
@@ -44,7 +47,7 @@ userRoute.put("/verify", async (req: Request, res: Response) => {
   const { phoneNumber, code } = req.body;
   const opt = await OTP.findOne({ phoneNumber, code });
   if (!opt) throw new BadRequestError("Invalid Verification Credentials");
-  if (opt.expiresAt.getTime() < Date.now())
+  if (opt.expiresAt && opt.expiresAt.getTime() < Date.now())
     throw new BadRequestError("Verification Code Expired");
   opt.isVerified = true;
   opt.expiresAt = undefined;
@@ -161,35 +164,82 @@ userRoute.put(
     res.send(user);
   }
 );
-userRoute.put('/basket/add/:id', validateUser, async (req: Request, res: Response) => {
-  const author = JWTDecrypter.decryptUser<IUserPayload>(req, jwtKey);
-  const user=await User.findByIdAndUpdate(author.id,{
-    $push:{basket:req.params.id}
-  },{new:true, fields:{
-    "id":1,
-    "fullName":1,
-    'phoneNumber':1,
-    'basket':1,
-  }}).populate('basket')
-  if(!user) throw new NotFoundError('User Not Found')
-  res.send(user);
-} )
-userRoute.put('/basket/remove/:id', validateUser, async (req: Request, res: Response) => {
-  const author = JWTDecrypter.decryptUser<IUserPayload>(req, jwtKey);
-  const user=await User.findByIdAndUpdate(author.id,{
-    $pull:{basket:req.params.id}
-  },{new:true, fields:{
-    "id":1,
-    "fullName":1,
-    'phoneNumber':1,
-    'basket':1,
-  }}).populate('basket')
-  if(!user) throw new NotFoundError('User Not Found')
-  res.send(user);
-} )
+userRoute.put(
+  "/basket/add/:id",
+  validateUser,
+  async (req: Request, res: Response) => {
+    const author = JWTDecrypter.decryptUser<IUserPayload>(req, jwtKey);
+    const alreadyInBasket = await User.findOne({
+      _id: author.id,
+      basket: new ObjectId(req.params.id),
+    });
+    if (alreadyInBasket) throw new BadRequestError("Product already in basket");
+    const user = await User.findByIdAndUpdate(
+      author.id,
+      {
+        $push: { basket: req.params.id },
+      },
+      {
+        new: true,
+      }
+    )
+      .select("-password")
+      .populate({
+        path: "basket",
+        model: "Product",
+      });
+    if (!user) throw new NotFoundError("User Not Found");
+    
+    res.send(user);
+  }
+);
+userRoute.put(
+  "/basket/remove/:id",
+  validateUser,
+  async (req: Request, res: Response) => {
+    const author = JWTDecrypter.decryptUser<IUserPayload>(req, jwtKey);
+    const alreadyInBasket = await User.findOne({
+      _id: author.id,
+      basket: new ObjectId(req.params.id),
+    });
+    if (!alreadyInBasket) throw new BadRequestError("Basket doesn't contain this product");
+    
+    const user = await User.findByIdAndUpdate(
+      author.id,
+      {
+        $pull: { basket: req.params.id },
+      },
+      { new: true, password: 0 }
+    );
+    if (!user) throw new NotFoundError("User Not Found");
+    res.send({ ...user.toObject(), password: undefined });
+  }
+);
 userRoute.get("/current", validateUser, async (req: Request, res: Response) => {
   const author = JWTDecrypter.decryptUser<IUserPayload>(req, jwtKey);
-  const user = await User.findOne({ _id: author.id }, { password: 0 });
+  const user = await User.findById(author.id, { password: 0 })
+    .select("-password")
+    .populate({
+      path: "basket",
+      model: "Product",
+      populate: [
+        {
+          path: "category",
+          model: "Category",
+          select:'id name'
+        },
+        {
+          path: "subcategory",
+          model: "Subcategory",
+          select: "id name",
+        },
+        {
+          path: "vendorId",
+          model: "Vendor",
+          select: "id name description contacts",
+        },
+      ],
+    });
   res.send(user);
 });
 export default userRoute;

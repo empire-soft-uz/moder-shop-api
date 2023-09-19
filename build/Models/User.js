@@ -13,7 +13,7 @@ const userSchema = new mongoose_1.Schema({
     gender: String,
     birthdate: Date,
     online: { type: Boolean, default: false },
-    basket: { type: [mongoose_1.Schema.Types.ObjectId], ref: Product_1.default }
+    basket: [{ type: mongoose_1.Schema.Types.ObjectId, ref: Product_1.default }]
 }, {
     toJSON: {
         transform(doc, ret) {

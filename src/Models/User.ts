@@ -35,7 +35,7 @@ const userSchema = new Schema(
     gender: String,
     birthdate: Date,
     online:{type:Boolean, default:false},
-    basket:{type:[Schema.Types.ObjectId], ref:Product}
+    basket:[{type:Schema.Types.ObjectId, ref:Product}]
   },
   {
     toJSON: {

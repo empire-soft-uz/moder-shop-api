@@ -19,6 +19,7 @@ import IPrice from "../Interfaces/Product/IPrice";
 import Admin from "../Models/Admin";
 import ForbidenError from "../Classes/Errors/ForbidenError";
 import PropFormater from "../utils/PropFormater";
+import { model } from "mongoose";
 
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
@@ -66,22 +67,29 @@ productRouter.get("/", async (req: Request, res: Response) => {
   if (popularProducts) {
     sort = { viewCount: -1 };
   }
-  const products = await Product.find(query)
-    .sort(sort)
-    //@ts-ignore
-    .skip(page * limit)
-    //@ts-ignore
-    .limit(limit)
-    .populate("vendorId", "name")
-    .populate("category", "name id")
-    .populate("subcategory", "name id")
-    .populate({
-      path: "props",
-      model: "PropValue",
-      populate: { path: "prop", model: "Prop" },
-    });
-  const totalCount = await Product.count(query);
-  res.send({ page: page || 1, limit, totalCount, products });
+  const result = await Promise.all([
+    Product.find(query)
+      .sort(sort)
+      //@ts-ignore
+      .skip(page * limit)
+      //@ts-ignore
+      .limit(limit)
+      .populate("vendorId", "name")
+      .populate("category", "name id")
+      .populate("subcategory", "name id")
+      .populate({
+        path: "props",
+        model: "PropValue",
+        //populate: { path: "prop", model: "Prop" },
+      }),
+    Product.count(query),
+  ]);
+  res.send({
+    page: page || 1,
+    limit,
+    totalCount: result[1],
+    products: result[0],
+  });
 });
 productRouter.get(
   "/admin",
@@ -135,7 +143,7 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
       model: "Review",
       populate: {
         path: "authorId",
-        model: "User",
+        model: "Admin",
         select: "id fullName phoneNumber",
       },
     })
@@ -146,6 +154,10 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
       path: "props",
       model: "PropValue",
       populate: { path: "prop", model: "Prop" },
+    })
+    .populate({
+      path: "vendorId",
+      model: Vendor,
     });
   if (!product) throw new NotFoundError("Product Not Found");
   if (req.query.admin) {
@@ -154,10 +166,15 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
   }
   product.viewCount += 1;
   await product.save();
-  
+
   const fProps = PropFormater.format(product.props);
-  
-  const obj = { id: product.id, ...product.toObject(), props: fProps };
+
+  const obj = {
+    id: product.id,
+    ...product.toObject(),
+    props: fProps,
+    author: { id: product.author._id, email: product.author.email },
+  };
   delete obj._id;
   res.send(obj);
 });
@@ -169,6 +186,7 @@ productRouter.put(
       req,
       process.env.JWT || ""
     );
+
     const product = await Product.likeProduct(req.params.id, user.id);
 
     res.send(product);
@@ -184,17 +202,21 @@ productRouter.post(
 
     const { files } = req;
     const { prices } = req.body;
+
     //@ts-ignore
 
     let temp = [];
     Array.isArray(prices) && prices.map((p) => temp.push(JSON.parse(p)));
-    const product = Product.build({ ...req.body, price: temp });
+    let product;
     const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
+  
     if (admin.vendorId) {
-      const vendor = await Vendor.findByIdAndUpdate(req.body.vendorId, {
+      product = Product.build({ ...req.body, price: temp });
+      const vendor = await Vendor.findByIdAndUpdate(admin.vendorId, {
         $push: { products: product.id },
       });
       if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
+      product.vendorId = vendor.id;
       await vendor.save();
     }
     if (files) {
@@ -219,6 +241,7 @@ productRouter.post(
       }
     }
     product.author = admin.id;
+
     await product.save();
 
     res.send(product);
@@ -232,7 +255,7 @@ productRouter.put(
   [...productCreation],
   async (req: Request, res: Response) => {
     Validator.validate(req);
-
+    
     const { remainingProps, newProps, prices } = req.body;
     const { files } = req;
     const product = await Product.findById(req.params.id);
@@ -244,9 +267,10 @@ productRouter.put(
       req.body.delFiles.map((f) => fns.push(MediaManager.deletefiles(f)));
     if (admin.vendorId) {
       const vendor = await Vendor.findByIdAndUpdate(admin.vendorId, {
-        $push: { products: product.id },
+        $push: { products: product._id },
       });
       if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
+      await vendor.save();
     }
     let tempProps = [...new Set(req.body.props)];
     const newData = {
@@ -292,7 +316,7 @@ productRouter.put(
       ),
       ...fns,
     ]);
-    console.log(newPr);
+  
     res.send(newPr);
   }
 );
@@ -301,14 +325,20 @@ productRouter.delete(
   "/delete/:id",
   validateAdmin,
   async (req: Request, res: Response) => {
-    const [deletedProduct, admin] = await Promise.all([
-      Product.findById(req.params.id),
-      Admin.findById(JWTDecrypter.decryptUser<IAdmin>(req, jwtKey).id),
-    ]);
+    const admin = await Admin.findById(
+      JWTDecrypter.decryptUser<IAdmin>(req, jwtKey).id
+    );
+
     if (!admin) throw new ForbidenError("Access denied");
+    const deletedProduct = await Product.findById(req.params.id);
+
     if (!deletedProduct) throw new NotFoundError("Product Not Found");
-    if (deletedProduct.author != admin.id || !admin.super)
-      throw new ForbidenError("Access denied");
+
+    if (!admin.super) {
+      if (deletedProduct.author.toString() != admin.id)
+        throw new ForbidenError("Access denied");
+    }
+
     const fns = [
       deletedProduct.deleteOne(),
       Vendor.findByIdAndUpdate(deletedProduct.vendorId, {

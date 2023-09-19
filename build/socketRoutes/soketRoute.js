@@ -25,59 +25,60 @@ const startSocketServer = () => {
         console.log("New user connected", socket.id);
         socket.on("newUser", (msg) => {
             let user = Object.assign(Object.assign({}, JSON.parse(msg)), { socketId: socket.id });
+            //socket.join(msg.id);
             usrs.push({ socketId: socket.id, id: user.id });
         });
         socket.on("chatSelected", (chat) => {
-            const u = usrs.find((U) => U.id === chat.admin.id || chat.user.id);
-            socket.join(chat.id.toString());
-            if (u) {
-                //@ts-ignore
-                io.sockets.sockets.get(u.socketId).join(chat.id);
-                //@ts-ignore
-                io.sockets.sockets
-                    .get(u.socketId)
-                    .emit("newChatAdminNotification", chat);
+            try {
+                console.log("chat selected", chat);
+                socket.join(chat.id.toString());
+                const u = usrs.find((U) => U.id === chat.admin.id || chat.user.id);
+                if (u) {
+                    //@ts-ignore
+                    io.sockets.sockets.get(u.socketId).join(chat.id);
+                    //@ts-ignore
+                    io.sockets.sockets
+                        .get(u.socketId)
+                        .emit("newChatAdminNotification", chat);
+                }
+            }
+            catch (error) {
+                console.log("chat error ---------------");
+                console.log(error);
             }
         });
         socket.on("recieveMsg", (msg) => __awaiter(void 0, void 0, void 0, function* () {
-            let m = {
-                sender: msg.sender,
-                reciever: msg.reciever,
-                chat: msg.chat,
-            };
-            //@ts-ignore
-            // var room = io.in(msg.chat);
-            // console.log([...room.adapter.rooms], msg.chat);
-            if (msg.message) {
-                m = Object.assign(Object.assign({}, m), { message: msg.message });
+            try {
+                let m = {
+                    sender: msg.sender,
+                    reciever: msg.reciever,
+                    chat: msg.chat,
+                };
+                if (msg.message) {
+                    m = Object.assign(Object.assign({}, m), { message: msg.message });
+                }
+                const newMsg = Message_1.default.build(m);
+                if (msg.file) {
+                    const filePath = path_1.default.join(__dirname, "..", "..", "public", newMsg.id + msg.file.originalName);
+                    node_fs_1.default.writeFileSync(filePath, msg.file.buffer);
+                    newMsg.file = newMsg.id + msg.file.originalName;
+                }
+                yield newMsg.save();
+                //@ts-ignore  sending to chat
+                io.to(newMsg.chat.toString()).emit("sendMessage", newMsg);
             }
-            const newMsg = Message_1.default.build(m);
-            // if (
-            //   usrs.find((u) => {
-            //     if (u.id === msg.reciever) {
-            //       return u;
-            //     }
-            //   })
-            // ) {
-            //   newMsg.viewed = true;
-            // }
-            if (msg.file) {
-                const filePath = path_1.default.join(__dirname, "..", "..", "public", newMsg.id + msg.file.originalName);
-                node_fs_1.default.writeFileSync(filePath, msg.file.buffer);
-                newMsg.file = newMsg.id + msg.file.originalName;
+            catch (error) {
+                console.log(error);
             }
-            yield newMsg.save();
-            //@ts-ignore
-            io.to(newMsg.chat.toString()).emit("sendMessage", newMsg);
         }));
         socket.on("messageViewed", (msg) => __awaiter(void 0, void 0, void 0, function* () {
-            const m = yield Message_1.default.findByIdAndUpdate(msg.id, { viewed: true }, { new: true });
+            const m = yield Message_1.default.findOneAndUpdate({ _id: msg.id }, { viewed: true }, { new: true });
             if (!m) {
                 return;
             }
             //@ts-ignore
-            io.to(m.chat.toString()).emit(String(m.id), m);
-            console.log(m);
+            io.to(m.chat.toString()).emit(m.id.toString(), m);
+            //@ts-ignore notify
         }));
         socket.on("getChatMessages", (user) => __awaiter(void 0, void 0, void 0, function* () {
             const existingChat = yield Chat_1.default.findOne({

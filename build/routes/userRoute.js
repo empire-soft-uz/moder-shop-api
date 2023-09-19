@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const mongodb_1 = require("mongodb");
 const userRoute = (0, express_1.Router)();
 require("express-async-errors");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -51,7 +52,7 @@ userRoute.put("/verify", (req, res) => __awaiter(void 0, void 0, void 0, functio
     const opt = yield OTP_1.default.findOne({ phoneNumber, code });
     if (!opt)
         throw new BadRequestError_1.default("Invalid Verification Credentials");
-    if (opt.expiresAt.getTime() < Date.now())
+    if (opt.expiresAt && opt.expiresAt.getTime() < Date.now())
         throw new BadRequestError_1.default("Verification Code Expired");
     opt.isVerified = true;
     opt.expiresAt = undefined;
@@ -137,37 +138,68 @@ userRoute.put("/update", [...UserRules_1.userRegistrationRules], verifyUser_1.de
     user === null || user === void 0 ? void 0 : user.password = undefined;
     res.send(user);
 }));
-userRoute.put('/basket/add/:id', validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRoute.put("/basket/add/:id", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const author = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    const alreadyInBasket = yield User_1.default.findOne({
+        _id: author.id,
+        basket: new mongodb_1.ObjectId(req.params.id),
+    });
+    if (alreadyInBasket)
+        throw new BadRequestError_1.default("Product already in basket");
     const user = yield User_1.default.findByIdAndUpdate(author.id, {
-        $push: { basket: req.params.id }
-    }, { new: true, fields: {
-            "id": 1,
-            "fullName": 1,
-            'phoneNumber': 1,
-            'basket': 1,
-        } }).populate('basket');
+        $push: { basket: req.params.id },
+    }, {
+        new: true,
+    })
+        .select("-password")
+        .populate({
+        path: "basket",
+        model: "Product",
+    });
     if (!user)
-        throw new NotFoundError_1.default('User Not Found');
+        throw new NotFoundError_1.default("User Not Found");
     res.send(user);
 }));
-userRoute.put('/basket/remove/:id', validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRoute.put("/basket/remove/:id", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const author = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    const alreadyInBasket = yield User_1.default.findOne({
+        _id: author.id,
+        basket: new mongodb_1.ObjectId(req.params.id),
+    });
+    if (!alreadyInBasket)
+        throw new BadRequestError_1.default("Basket doesn't contain this product");
     const user = yield User_1.default.findByIdAndUpdate(author.id, {
-        $pull: { basket: req.params.id }
-    }, { new: true, fields: {
-            "id": 1,
-            "fullName": 1,
-            'phoneNumber': 1,
-            'basket': 1,
-        } }).populate('basket');
+        $pull: { basket: req.params.id },
+    }, { new: true, password: 0 });
     if (!user)
-        throw new NotFoundError_1.default('User Not Found');
-    res.send(user);
+        throw new NotFoundError_1.default("User Not Found");
+    res.send(Object.assign(Object.assign({}, user.toObject()), { password: undefined }));
 }));
 userRoute.get("/current", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const author = JWTDecrypter_1.default.decryptUser(req, jwtKey);
-    const user = yield User_1.default.findOne({ _id: author.id }, { password: 0 });
+    const user = yield User_1.default.findById(author.id, { password: 0 })
+        .select("-password")
+        .populate({
+        path: "basket",
+        model: "Product",
+        populate: [
+            {
+                path: "category",
+                model: "Category",
+                select: 'id name'
+            },
+            {
+                path: "subcategory",
+                model: "Subcategory",
+                select: "id name",
+            },
+            {
+                path: "vendorId",
+                model: "Vendor",
+                select: "id name description contacts",
+            },
+        ],
+    });
     res.send(user);
 }));
 exports.default = userRoute;
