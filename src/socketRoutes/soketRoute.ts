@@ -49,7 +49,7 @@ const startSocketServer = () => {
         if (msg.message) {
           m = { ...m, message: msg.message };
         }
-
+        console.log(msg);
         const newMsg = Message.build(m);
 
         if (msg.file) {
@@ -72,13 +72,12 @@ const startSocketServer = () => {
       }
     });
     socket.on("messageViewed", async (msg) => {
-      
       const m = await Message.findOneAndUpdate(
-        {_id:msg.id},
+        { _id: msg.id },
         { viewed: true },
         { new: true }
       );
-     
+
       if (!m) {
         return;
       }

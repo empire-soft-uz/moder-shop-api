@@ -1,5 +1,6 @@
 import { Model, Schema, model, Document } from "mongoose";
 import IOrderProducts from "../Interfaces/Order/IOrderProducts";
+import Vendor from "./Vendor";
 
 enum orderStatus {
   new = "new",
@@ -19,7 +20,7 @@ interface OrderDoc extends Document {
   deliveryAddress: string;
   total:number
   status: orderStatus;
-  //vendor:Schema.Types.ObjectId;
+  vendor:Schema.Types.ObjectId;
 }
 interface OrderModel extends Model<OrderDoc> {
   build(attrs: order): OrderDoc;
@@ -27,6 +28,7 @@ interface OrderModel extends Model<OrderDoc> {
 const productSchema = new Schema(
   {
     productId: { type: Schema.Types.ObjectId, ref: "Product" },
+    vendor:{type:Schema.Types.ObjectId, ref:Vendor},
     qty: Number,
     price:Number
   },

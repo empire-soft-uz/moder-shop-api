@@ -136,8 +136,8 @@ userRoute.put(
 
   async (req: Request, res: Response) => {
     const author = JWTDecrypter.decryptUser<IUserPayload>(req, jwtKey);
-
-    console.log(author);
+    console.log(req.body);
+   
     if (author.exp && author.exp < Date.now())
       throw new BadRequestError("Token expired");
     let update = { ...req.body };
@@ -189,7 +189,7 @@ userRoute.put(
         model: "Product",
       });
     if (!user) throw new NotFoundError("User Not Found");
-    
+
     res.send(user);
   }
 );
@@ -202,8 +202,9 @@ userRoute.put(
       _id: author.id,
       basket: new ObjectId(req.params.id),
     });
-    if (!alreadyInBasket) throw new BadRequestError("Basket doesn't contain this product");
-    
+    if (!alreadyInBasket)
+      throw new BadRequestError("Basket doesn't contain this product");
+
     const user = await User.findByIdAndUpdate(
       author.id,
       {
@@ -226,7 +227,7 @@ userRoute.get("/current", validateUser, async (req: Request, res: Response) => {
         {
           path: "category",
           model: "Category",
-          select:'id name'
+          select: "id name",
         },
         {
           path: "subcategory",

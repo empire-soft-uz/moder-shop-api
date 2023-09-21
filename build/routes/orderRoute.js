@@ -45,11 +45,8 @@ orderRoute.get("/user", validateUser_1.default, (req, res) => __awaiter(void 0, 
 }));
 orderRoute.get("/vendor", validateAdmin_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const admin = JWTDecrypter_1.default.decryptUser(req, process.env.JWT_ADMIN || "");
-    const products = yield Product_1.default.find({ vendorId: admin.vendorId }).select("id");
-    const prIds = products.map((p) => p.id.toString());
-    console.log(prIds);
     const orders = yield Order_1.default.find({
-        "products.productId": { $in: [prIds] },
+        "products.vendor": admin.vendorId,
     });
     res.send(orders);
 }));
@@ -86,21 +83,23 @@ orderRoute.post("/new", validateUser_1.default, (req, res) => __awaiter(void 0, 
     if (products.length <= 0)
         throw new NotFoundError_1.default("Products Not Found!");
     let total = 0;
-    products.forEach((p, i) => {
-        if (orderProducts[i].productId === p.id.toString()) {
-            const pr = p.price.find((pr) => {
-                if (pr.qtyMin <= orderProducts[i].qty &&
-                    orderProducts[i].qty <= pr.qtyMax) {
-                    return pr;
-                }
-            }) || { price: 1 };
-            total += pr.price * orderProducts[i].qty;
-            orderProductPrice.push({
-                productId: p.id,
-                qty: orderProducts[i].qty,
-                price: pr.price * orderProducts[i].qty,
-            });
-        }
+    orderProducts.forEach((o) => {
+        const p = products.find((p) => p._id.toString() === o.productId);
+        if (!p)
+            throw new BadRequestError_1.default("One of the products doesn't exists");
+        const pr = p.price.find((pr) => {
+            if (pr.qtyMin <= o.qty &&
+                o.qty <= pr.qtyMax) {
+                return pr;
+            }
+        }) || { price: 1 };
+        total += pr.price * o.qty;
+        orderProductPrice.push({
+            productId: p.id,
+            qty: o.qty,
+            price: pr.price * o.qty,
+            vendor: p.vendorId,
+        });
     });
     const order = Order_1.default.build(Object.assign(Object.assign({}, req.body), { products: orderProductPrice, userId: author.id, total }));
     yield order.save();

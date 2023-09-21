@@ -18,6 +18,7 @@ interface OrderDoc extends Document {
     deliveryAddress: string;
     total: number;
     status: orderStatus;
+    vendor: Schema.Types.ObjectId;
 }
 interface OrderModel extends Model<OrderDoc> {
     build(attrs: order): OrderDoc;

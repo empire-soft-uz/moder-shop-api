@@ -42,14 +42,11 @@ orderRoute.get(
       req,
       process.env.JWT_ADMIN || ""
     );
-    const products = await Product.find({ vendorId: admin.vendorId }).select(
-      "id"
-    );
-    const prIds = products.map((p) => p.id.toString());
-    console.log(prIds);
+
     const orders = await Order.find({
-      "products.productId": { $in: [prIds] },
+      "products.vendor": admin.vendorId,
     });
+
     res.send(orders);
   }
 );
@@ -83,27 +80,30 @@ orderRoute.post("/new", validateUser, async (req: Request, res: Response) => {
   const orderProducts: [{ productId: string; qty: number }] = req.body.products;
   const prIds = orderProducts.map((p) => p.productId);
   const products = await Product.find({ _id: { $in: prIds } });
-  const orderProductPrice: [{ productId: string; qty: number; price: number }] =
-    [];
+  const orderProductPrice: [
+    { productId: string; qty: number; price: number; vendor: string }
+  ] = [];
   if (products.length <= 0) throw new NotFoundError("Products Not Found!");
   let total = 0;
-  products.forEach((p, i) => {
-    if (orderProducts[i].productId === p.id.toString()) {
-      const pr = p.price.find((pr) => {
-        if (
-          pr.qtyMin <= orderProducts[i].qty &&
-          orderProducts[i].qty <= pr.qtyMax
-        ) {
-          return pr;
-        }
-      }) || { price: 1 };
-      total += pr.price * orderProducts[i].qty;
-      orderProductPrice.push({
-        productId: p.id,
-        qty: orderProducts[i].qty,
-        price: pr.price * orderProducts[i].qty,
-      });
-    }
+  orderProducts.forEach((o) => {
+    const p = products.find((p) => p._id.toString() === o.productId);
+    if(!p) throw new BadRequestError("One of the products doesn't exists")
+    const pr = p.price.find((pr) => {
+      if (
+        pr.qtyMin <= o.qty &&
+        o.qty <= pr.qtyMax
+      ) {
+        return pr;
+      }
+    }) || { price: 1 };
+    total += pr.price * o.qty;
+    
+    orderProductPrice.push({
+      productId: p.id,
+      qty: o.qty,
+      price: pr.price * o.qty,
+      vendor: p.vendorId,
+    });
   });
 
   const order = Order.build({

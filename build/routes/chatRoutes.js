@@ -20,6 +20,8 @@ const JWTDecrypter_1 = __importDefault(require("../utils/JWTDecrypter"));
 require("express-async-errors");
 const validateUser_1 = __importDefault(require("../middlewares/validateUser"));
 const validateAdmin_1 = __importDefault(require("../middlewares/validateAdmin"));
+const mongoose_2 = require("mongoose");
+const BadRequestError_1 = __importDefault(require("../Classes/Errors/BadRequestError"));
 const chatRouter = (0, express_1.Router)();
 chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const admin = JWTDecrypter_1.default.decryptUser(req, process.env.JWT_ADMIN);
@@ -44,13 +46,21 @@ chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(
     //       }).count()
     //     );
     //   });
-    // } 
+    // }
     // const counts=await Promise.all(chatCountFns);
     // chats.forEach((c,i)=>{
     //   result.push({...c.toObject(),id:c._id, unreadMsgs:counts[i]})
     // })
     // console.log(chats)
     res.send(chats);
+}));
+chatRouter.get("/admin/msgcount", validateAdmin_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const admin = JWTDecrypter_1.default.decryptUser(req, process.env.JWT_ADMIN);
+    const unreadMsgs = yield Message_1.default.find({
+        reciever: admin.id,
+        viewed: false,
+    }).count();
+    res.send({ unreadMsgs });
 }));
 chatRouter.get("/admin/:chatId", validateAdmin_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const id = new mongoose_1.default.Types.ObjectId(req.params.chatId);
@@ -92,8 +102,12 @@ chatRouter.post("/new", validateUser_1.default, (req, res, next) => __awaiter(vo
     const validUser = JWTDecrypter_1.default.decryptUser(req, process.env.JWT);
     const { author, product } = req.body;
     let chat;
-    const data = { user: validUser.id, admin: author };
+    const data = { user: validUser.id, admin: author, product };
     chat = yield Chat_1.default.findOne(data);
+    if (!mongoose_2.Types.ObjectId.isValid(author))
+        throw new BadRequestError_1.default("Invalid Product Admin id is suplied to create chat");
+    if (!mongoose_2.Types.ObjectId.isValid(product))
+        throw new BadRequestError_1.default("Invalid Product Id is suplied to create chat");
     if (!chat) {
         chat = Chat_1.default.build(data);
         yield chat.save();

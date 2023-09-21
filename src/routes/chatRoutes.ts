@@ -9,7 +9,9 @@ import "express-async-errors";
 import validateUser from "../middlewares/validateUser";
 import validateAdmin from "../middlewares/validateAdmin";
 import IAdmin from "../Interfaces/IAdmin";
+import { Types } from "mongoose";
 import IChat from "../Interfaces/IChat";
+import BadRequestError from "../Classes/Errors/BadRequestError";
 const chatRouter = Router();
 interface UserPayload {
   id: string;
@@ -23,20 +25,20 @@ chatRouter.get(
     const admin = JWTDecrypter.decryptUser<IAdmin>(req, process.env.JWT_ADMIN);
 
     const chats = await Chat.find({ admin: admin.id })
-    .populate({
-      path: "admin",
-      select: "id email",
-    })
-    .populate({
-      path: "user",
-      select: "id fullName phoneNumber",
-    });
-   
+      .populate({
+        path: "admin",
+        select: "id email",
+      })
+      .populate({
+        path: "user",
+        select: "id fullName phoneNumber",
+      });
+
     const chatCountFns = [];
     // const result=[]
     // if (chats.length > 0) {
     //   chats.forEach((c) => {
-        
+
     //     chatCountFns.push(
     //       Message.find({
     //         reciever: admin.id,
@@ -45,13 +47,26 @@ chatRouter.get(
     //       }).count()
     //     );
     //   });
-    // } 
+    // }
     // const counts=await Promise.all(chatCountFns);
     // chats.forEach((c,i)=>{
     //   result.push({...c.toObject(),id:c._id, unreadMsgs:counts[i]})
     // })
     // console.log(chats)
     res.send(chats);
+  }
+);
+chatRouter.get(
+  "/admin/msgcount",
+  validateAdmin,
+  async (req: Request, res: Response, next: NextFunction) => {
+    const admin = JWTDecrypter.decryptUser<IAdmin>(req, process.env.JWT_ADMIN!);
+    const unreadMsgs = await Message.find({
+      reciever: admin.id,
+      viewed: false,
+    }).count();
+
+    res.send({ unreadMsgs });
   }
 );
 chatRouter.get(
@@ -78,7 +93,7 @@ chatRouter.get(
   "/user",
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
-    const user = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT);
+    const user = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT!);
 
     const chats = await Chat.find({ user: user.id })
       .populate({
@@ -89,7 +104,7 @@ chatRouter.get(
         path: "user",
         select: "id fullName phoneNumber",
       });
-     
+
     res.send(chats);
   }
 );
@@ -98,8 +113,7 @@ chatRouter.get(
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
     const id = new mongoose.Types.ObjectId(req.params.chatId);
-    const user = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT);
-
+    const user = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT!);
 
     const msgs = await Message.find({
       chat: id,
@@ -112,11 +126,17 @@ chatRouter.post(
   "/new",
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
-    const validUser = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT);
+    const validUser = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT!);
     const { author, product } = req.body;
+
     let chat;
-    const data = { user: validUser.id, admin: author };
+    const data = { user: validUser.id, admin: author, product };
     chat = await Chat.findOne(data);
+    if ( !Types.ObjectId.isValid(author))
+      throw new BadRequestError("Invalid Product Admin id is suplied to create chat");
+    if (!Types.ObjectId.isValid(product) )
+      throw new BadRequestError("Invalid Product Id is suplied to create chat");
+   
     if (!chat) {
       chat = Chat.build(data);
       await chat.save();

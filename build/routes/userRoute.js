@@ -118,7 +118,7 @@ userRoute.post("/login", [...UserRules_1.userLoginRules], (req, res) => __awaite
 }));
 userRoute.put("/update", [...UserRules_1.userRegistrationRules], verifyUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const author = JWTDecrypter_1.default.decryptUser(req, jwtKey);
-    console.log(author);
+    console.log(req.body);
     if (author.exp && author.exp < Date.now())
         throw new BadRequestError_1.default("Token expired");
     let update = Object.assign({}, req.body);
@@ -186,7 +186,7 @@ userRoute.get("/current", validateUser_1.default, (req, res) => __awaiter(void 0
             {
                 path: "category",
                 model: "Category",
-                select: 'id name'
+                select: "id name",
             },
             {
                 path: "subcategory",

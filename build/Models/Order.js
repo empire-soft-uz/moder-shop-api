@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
+const Vendor_1 = __importDefault(require("./Vendor"));
 var orderStatus;
 (function (orderStatus) {
     orderStatus["new"] = "new";
@@ -10,6 +14,7 @@ var orderStatus;
 })(orderStatus || (orderStatus = {}));
 const productSchema = new mongoose_1.Schema({
     productId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Product" },
+    vendor: { type: mongoose_1.Schema.Types.ObjectId, ref: Vendor_1.default },
     qty: Number,
     price: Number
 }, { id: false, _id: false });
