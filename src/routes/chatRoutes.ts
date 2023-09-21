@@ -127,17 +127,17 @@ chatRouter.post(
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
     const validUser = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT!);
-    const { author, product } = req.body;
+    const { admin, product } = req.body;
 
     let chat;
-    const data = { user: validUser.id, admin: author, product };
+    const data = { user: validUser.id, admin: admin };
     chat = await Chat.findOne(data);
-    if ( !Types.ObjectId.isValid(author))
-      throw new BadRequestError("Invalid Product Admin id is suplied to create chat");
-    if (!Types.ObjectId.isValid(product) )
-      throw new BadRequestError("Invalid Product Id is suplied to create chat");
-   
+console.log(chat)
     if (!chat) {
+      if (!Types.ObjectId.isValid(admin))
+        throw new BadRequestError(
+          "Invalid Product Admin id is suplied to create chat"
+        );
       chat = Chat.build(data);
       await chat.save();
     }

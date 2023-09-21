@@ -100,15 +100,14 @@ chatRouter.get("/user/:chatId", validateUser_1.default, (req, res, next) => __aw
 }));
 chatRouter.post("/new", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const validUser = JWTDecrypter_1.default.decryptUser(req, process.env.JWT);
-    const { author, product } = req.body;
+    const { admin, product } = req.body;
     let chat;
-    const data = { user: validUser.id, admin: author, product };
+    const data = { user: validUser.id, admin: admin };
     chat = yield Chat_1.default.findOne(data);
-    if (!mongoose_2.Types.ObjectId.isValid(author))
-        throw new BadRequestError_1.default("Invalid Product Admin id is suplied to create chat");
-    if (!mongoose_2.Types.ObjectId.isValid(product))
-        throw new BadRequestError_1.default("Invalid Product Id is suplied to create chat");
+    console.log(chat);
     if (!chat) {
+        if (!mongoose_2.Types.ObjectId.isValid(admin))
+            throw new BadRequestError_1.default("Invalid Product Admin id is suplied to create chat");
         chat = Chat_1.default.build(data);
         yield chat.save();
     }
