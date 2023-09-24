@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response, Router } from "express";
 
-import mongoose from "mongoose";
 import IUser from "../Interfaces/IUser";
 import Chat from "../Models/Chat";
 import Message from "../Models/Message";
@@ -9,7 +8,7 @@ import "express-async-errors";
 import validateUser from "../middlewares/validateUser";
 import validateAdmin from "../middlewares/validateAdmin";
 import IAdmin from "../Interfaces/IAdmin";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import IChat from "../Interfaces/IChat";
 import BadRequestError from "../Classes/Errors/BadRequestError";
 const chatRouter = Router();
@@ -24,36 +23,87 @@ chatRouter.get(
   async (req: Request, res: Response, next: NextFunction) => {
     const admin = JWTDecrypter.decryptUser<IAdmin>(req, process.env.JWT_ADMIN);
 
-    const chats = await Chat.find({ admin: admin.id })
-      .populate({
-        path: "admin",
-        select: "id email",
-      })
-      .populate({
-        path: "user",
-        select: "id fullName phoneNumber",
-      });
-
-    const chatCountFns = [];
-    // const result=[]
-    // if (chats.length > 0) {
-    //   chats.forEach((c) => {
-
-    //     chatCountFns.push(
-    //       Message.find({
-    //         reciever: admin.id,
-    //         chat: c.id,
-    //         viewed: false,
-    //       }).count()
-    //     );
+    // const chats = await Chat.find({ admin: admin.id })
+    //   .populate({
+    //     path: "admin",
+    //     select: "id email",
+    //   })
+    //   .populate({
+    //     path: "user",
+    //     select: "id fullName phoneNumber",
     //   });
-    // }
-    // const counts=await Promise.all(chatCountFns);
-    // chats.forEach((c,i)=>{
-    //   result.push({...c.toObject(),id:c._id, unreadMsgs:counts[i]})
-    // })
-    // console.log(chats)
-    res.send(chats);
+
+    const result = await Chat.aggregate([
+      {
+        $match: {
+          admin: new Types.ObjectId(admin.id),
+        },
+      },
+      {
+        $lookup: {
+          from: "admins",
+          localField: "admin",
+          foreignField: "_id",
+          as: "admin",
+        },
+      },
+      { $unwind: "$admin" },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+
+      {
+        $lookup: {
+          from: "messages",
+          localField: "_id",
+          foreignField: "chat",
+
+          as: "messages",
+        },
+      },
+      // {
+      //   $unwind: "$messages",
+      // },
+      {
+        $match: {
+          "messages.viewed": false,
+          //"messages.reciever":new Types.ObjectId(admin.id),
+        },
+      },
+
+      {
+        $project: {
+          id: "$_id",
+
+          "admin.id": "$admin._id",
+          "admin.email": "$admin.email",
+          "admin.vendorId": "$admin.vendorId",
+
+          "user.fullName": 1,
+          "user.id": "$user._id",
+          "user.phoneNumber": 1,
+          
+          "unreadMsgs": {
+            $size: {
+              $filter: {
+                input: "$messages",
+                as: "message",
+                cond: { $eq: ["$$message.viewed", false] },
+              },
+            },
+          },
+        },
+      },
+    ]).exec();
+    console.log(admin.id);
+    res.send(result);
   }
 );
 chatRouter.get(
@@ -132,7 +182,6 @@ chatRouter.post(
     let chat;
     const data = { user: validUser.id, admin: admin };
     chat = await Chat.findOne(data);
-console.log(chat)
     if (!chat) {
       if (!Types.ObjectId.isValid(admin))
         throw new BadRequestError(

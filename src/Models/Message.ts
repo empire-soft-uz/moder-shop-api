@@ -27,9 +27,9 @@ interface MessageModel extends Model<MessageDoc> {
 
 const messageSchema = new Schema(
   {
-    sender: { type: Schema.Types.ObjectId, required: true, reg: User },
-    reciever: { type: Schema.Types.ObjectId, required: true, reg: User },
-    chat: { type: Schema.Types.ObjectId, required: true, reg: Chat },
+    sender: { type: Schema.Types.ObjectId, required: true, ref: User },
+    reciever: { type: Schema.Types.ObjectId, required: true, ref: User },
+    chat: { type: Schema.Types.ObjectId, required: true, ref: Chat },
     message: String,
     file: String,
     viewed:{type:Boolean, default:false}

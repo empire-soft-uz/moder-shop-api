@@ -22,6 +22,7 @@ const startSocketServer = () => {
 
     socket.on("chatSelected", (chat) => {
       try {
+        
         console.log("chat selected", chat);
         socket.join(chat.id.toString());
         const u = usrs.find((U) => U.id === chat.admin.id || chat.user.id);
@@ -49,7 +50,6 @@ const startSocketServer = () => {
         if (msg.message) {
           m = { ...m, message: msg.message };
         }
-        console.log(msg);
         const newMsg = Message.build(m);
 
         if (msg.file) {

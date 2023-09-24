@@ -57,7 +57,6 @@ const startSocketServer = () => {
                 if (msg.message) {
                     m = Object.assign(Object.assign({}, m), { message: msg.message });
                 }
-                console.log(msg);
                 const newMsg = Message_1.default.build(m);
                 if (msg.file) {
                     const filePath = path_1.default.join(__dirname, "..", "..", "public", newMsg.id + msg.file.originalName);

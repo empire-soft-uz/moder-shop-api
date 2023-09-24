@@ -7,9 +7,9 @@ const mongoose_1 = require("mongoose");
 const User_1 = __importDefault(require("./User"));
 const Chat_1 = __importDefault(require("./Chat"));
 const messageSchema = new mongoose_1.Schema({
-    sender: { type: mongoose_1.Schema.Types.ObjectId, required: true, reg: User_1.default },
-    reciever: { type: mongoose_1.Schema.Types.ObjectId, required: true, reg: User_1.default },
-    chat: { type: mongoose_1.Schema.Types.ObjectId, required: true, reg: Chat_1.default },
+    sender: { type: mongoose_1.Schema.Types.ObjectId, required: true, ref: User_1.default },
+    reciever: { type: mongoose_1.Schema.Types.ObjectId, required: true, ref: User_1.default },
+    chat: { type: mongoose_1.Schema.Types.ObjectId, required: true, ref: Chat_1.default },
     message: String,
     file: String,
     viewed: { type: Boolean, default: false }
