@@ -47,15 +47,6 @@ const BadRequestError_1 = __importDefault(require("../Classes/Errors/BadRequestE
 const chatRouter = (0, express_1.Router)();
 chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const admin = JWTDecrypter_1.default.decryptUser(req, process.env.JWT_ADMIN);
-    // const chats = await Chat.find({ admin: admin.id })
-    //   .populate({
-    //     path: "admin",
-    //     select: "id email",
-    //   })
-    //   .populate({
-    //     path: "user",
-    //     select: "id fullName phoneNumber",
-    //   });
     const result = yield Chat_1.default.aggregate([
         {
             $match: {
@@ -89,14 +80,11 @@ chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(
             },
         },
         // {
-        //   $unwind: "$messages",
+        //   $match: {
+        //     "messages.viewed": false,
+        //     //"messages.reciever":new Types.ObjectId(admin.id),
+        //   },
         // },
-        {
-            $match: {
-                "messages.viewed": false,
-                //"messages.reciever":new Types.ObjectId(admin.id),
-            },
-        },
         {
             $project: {
                 id: "$_id",
@@ -118,7 +106,6 @@ chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(
             },
         },
     ]).exec();
-    console.log(admin.id);
     res.send(result);
 }));
 chatRouter.get("/admin/msgcount", validateAdmin_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
