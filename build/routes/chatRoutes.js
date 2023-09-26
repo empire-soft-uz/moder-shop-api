@@ -81,8 +81,7 @@ chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(
         },
         // {
         //   $match: {
-        //     "messages.viewed": false,
-        //     //"messages.reciever":new Types.ObjectId(admin.id),
+        //     "messages.reciever":new Types.ObjectId(admin.id),
         //   },
         // },
         {
@@ -94,12 +93,19 @@ chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(
                 "user.fullName": 1,
                 "user.id": "$user._id",
                 "user.phoneNumber": 1,
-                "unreadMsgs": {
+                unreadMsgs: {
                     $size: {
                         $filter: {
                             input: "$messages",
                             as: "message",
-                            cond: { $eq: ["$$message.viewed", false] },
+                            cond: {
+                                $and: [
+                                    { $eq: ["$$message.viewed", false] },
+                                    {
+                                        $eq: ["$$message.reciever", new mongoose_1.Types.ObjectId(admin.id)],
+                                    },
+                                ],
+                            },
                         },
                     },
                 },
@@ -128,7 +134,7 @@ chatRouter.get("/admin/:chatId", validateAdmin_1.default, (req, res, next) => __
     // );
     const msgs = yield Message_1.default.find({ chat: id });
     //.populate('user');
-    res.send({ messages: msgs });
+    res.send(msgs);
 }));
 chatRouter.get("/user", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT);

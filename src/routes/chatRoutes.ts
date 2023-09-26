@@ -23,7 +23,6 @@ chatRouter.get(
   async (req: Request, res: Response, next: NextFunction) => {
     const admin = JWTDecrypter.decryptUser<IAdmin>(req, process.env.JWT_ADMIN);
 
-
     const result = await Chat.aggregate([
       {
         $match: {
@@ -59,11 +58,11 @@ chatRouter.get(
           as: "messages",
         },
       },
-     
+
       // {
       //   $match: {
-      //     "messages.viewed": false,
-      //     //"messages.reciever":new Types.ObjectId(admin.id),
+
+      //     "messages.reciever":new Types.ObjectId(admin.id),
       //   },
       // },
 
@@ -78,19 +77,26 @@ chatRouter.get(
           "user.fullName": 1,
           "user.id": "$user._id",
           "user.phoneNumber": 1,
-          "unreadMsgs": {
+          unreadMsgs: {
             $size: {
               $filter: {
                 input: "$messages",
                 as: "message",
-                cond: { $eq: ["$$message.viewed", false] },
+                cond: {
+                  $and: [
+                    { $eq: ["$$message.viewed", false] },
+                    {
+                      $eq: ["$$message.reciever", new Types.ObjectId(admin.id)],
+                    },
+                  ],
+                },
               },
             },
           },
         },
       },
     ]).exec();
-    
+
     res.send(result);
   }
 );
@@ -123,7 +129,7 @@ chatRouter.get(
     // );
     const msgs = await Message.find({ chat: id });
     //.populate('user');
-    res.send({ messages: msgs });
+    res.send(msgs);
   }
 );
 
