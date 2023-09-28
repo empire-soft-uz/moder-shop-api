@@ -65,7 +65,7 @@ const startSocketServer = () => {
                 }
                 yield newMsg.save();
                 //@ts-ignore  sending to chat
-                io.to(newMsg.chat.toString()).emit("sendMessage", newMsg);
+                io.to(newMsg.chat.toString()).emit(`sendMessage-${newMsg.chat}`, newMsg);
             }
             catch (error) {
                 console.log(error);
