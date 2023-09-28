@@ -23,10 +23,31 @@ const MediaManager_1 = __importDefault(require("../utils/MediaManager"));
 const Admin_1 = __importDefault(require("../Models/Admin"));
 const vendorRoute = (0, express_1.Router)();
 vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const vendors = yield Vendor_1.default.find().populate({
-        path: "products",
-        model: "Product",
-    });
+    // const vendors = await Vendor.find().populate({
+    //   path: "products",
+    //   model: "Product",
+    // });
+    const vendors = yield Vendor_1.default.aggregate([
+        {
+            $lookup: {
+                from: "admins",
+                localField: "_id",
+                foreignField: "vendorId",
+                as: "admin",
+            },
+        },
+        { $unwind: "$admin" },
+        {
+            $project: {
+                id: "$_id",
+                name: "$name",
+                contacts: "$contacts",
+                "admin.id": "$admin._id",
+                "admin.email": "$admin.email",
+            },
+        },
+        { $unset: ["_id", "admin._id",] }
+    ]);
     res.send(vendors);
 }));
 vendorRoute.post("/new", [...VendorRules_1.vendorCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -51,7 +72,7 @@ vendorRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function
 vendorRoute.delete("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const delVendor = yield Promise.all([
         Vendor_1.default.findByIdAndDelete(req.params.id),
-        Admin_1.default.findOneAndDelete({ vendorId: req.params.id })
+        Admin_1.default.findOneAndDelete({ vendorId: req.params.id }),
     ]);
     const vendor = delVendor[0];
     if (!vendor)

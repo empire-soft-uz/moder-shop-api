@@ -61,7 +61,7 @@ chatRouter.get(
 
       // {
       //   $match: {
-
+      //     "messages.viewed":false,
       //     "messages.reciever":new Types.ObjectId(admin.id),
       //   },
       // },
@@ -95,6 +95,7 @@ chatRouter.get(
           },
         },
       },
+      { $unset: ["_id", "admin._id", "user._id"] },
     ]).exec();
 
     res.send(result);

@@ -18,35 +18,53 @@ const io = SoketServer_1.default.getInstance;
 const path_1 = __importDefault(require("path"));
 const Chat_1 = __importDefault(require("../Models/Chat"));
 const Message_1 = __importDefault(require("../Models/Message"));
-let usrs = [];
+let usrs = new Map();
 const startSocketServer = () => {
     console.log("Starting Socket Server");
     io.on("connection", (socket) => {
         console.log("New user connected", socket.id);
         socket.on("newUser", (msg) => {
-            let user = Object.assign(Object.assign({}, JSON.parse(msg)), { socketId: socket.id });
-            //socket.join(msg.id);
-            usrs.push({ socketId: socket.id, id: user.id });
-        });
-        socket.on("chatSelected", (chat) => {
             try {
-                console.log("chat selected", chat);
+                console.log(msg);
+                let user = { id: msg.id, socketId: socket.id };
+                socket.data.user = msg;
+                //socket.join(msg.id);
+                usrs.set(user.id, user.socketId);
+            }
+            catch (error) {
+                console.log('new user error-------------------------');
+                console.log(error);
+            }
+        });
+        socket.on("chatSelected", (chat) => __awaiter(void 0, void 0, void 0, function* () {
+            try {
                 socket.join(chat.id.toString());
-                const u = usrs.find((U) => U.id === chat.admin.id || chat.user.id);
+                const u = usrs.get(chat.admin.toString());
+                console.log(socket.data.user);
                 if (u) {
+                    const c = yield Chat_1.default.findById(chat.id)
+                        .populate({
+                        path: "admin",
+                        select: "id email",
+                    })
+                        .populate({
+                        path: "user",
+                        select: "id fullName phoneNumber",
+                    });
+                    if (!c) {
+                        return;
+                    }
                     //@ts-ignore
-                    io.sockets.sockets.get(u.socketId).join(chat.id);
+                    io.sockets.sockets.get(u).join(c.id);
                     //@ts-ignore
-                    io.sockets.sockets
-                        .get(u.socketId)
-                        .emit("newChatAdminNotification", chat);
+                    io.sockets.sockets.get(u).emit("newChatAdminNotification", c);
                 }
             }
             catch (error) {
                 console.log("chat error ---------------");
                 console.log(error);
             }
-        });
+        }));
         socket.on("recieveMsg", (msg) => __awaiter(void 0, void 0, void 0, function* () {
             try {
                 let m = {
@@ -65,7 +83,11 @@ const startSocketServer = () => {
                 }
                 yield newMsg.save();
                 //@ts-ignore  sending to chat
-                io.to(newMsg.chat.toString()).emit(`sendMessage-${newMsg.chat}`, newMsg);
+                io.to(newMsg.chat.toString()).emit(
+                //@ts-ignore
+                `sendMessage-${newMsg.chat}`, newMsg);
+                //@ts-ignore
+                io.sockets.socket(usrs.get(newMsg.reciever.toString())).emit(newMsg.chat.toString(), newMsg);
             }
             catch (error) {
                 console.log(error);
@@ -93,7 +115,7 @@ const startSocketServer = () => {
         //  Handle disconnection
         socket.on("disconnect", () => {
             console.log("User disconnected");
-            usrs = usrs.filter((u) => u.socketId != socket.id);
+            //usrs = usrs.filter((u) => u.socketId != socket.id);
             io.emit("userDisconnected", socket.data.user);
         });
     });

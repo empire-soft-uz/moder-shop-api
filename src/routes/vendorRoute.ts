@@ -9,10 +9,31 @@ import MediaManager from "../utils/MediaManager";
 import Admin from "../Models/Admin";
 const vendorRoute = Router();
 vendorRoute.get("/", async (req: Request, res: Response) => {
-  const vendors = await Vendor.find().populate({
-    path: "products",
-    model: "Product",
-  });
+  // const vendors = await Vendor.find().populate({
+  //   path: "products",
+  //   model: "Product",
+  // });
+  const vendors = await Vendor.aggregate([
+    {
+      $lookup: {
+        from: "admins",
+        localField: "_id",
+        foreignField: "vendorId",
+        as: "admin",
+      },
+    },
+    { $unwind: "$admin" },
+    {
+      $project: {
+        id: "$_id",
+        name: "$name",
+        contacts: "$contacts",
+        "admin.id": "$admin._id",
+        "admin.email": "$admin.email",
+      },
+    },
+    { $unset: [ "_id", "admin._id",  ] }
+  ]);
   res.send(vendors);
 });
 vendorRoute.post(
@@ -45,19 +66,17 @@ vendorRoute.get("/:id", async (req: Request, res: Response) => {
     model: "Product",
   });
   if (!vendor) throw new NotFoundError("Vendor Not Found");
-  console.log(vendor)
+  console.log(vendor);
   res.send(vendor);
 });
 vendorRoute.delete(
   "/:id",
   isSuperAdmin,
   async (req: Request, res: Response) => {
-    const delVendor=await Promise.all(
-      [
-        Vendor.findByIdAndDelete(req.params.id),
-        Admin.findOneAndDelete({vendorId:req.params.id})
-      ]
-    )
+    const delVendor = await Promise.all([
+      Vendor.findByIdAndDelete(req.params.id),
+      Admin.findOneAndDelete({ vendorId: req.params.id }),
+    ]);
     const vendor = delVendor[0];
     if (!vendor) throw new NotFoundError("Vendor Not Found");
 
@@ -75,12 +94,11 @@ vendorRoute.delete(
         }
       });
       delImages.push(Product.deleteMany({ vendorId: req.params.id }));
-      const result =await Promise.all(delImages);
+      const result = await Promise.all(delImages);
       console.log(result);
       res.send(result);
       return;
     }
-
 
     res.send(vendor);
   }

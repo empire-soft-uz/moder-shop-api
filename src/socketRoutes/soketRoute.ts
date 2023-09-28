@@ -5,38 +5,59 @@ const io = SocketServer.getInstance;
 import path from "path";
 import Chat from "../Models/Chat";
 import Message from "../Models/Message";
-import IMessage from "../Interfaces/IMessage";
-import IChat from "../Interfaces/IChat";
 
-let usrs: Array<{ socketId: string; id: string }> = [];
+let usrs: Map<string, string> = new Map<string, string>();
 const startSocketServer = () => {
   console.log("Starting Socket Server");
   io.on("connection", (socket) => {
     console.log("New user connected", socket.id);
 
     socket.on("newUser", (msg) => {
-      let user = { ...JSON.parse(msg), socketId: socket.id };
+      try {
+        console.log(msg)
+      let user = { id: msg.id, socketId: socket.id };
+      socket.data.user=msg
       //socket.join(msg.id);
-      usrs.push({ socketId: socket.id, id: user.id });
+      usrs.set(user.id, user.socketId);
+      } catch (error) {
+        console.log('new user error-------------------------')
+        console.log(error)
+      }
+      
+     
+
     });
 
-    socket.on("chatSelected", (chat) => {
+    socket.on("chatSelected", async (chat) => {
       try {
-        
-        console.log("chat selected", chat);
         socket.join(chat.id.toString());
-        const u = usrs.find((U) => U.id === chat.admin.id || chat.user.id);
+        const u = usrs.get(chat.admin.toString());
+        console.log(socket.data.user)
         if (u) {
+          const c = await Chat.findById(chat.id)
+            .populate({
+              path: "admin",
+              select: "id email",
+            })
+            .populate({
+              path: "user",
+              select: "id fullName phoneNumber",
+            });
+           
+            if(!c){
+              return
+            }
           //@ts-ignore
-          io.sockets.sockets.get(u.socketId).join(chat.id);
+          io.sockets.sockets.get(u).join(c.id);
           //@ts-ignore
-          io.sockets.sockets
-            .get(u.socketId)
-            .emit("newChatAdminNotification", chat);
+          io.sockets.sockets.get(u).emit("newChatAdminNotification", c);
+       
         }
       } catch (error) {
         console.log("chat error ---------------");
         console.log(error);
+
+
       }
     });
     socket.on("recieveMsg", async (msg) => {
@@ -66,7 +87,14 @@ const startSocketServer = () => {
         await newMsg.save();
         //@ts-ignore  sending to chat
 
-        io.to(newMsg.chat.toString()).emit(`sendMessage-${newMsg.chat}`, newMsg);
+        io.to(newMsg.chat.toString()).emit(
+          //@ts-ignore
+          `sendMessage-${newMsg.chat}`,
+          newMsg
+        );
+        //@ts-ignore
+        io.sockets.socket(usrs.get(newMsg.reciever.toString())).emit(newMsg.chat.toString(), newMsg)
+
       } catch (error) {
         console.log(error);
       }
@@ -98,10 +126,11 @@ const startSocketServer = () => {
       }
     });
 
+
     //  Handle disconnection
     socket.on("disconnect", () => {
       console.log("User disconnected");
-      usrs = usrs.filter((u) => u.socketId != socket.id);
+      //usrs = usrs.filter((u) => u.socketId != socket.id);
       io.emit("userDisconnected", socket.data.user);
     });
   });

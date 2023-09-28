@@ -81,6 +81,7 @@ chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(
         },
         // {
         //   $match: {
+        //     "messages.viewed":false,
         //     "messages.reciever":new Types.ObjectId(admin.id),
         //   },
         // },
@@ -111,6 +112,7 @@ chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(
                 },
             },
         },
+        { $unset: ["_id", "admin._id", "user._id"] },
     ]).exec();
     res.send(result);
 }));
