@@ -25,14 +25,13 @@ const startSocketServer = () => {
         console.log("New user connected", socket.id);
         socket.on("newUser", (msg) => {
             try {
-                console.log(msg);
                 let user = { id: msg.id, socketId: socket.id };
                 socket.data.user = msg;
                 //socket.join(msg.id);
-                usrs.set(user.id, user.socketId);
+                usrs.set(msg.id, user.socketId);
             }
             catch (error) {
-                console.log('new user error-------------------------');
+                console.log("new user error-------------------------");
                 console.log(error);
             }
         });
@@ -40,7 +39,6 @@ const startSocketServer = () => {
             try {
                 socket.join(chat.id.toString());
                 const u = usrs.get(chat.admin.toString());
-                console.log(socket.data.user);
                 if (u) {
                     const c = yield Chat_1.default.findById(chat.id)
                         .populate({
@@ -86,8 +84,14 @@ const startSocketServer = () => {
                 io.to(newMsg.chat.toString()).emit(
                 //@ts-ignore
                 `sendMessage-${newMsg.chat}`, newMsg);
+                let usr = usrs.get(newMsg.reciever.toString());
                 //@ts-ignore
-                io.sockets.socket(usrs.get(newMsg.reciever.toString())).emit(newMsg.chat.toString(), newMsg);
+                if (usr) {
+                    io.to(usr) //@ts-ignore
+                        .emit(newMsg.chat.toString(), newMsg);
+                    io.to(usr) //@ts-ignore
+                        .emit('total-count', newMsg);
+                }
             }
             catch (error) {
                 console.log(error);

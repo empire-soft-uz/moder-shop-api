@@ -23,10 +23,6 @@ const MediaManager_1 = __importDefault(require("../utils/MediaManager"));
 const Admin_1 = __importDefault(require("../Models/Admin"));
 const vendorRoute = (0, express_1.Router)();
 vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // const vendors = await Vendor.find().populate({
-    //   path: "products",
-    //   model: "Product",
-    // });
     const vendors = yield Vendor_1.default.aggregate([
         {
             $lookup: {

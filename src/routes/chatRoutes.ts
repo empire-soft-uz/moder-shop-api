@@ -163,7 +163,7 @@ chatRouter.get(
     const msgs = await Message.find({
       chat: id,
     });
-    console.log(msgs[msgs.length - 1]);
+   
     res.send({ messages: msgs });
   }
 );

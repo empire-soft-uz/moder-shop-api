@@ -157,7 +157,6 @@ chatRouter.get("/user/:chatId", validateUser_1.default, (req, res, next) => __aw
     const msgs = yield Message_1.default.find({
         chat: id,
     });
-    console.log(msgs[msgs.length - 1]);
     res.send({ messages: msgs });
 }));
 chatRouter.post("/new", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {

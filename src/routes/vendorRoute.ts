@@ -9,10 +9,7 @@ import MediaManager from "../utils/MediaManager";
 import Admin from "../Models/Admin";
 const vendorRoute = Router();
 vendorRoute.get("/", async (req: Request, res: Response) => {
-  // const vendors = await Vendor.find().populate({
-  //   path: "products",
-  //   model: "Product",
-  // });
+  
   const vendors = await Vendor.aggregate([
     {
       $lookup: {

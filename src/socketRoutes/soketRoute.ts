@@ -14,25 +14,22 @@ const startSocketServer = () => {
 
     socket.on("newUser", (msg) => {
       try {
-        console.log(msg)
-      let user = { id: msg.id, socketId: socket.id };
-      socket.data.user=msg
-      //socket.join(msg.id);
-      usrs.set(user.id, user.socketId);
-      } catch (error) {
-        console.log('new user error-------------------------')
-        console.log(error)
-      }
-      
-     
+        let user = { id: msg.id, socketId: socket.id };
+        socket.data.user = msg;
+        //socket.join(msg.id);
 
+        usrs.set(msg.id, user.socketId);
+      } catch (error) {
+        console.log("new user error-------------------------");
+        console.log(error);
+      }
     });
 
     socket.on("chatSelected", async (chat) => {
       try {
         socket.join(chat.id.toString());
         const u = usrs.get(chat.admin.toString());
-        console.log(socket.data.user)
+
         if (u) {
           const c = await Chat.findById(chat.id)
             .populate({
@@ -43,21 +40,18 @@ const startSocketServer = () => {
               path: "user",
               select: "id fullName phoneNumber",
             });
-           
-            if(!c){
-              return
-            }
+
+          if (!c) {
+            return;
+          }
           //@ts-ignore
           io.sockets.sockets.get(u).join(c.id);
           //@ts-ignore
           io.sockets.sockets.get(u).emit("newChatAdminNotification", c);
-       
         }
       } catch (error) {
         console.log("chat error ---------------");
         console.log(error);
-
-
       }
     });
     socket.on("recieveMsg", async (msg) => {
@@ -92,9 +86,16 @@ const startSocketServer = () => {
           `sendMessage-${newMsg.chat}`,
           newMsg
         );
+        let usr = usrs.get(newMsg.reciever.toString());
+        
         //@ts-ignore
-        io.sockets.socket(usrs.get(newMsg.reciever.toString())).emit(newMsg.chat.toString(), newMsg)
-
+        if(usr){
+          io.to(usr) //@ts-ignore
+          .emit(newMsg.chat.toString(), newMsg);
+          io.to(usr) //@ts-ignore
+          .emit('total-count', newMsg);
+        }
+        
       } catch (error) {
         console.log(error);
       }
@@ -125,7 +126,6 @@ const startSocketServer = () => {
         });
       }
     });
-
 
     //  Handle disconnection
     socket.on("disconnect", () => {
