@@ -82,7 +82,7 @@ orderRoute.post("/new", validateUser, async (req: Request, res: Response) => {
   const products = await Product.find({ _id: { $in: prIds } });
   const orderProductPrice: [
     { productId: string; qty: number; price: number; vendor: string }
-  ] = [];
+  ] |[]= [];
   if (products.length <= 0) throw new NotFoundError("Products Not Found!");
   let total = 0;
   orderProducts.forEach((o) => {
@@ -95,7 +95,7 @@ orderRoute.post("/new", validateUser, async (req: Request, res: Response) => {
       ) {
         return pr;
       }
-    }) || { price: 1 };
+    }) || p.price[0];
     total += pr.price * o.qty;
     
     orderProductPrice.push({
