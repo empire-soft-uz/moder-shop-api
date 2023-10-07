@@ -92,7 +92,7 @@ orderRoute.post("/new", validateUser_1.default, (req, res) => __awaiter(void 0, 
                 o.qty <= pr.qtyMax) {
                 return pr;
             }
-        }) || p.price[0];
+        }) || p.price[p.price.length - 1];
         total += pr.price * o.qty;
         orderProductPrice.push({
             productId: p.id,

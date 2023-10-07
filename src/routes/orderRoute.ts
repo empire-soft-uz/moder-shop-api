@@ -95,7 +95,7 @@ orderRoute.post("/new", validateUser, async (req: Request, res: Response) => {
       ) {
         return pr;
       }
-    }) || p.price[0];
+    }) || p.price[p.price.length-1];
     total += pr.price * o.qty;
     
     orderProductPrice.push({
