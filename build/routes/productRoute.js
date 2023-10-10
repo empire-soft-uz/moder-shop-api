@@ -155,6 +155,8 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
 }));
 productRouter.put("/like/:id", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT || "");
+    if (!req.params.id)
+        throw new NotFoundError_1.default("Product Not Found");
     const product = yield Product_1.default.likeProduct(req.params.id, user.id);
     res.send(product);
 }));
@@ -167,16 +169,15 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
     Array.isArray(prices) && prices.map((p) => temp.push(JSON.parse(p)));
     let product;
     const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
-    if (admin.vendorId) {
-        product = Product_1.default.build(Object.assign(Object.assign({}, req.body), { price: temp }));
-        const vendor = yield Vendor_1.default.findByIdAndUpdate(admin.vendorId, {
-            $push: { products: product.id },
-        });
-        if (!vendor)
-            throw new NotFoundError_1.default(`Vendor with given id not found`);
-        product.vendorId = vendor.id;
-        yield vendor.save();
-    }
+    //@ts-ignore
+    product = Product_1.default.build(Object.assign(Object.assign({}, req.body), { price: temp }));
+    const vendor = yield Vendor_1.default.findByIdAndUpdate(admin.vendorId, {
+        $push: { products: product.id },
+    });
+    if (!vendor)
+        throw new NotFoundError_1.default(`Vendor with given id not found`);
+    product.vendorId = vendor.id;
+    yield vendor.save();
     if (files) {
         const video = [
             "video/mp4",
@@ -205,14 +206,14 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
 }));
 productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4), [...ProductRules_1.productCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
-    const { remainingProps, newProps, prices } = req.body;
+    const { prices } = req.body;
     const { files } = req;
     const product = yield Product_1.default.findById(req.params.id);
     if (!product)
         throw new NotFoundError_1.default("Product Not Found");
     const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
     const fns = [];
-    req.body.delFiles &&
+    req.body.delFiles && //@ts-ignore
         req.body.delFiles.map((f) => fns.push(MediaManager_1.default.deletefiles(f)));
     if (admin.vendorId) {
         const vendor = yield Vendor_1.default.findByIdAndUpdate(admin.vendorId, {

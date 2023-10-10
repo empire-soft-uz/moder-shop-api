@@ -75,7 +75,7 @@ const productSchema = new Schema(
     media: [mediaSchema],
     video: mediaSchema,
     viewCount: { type: Number, default: 0 },
-    likes: [{ type: Schema.Types.ObjectId, ref: User }],
+    likes: [{ type: Schema.Types.ObjectId, ref: User,required:true }],
     category: { type: Schema.Types.ObjectId, ref: Category },
     subcategory: { type: Schema.Types.ObjectId, ref: Subcategory },
     reviews: [{ type: Schema.Types.ObjectId, ref: Review }],

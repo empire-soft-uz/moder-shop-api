@@ -20,6 +20,7 @@ import Admin from "../Models/Admin";
 import ForbidenError from "../Classes/Errors/ForbidenError";
 import PropFormater from "../utils/PropFormater";
 import { model } from "mongoose";
+import IProductMedia from "../Interfaces/Product/IProducMedia";
 
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
@@ -186,7 +187,7 @@ productRouter.put(
       req,
       process.env.JWT || ""
     );
-
+    if (!req.params.id) throw new NotFoundError("Product Not Found");
     const product = await Product.likeProduct(req.params.id, user.id);
 
     res.send(product);
@@ -209,16 +210,16 @@ productRouter.post(
     Array.isArray(prices) && prices.map((p) => temp.push(JSON.parse(p)));
     let product;
     const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
-  
-    if (admin.vendorId) {
-      product = Product.build({ ...req.body, price: temp });
-      const vendor = await Vendor.findByIdAndUpdate(admin.vendorId, {
-        $push: { products: product.id },
-      });
-      if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
-      product.vendorId = vendor.id;
-      await vendor.save();
-    }
+
+    //@ts-ignore
+    product = Product.build({ ...req.body, price: temp });
+    const vendor = await Vendor.findByIdAndUpdate(admin.vendorId, {
+      $push: { products: product.id },
+    });
+    if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
+    product.vendorId = vendor.id;
+    await vendor.save();
+
     if (files) {
       const video = [
         "video/mp4",
@@ -255,16 +256,18 @@ productRouter.put(
   [...productCreation],
   async (req: Request, res: Response) => {
     Validator.validate(req);
-    
-    const { remainingProps, newProps, prices } = req.body;
+
+    const { prices } = req.body;
     const { files } = req;
     const product = await Product.findById(req.params.id);
     if (!product) throw new NotFoundError("Product Not Found");
 
     const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
-    const fns = [];
-    req.body.delFiles &&
-      req.body.delFiles.map((f) => fns.push(MediaManager.deletefiles(f)));
+    const fns: Function[] = [];
+    req.body.delFiles && //@ts-ignore
+      req.body.delFiles.map((f: IProductMedia) =>
+        fns.push(MediaManager.deletefiles(f))
+      );
     if (admin.vendorId) {
       const vendor = await Vendor.findByIdAndUpdate(admin.vendorId, {
         $push: { products: product._id },
@@ -316,7 +319,7 @@ productRouter.put(
       ),
       ...fns,
     ]);
-  
+
     res.send(newPr);
   }
 );

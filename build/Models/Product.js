@@ -41,7 +41,7 @@ const productSchema = new mongoose_1.Schema({
     media: [mediaSchema],
     video: mediaSchema,
     viewCount: { type: Number, default: 0 },
-    likes: [{ type: mongoose_1.Schema.Types.ObjectId, ref: User_1.default }],
+    likes: [{ type: mongoose_1.Schema.Types.ObjectId, ref: User_1.default, required: true }],
     category: { type: mongoose_1.Schema.Types.ObjectId, ref: Category_1.default },
     subcategory: { type: mongoose_1.Schema.Types.ObjectId, ref: Subcateygory_1.default },
     reviews: [{ type: mongoose_1.Schema.Types.ObjectId, ref: Review_1.default }],
