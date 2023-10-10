@@ -187,7 +187,6 @@ productRouter.put(
       req,
       process.env.JWT || ""
     );
-    if (!req.params.id) throw new NotFoundError("Product Not Found");
     const product = await Product.likeProduct(req.params.id, user.id);
 
     res.send(product);
@@ -266,6 +265,7 @@ productRouter.put(
     const fns: Function[] = [];
     req.body.delFiles && //@ts-ignore
       req.body.delFiles.map((f: IProductMedia) =>
+        //@ts-ignore
         fns.push(MediaManager.deletefiles(f))
       );
     if (admin.vendorId) {

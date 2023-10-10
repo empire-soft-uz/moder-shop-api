@@ -14,6 +14,7 @@ import Admin from "./Admin";
 import NotFoundError from "../Classes/Errors/NotFoundError";
 import User from "./User";
 import { IPropValue } from "../Interfaces/Product/IPropValue";
+import UnauthorizedError from "../Classes/Errors/UnauthoruzedError";
 interface product {
   vendorId: IVendor["id"];
   name: string;
@@ -75,7 +76,7 @@ const productSchema = new Schema(
     media: [mediaSchema],
     video: mediaSchema,
     viewCount: { type: Number, default: 0 },
-    likes: [{ type: Schema.Types.ObjectId, ref: User,required:true }],
+    likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
     category: { type: Schema.Types.ObjectId, ref: Category },
     subcategory: { type: Schema.Types.ObjectId, ref: Subcategory },
     reviews: [{ type: Schema.Types.ObjectId, ref: Review }],
@@ -103,6 +104,7 @@ productSchema.statics.likeProduct = async (
   id: string,
   userId: string
 ): Promise<ProductDoc> => {
+  if (!userId) throw new UnauthorizedError("User Unauthorized");
   const product = await Product.findById(id)
     .populate("vendorId", "name")
     .populate("category", "name id")
@@ -128,5 +130,8 @@ productSchema.statics.likeProduct = async (
   product.likes.push(userId);
   return product.save();
 };
-const Product:ProductModel = model<ProductDoc, ProductModel>("Product", productSchema);
+const Product: ProductModel = model<ProductDoc, ProductModel>(
+  "Product",
+  productSchema
+);
 export default Product;

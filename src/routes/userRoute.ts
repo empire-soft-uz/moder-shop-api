@@ -50,6 +50,7 @@ userRoute.put("/verify", async (req: Request, res: Response) => {
   if (opt.expiresAt && opt.expiresAt.getTime() < Date.now())
     throw new BadRequestError("Verification Code Expired");
   opt.isVerified = true;
+  //@ts-ignore
   opt.expiresAt = undefined;
   await opt.save();
   const token = jwt.sign(
@@ -66,7 +67,7 @@ userRoute.put("/verify", async (req: Request, res: Response) => {
   res.send({ message: `User with ${phoneNumber} is verified`, token });
 });
 userRoute.post("/register", verifyUser, async (req: Request, res: Response) => {
-  const { fullName, phoneNumber, password, gender, birthDate } = req.body;
+  const { phoneNumber, password } = req.body;
 
   const existingUser = await User.findOne({ phoneNumber });
   if (existingUser)
@@ -136,8 +137,7 @@ userRoute.put(
 
   async (req: Request, res: Response) => {
     const author = JWTDecrypter.decryptUser<IUserPayload>(req, jwtKey);
-    console.log(req.body);
-   
+
     if (author.exp && author.exp < Date.now())
       throw new BadRequestError("Token expired");
     let update = { ...req.body };
@@ -158,9 +158,9 @@ userRoute.put(
     }
 
     const user = await User.findOneAndUpdate(query, update);
-    //@ts-ignore
 
-    user?.password = undefined;
+    if (!user) throw new NotFoundError("User Not Found");
+
     res.send(user);
   }
 );

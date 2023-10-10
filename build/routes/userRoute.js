@@ -55,6 +55,7 @@ userRoute.put("/verify", (req, res) => __awaiter(void 0, void 0, void 0, functio
     if (opt.expiresAt && opt.expiresAt.getTime() < Date.now())
         throw new BadRequestError_1.default("Verification Code Expired");
     opt.isVerified = true;
+    //@ts-ignore
     opt.expiresAt = undefined;
     yield opt.save();
     const token = jsonwebtoken_1.default.sign({
@@ -65,7 +66,7 @@ userRoute.put("/verify", (req, res) => __awaiter(void 0, void 0, void 0, functio
     res.send({ message: `User with ${phoneNumber} is verified`, token });
 }));
 userRoute.post("/register", verifyUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { fullName, phoneNumber, password, gender, birthDate } = req.body;
+    const { phoneNumber, password } = req.body;
     const existingUser = yield User_1.default.findOne({ phoneNumber });
     if (existingUser)
         throw new BadRequestError_1.default(`User with ${phoneNumber} already exists`);
@@ -118,7 +119,6 @@ userRoute.post("/login", [...UserRules_1.userLoginRules], (req, res) => __awaite
 }));
 userRoute.put("/update", [...UserRules_1.userRegistrationRules], verifyUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const author = JWTDecrypter_1.default.decryptUser(req, jwtKey);
-    console.log(req.body);
     if (author.exp && author.exp < Date.now())
         throw new BadRequestError_1.default("Token expired");
     let update = Object.assign({}, req.body);
@@ -134,8 +134,8 @@ userRoute.put("/update", [...UserRules_1.userRegistrationRules], verifyUser_1.de
         update = Object.assign(Object.assign({}, update), { password: `${p.buff}.${p.salt}` });
     }
     const user = yield User_1.default.findOneAndUpdate(query, update);
-    //@ts-ignore
-    user === null || user === void 0 ? void 0 : user.password = undefined;
+    if (!user)
+        throw new NotFoundError_1.default("User Not Found");
     res.send(user);
 }));
 userRoute.put("/basket/add/:id", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
