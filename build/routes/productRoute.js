@@ -155,8 +155,6 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
 }));
 productRouter.put("/like/:id", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT || "");
-    if (!req.params.id)
-        throw new NotFoundError_1.default("Product Not Found");
     const product = yield Product_1.default.likeProduct(req.params.id, user.id);
     res.send(product);
 }));
@@ -214,7 +212,9 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
     const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
     const fns = [];
     req.body.delFiles && //@ts-ignore
-        req.body.delFiles.map((f) => fns.push(MediaManager_1.default.deletefiles(f)));
+        req.body.delFiles.map((f) => 
+        //@ts-ignore
+        fns.push(MediaManager_1.default.deletefiles(f)));
     if (admin.vendorId) {
         const vendor = yield Vendor_1.default.findByIdAndUpdate(admin.vendorId, {
             $push: { products: product._id },

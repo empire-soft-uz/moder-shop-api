@@ -22,7 +22,7 @@ const Product_1 = __importDefault(require("../Models/Product"));
 const MediaManager_1 = __importDefault(require("../utils/MediaManager"));
 const Admin_1 = __importDefault(require("../Models/Admin"));
 const vendorRoute = (0, express_1.Router)();
-vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+vendorRoute.get("/admin", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const vendors = yield Vendor_1.default.aggregate([
         {
             $lookup: {
@@ -42,8 +42,12 @@ vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 "admin.email": "$admin.email",
             },
         },
-        { $unset: ["_id", "admin._id",] }
+        { $unset: ["_id", "admin._id"] },
     ]);
+    res.send(vendors);
+}));
+vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const vendors = yield Vendor_1.default.find();
     res.send(vendors);
 }));
 vendorRoute.post("/new", [...VendorRules_1.vendorCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {

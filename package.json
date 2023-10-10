@@ -6,7 +6,8 @@
   "scripts": {
     "bun": "bun --hot src/index.ts",
     "start": "nodemon build/index",
-    "dev": "concurrently  \"tsc -w\" \"nodemon build/index.js\""
+    "dev": "concurrently  \"tsc -w\" \"nodemon build/index.js\"",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",

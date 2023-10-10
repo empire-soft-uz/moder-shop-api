@@ -20,7 +20,7 @@ const Category_1 = __importDefault(require("./Category"));
 const PropValue_1 = __importDefault(require("./PropValue"));
 const Admin_1 = __importDefault(require("./Admin"));
 const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError"));
-const User_1 = __importDefault(require("./User"));
+const UnauthoruzedError_1 = __importDefault(require("../Classes/Errors/UnauthoruzedError"));
 const priceSchema = new mongoose_1.Schema({
     price: Number,
     oldPrice: { type: Number, default: 0 },
@@ -41,7 +41,7 @@ const productSchema = new mongoose_1.Schema({
     media: [mediaSchema],
     video: mediaSchema,
     viewCount: { type: Number, default: 0 },
-    likes: [{ type: mongoose_1.Schema.Types.ObjectId, ref: User_1.default }],
+    likes: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "User" }],
     category: { type: mongoose_1.Schema.Types.ObjectId, ref: Category_1.default },
     subcategory: { type: mongoose_1.Schema.Types.ObjectId, ref: Subcateygory_1.default },
     reviews: [{ type: mongoose_1.Schema.Types.ObjectId, ref: Review_1.default }],
@@ -66,6 +66,8 @@ productSchema.statics.build = (attrs) => {
     return new Product(attrs);
 };
 productSchema.statics.likeProduct = (id, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!userId)
+        throw new UnauthoruzedError_1.default("User Unauthorized");
     const product = yield Product.findById(id)
         .populate("vendorId", "name")
         .populate("category", "name id")

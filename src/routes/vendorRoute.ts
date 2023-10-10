@@ -8,8 +8,7 @@ import Product from "../Models/Product";
 import MediaManager from "../utils/MediaManager";
 import Admin from "../Models/Admin";
 const vendorRoute = Router();
-vendorRoute.get("/", async (req: Request, res: Response) => {
-  
+vendorRoute.get("/admin", isSuperAdmin, async (req: Request, res: Response) => {
   const vendors = await Vendor.aggregate([
     {
       $lookup: {
@@ -29,8 +28,12 @@ vendorRoute.get("/", async (req: Request, res: Response) => {
         "admin.email": "$admin.email",
       },
     },
-    { $unset: [ "_id", "admin._id",  ] }
+    { $unset: ["_id", "admin._id"] },
   ]);
+  res.send(vendors);
+});
+vendorRoute.get("/", async (req: Request, res: Response) => {
+  const vendors = await Vendor.find();
   res.send(vendors);
 });
 vendorRoute.post(
