@@ -9,7 +9,7 @@ const port = process.env.PORT || 3000;
 const mongoURL = process.env.MONGO;
 async function startServer() {
   try {
-    await mongoose.connect(mongoURL);
+    await mongoose.connect(mongoURL!);
     console.log("Db connected");
     server.listen(port, () => {
       console.log(`Listening on Port: ${port}`);

@@ -78,7 +78,7 @@ orderRoute.post("/new", validateUser_1.default, (req, res) => __awaiter(void 0, 
     const author = jsonwebtoken_1.default.verify(authHeader, jwtKey);
     const orderProducts = req.body.products;
     const prIds = orderProducts.map((p) => p.productId);
-    const products = yield Product_1.default.find({ _id: { $in: prIds } });
+    const products = yield Product_1.default.find({ _id: { $in: prIds } }); //@ts-ignore
     const orderProductPrice = [];
     if (products.length <= 0)
         throw new NotFoundError_1.default("Products Not Found!");
@@ -88,8 +88,7 @@ orderRoute.post("/new", validateUser_1.default, (req, res) => __awaiter(void 0, 
         if (!p)
             throw new BadRequestError_1.default("One of the products doesn't exists");
         const pr = p.price.find((pr) => {
-            if (pr.qtyMin <= o.qty &&
-                o.qty <= pr.qtyMax) {
+            if (pr.qtyMin <= o.qty && o.qty <= pr.qtyMax) {
                 return pr;
             }
         }) || p.price[p.price.length - 1];

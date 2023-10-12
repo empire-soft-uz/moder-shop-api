@@ -7,7 +7,11 @@ import { isSuperAdmin } from "../middlewares/validateAdmin";
 import Product from "../Models/Product";
 import MediaManager from "../utils/MediaManager";
 import Admin from "../Models/Admin";
+import multer from "multer";
+import IProductMedia from "../Interfaces/Product/IProducMedia";
 const vendorRoute = Router();
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage, limits: { fileSize: 50 * 1048576 } });
 vendorRoute.get("/admin", isSuperAdmin, async (req: Request, res: Response) => {
   const vendors = await Vendor.aggregate([
     {
@@ -38,9 +42,20 @@ vendorRoute.get("/", async (req: Request, res: Response) => {
 });
 vendorRoute.post(
   "/new",
+  isSuperAdmin,
   [...vendorCreation],
+  upload.single("baner"),
   async (req: Request, res: Response) => {
-    const vendor = Vendor.build(req.body);
+    const { name, desc, phoneNumber } = req.body;
+    const vendor = Vendor.build({
+      name,
+      description: desc,
+      contacts: { phoneNumber },
+    });
+    if (req.file) {
+      const baner = await MediaManager.uploadFile(req.file);
+      vendor.baner = baner;
+    }
     await vendor.save();
     res.send(vendor);
   }
@@ -48,12 +63,31 @@ vendorRoute.post(
 
 vendorRoute.put(
   "/edit/:id",
-  [...vendorCreation],
+  upload.single("baner"),
   isSuperAdmin,
+  [...vendorCreation],
   async (req: Request, res: Response) => {
+    const { name, desc, phoneNumber, oldBaner } = req.body;
+    let update = {
+      name,
+      description: desc,
+      contacts: { phoneNumber },
+    };
+
+    if (req.file) {
+      const temp = [MediaManager.uploadFile(req.file)];
+      if (oldBaner) {
+        //@ts-ignore
+        temp.push(MediaManager.deletefiles(JSON.parse(oldBaner)));
+      }
+      const res = await Promise.all(temp);
+      //@ts-ignore
+      update.baner = res[0];
+    }
+    console.log(update);
     const vendor = await Vendor.findByIdAndUpdate(
       req.params.id,
-      { ...req.body },
+      { ...update },
       { new: true }
     );
     res.send(vendor);
@@ -66,7 +100,7 @@ vendorRoute.get("/:id", async (req: Request, res: Response) => {
     model: "Product",
   });
   if (!vendor) throw new NotFoundError("Vendor Not Found");
-  console.log(vendor);
+
   res.send(vendor);
 });
 vendorRoute.delete(
@@ -78,11 +112,15 @@ vendorRoute.delete(
       Admin.findOneAndDelete({ vendorId: req.params.id }),
     ]);
     const vendor = delVendor[0];
+
     if (!vendor) throw new NotFoundError("Vendor Not Found");
 
     const products = await Product.find({ vendorId: req.params.id });
     if (products.length > 0) {
       const delImages = [];
+      if (vendor.baner) {
+        delImages.push(MediaManager.deletefiles(vendor.baner));
+      }
       products.forEach((p) => {
         if (p.media && p.media.length > 0) {
           p.media.forEach((m) => {

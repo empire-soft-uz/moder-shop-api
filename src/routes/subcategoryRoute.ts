@@ -19,11 +19,14 @@ subcatRoute.post(
     const { name, newProps, category } = req.body;
     const parentCat = await Category.findById(category);
     if (!parentCat) throw new BadRequestError("Invalid category is provided");
-    const subCt = Subcategory.build({name,props:newProps.map(p=>p.id),});
+    const subCt = Subcategory.build({
+      name,
+      props: newProps.map((p: any) => p.id),
+    });
     await subCt.save();
     parentCat.subcategories.push(subCt.id);
     await parentCat.save();
-    
+
     res.send(subCt);
   }
 );
@@ -56,17 +59,14 @@ subcatRoute.get("/:id", async (req: Request, res: Response) => {
     model: "PropValue",
     populate: { path: "prop", model: "Prop" },
   });
-  if(!subcategory) throw new NotFoundError("Subcategory Not Foound")
+  if (!subcategory) throw new NotFoundError("Subcategory Not Foound");
   if (admin) {
     res.send(subcategory);
     return;
   }
   const fProps = PropFormater.format(subcategory.props);
 
-  res.send(
-     { id: subcategory.id, name: subcategory.name, props: fProps }
-
-  );
+  res.send({ id: subcategory.id, name: subcategory.name, props: fProps });
 });
 subcatRoute.put("/:id", isSuperAdmin, async (req: Request, res: Response) => {
   const { name, subctProps, newProps } = req.body;
@@ -83,11 +83,14 @@ subcatRoute.put("/:id", isSuperAdmin, async (req: Request, res: Response) => {
   }
 
   const props = [...new Set(temp)];
-  
-   const subcategory = await Subcategory.findByIdAndUpdate(req.params.id, {name, props});
-   if (!subcategory) throw new NotFoundError("Subcategory Not Found");
 
-   res.send(subcategory);
+  const subcategory = await Subcategory.findByIdAndUpdate(req.params.id, {
+    name,
+    props,
+  });
+  if (!subcategory) throw new NotFoundError("Subcategory Not Found");
+
+  res.send(subcategory);
 });
 
 export default subcatRoute;

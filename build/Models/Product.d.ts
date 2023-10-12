@@ -4,6 +4,7 @@ import IPrice from "../Interfaces/Product/IPrice";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
 import IReview from "../Interfaces/Review/IReview";
 import { IPropValue } from "../Interfaces/Product/IPropValue";
+import IAdmin from "../Interfaces/IAdmin";
 interface product {
     vendorId: IVendor["id"];
     name: string;
@@ -23,7 +24,7 @@ interface ProductDoc extends Document {
     category: string;
     subcategoty: string;
     description: string;
-    author: string;
+    author: IAdmin;
     price: Array<IPrice>;
     media: Array<IProductMedia> | undefined;
     props: Array<IPropValue>;

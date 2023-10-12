@@ -79,25 +79,23 @@ orderRoute.post("/new", validateUser, async (req: Request, res: Response) => {
   const author = jwt.verify(authHeader, jwtKey) as IUserPayload;
   const orderProducts: [{ productId: string; qty: number }] = req.body.products;
   const prIds = orderProducts.map((p) => p.productId);
-  const products = await Product.find({ _id: { $in: prIds } });
+  const products = await Product.find({ _id: { $in: prIds } }); //@ts-ignore
   const orderProductPrice: [
     { productId: string; qty: number; price: number; vendor: string }
-  ] |[]= [];
+  ] = [];
   if (products.length <= 0) throw new NotFoundError("Products Not Found!");
   let total = 0;
   orderProducts.forEach((o) => {
     const p = products.find((p) => p._id.toString() === o.productId);
-    if(!p) throw new BadRequestError("One of the products doesn't exists")
-    const pr = p.price.find((pr) => {
-      if (
-        pr.qtyMin <= o.qty &&
-        o.qty <= pr.qtyMax
-      ) {
-        return pr;
-      }
-    }) || p.price[p.price.length-1];
+    if (!p) throw new BadRequestError("One of the products doesn't exists");
+    const pr =
+      p.price.find((pr) => {
+        if (pr.qtyMin <= o.qty && o.qty <= pr.qtyMax) {
+          return pr;
+        }
+      }) || p.price[p.price.length - 1];
     total += pr.price * o.qty;
-    
+
     orderProductPrice.push({
       productId: p.id,
       qty: o.qty,
@@ -107,7 +105,7 @@ orderRoute.post("/new", validateUser, async (req: Request, res: Response) => {
   });
 
   const order = Order.build({
-    ...req.body,
+    ...req.body, //@ts-ignore
     products: orderProductPrice,
     userId: author.id,
     total,

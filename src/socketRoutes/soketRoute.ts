@@ -63,8 +63,10 @@ const startSocketServer = () => {
         };
 
         if (msg.message) {
+          //@ts-ignore
           m = { ...m, message: msg.message };
         }
+        //@ts-ignore
         const newMsg = Message.build(m);
 
         if (msg.file) {
@@ -87,15 +89,14 @@ const startSocketServer = () => {
           newMsg
         );
         let usr = usrs.get(newMsg.reciever.toString());
-        
+
         //@ts-ignore
-        if(usr){
+        if (usr) {
           io.to(usr) //@ts-ignore
-          .emit(newMsg.chat.toString(), newMsg);
+            .emit(newMsg.chat.toString(), newMsg);
           io.to(usr) //@ts-ignore
-          .emit('total-count', newMsg);
+            .emit("total-count", newMsg);
         }
-        
       } catch (error) {
         console.log(error);
       }

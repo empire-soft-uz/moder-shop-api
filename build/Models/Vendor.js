@@ -1,12 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
+const mediaSchema = new mongoose_1.Schema({
+    name: String,
+    fileId: String,
+}, { id: false, _id: false });
 const vendorSchema = new mongoose_1.Schema({
     name: String,
     description: String,
     contacts: {
         phoneNumber: Number,
     },
+    baner: mediaSchema,
     products: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Product" }],
 }, {
     toJSON: {

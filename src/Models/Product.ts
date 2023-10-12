@@ -15,6 +15,7 @@ import NotFoundError from "../Classes/Errors/NotFoundError";
 import User from "./User";
 import { IPropValue } from "../Interfaces/Product/IPropValue";
 import UnauthorizedError from "../Classes/Errors/UnauthoruzedError";
+import IAdmin from "../Interfaces/IAdmin";
 interface product {
   vendorId: IVendor["id"];
   name: string;
@@ -35,7 +36,7 @@ interface ProductDoc extends Document {
 
   subcategoty: string;
   description: string;
-  author: string;
+  author: IAdmin;
   price: Array<IPrice>;
   media: Array<IProductMedia> | undefined;
   props: Array<IPropValue>;

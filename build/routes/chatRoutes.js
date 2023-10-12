@@ -79,12 +79,6 @@ chatRouter.get("/admin", validateAdmin_1.default, (req, res, next) => __awaiter(
                 as: "messages",
             },
         },
-        // {
-        //   $match: {
-        //     "messages.viewed":false,
-        //     "messages.reciever":new Types.ObjectId(admin.id),
-        //   },
-        // },
         {
             $project: {
                 id: "$_id",
@@ -151,9 +145,16 @@ chatRouter.get("/user", validateUser_1.default, (req, res, next) => __awaiter(vo
     });
     res.send(chats);
 }));
+chatRouter.get("/user/msgcount", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const validUser = JWTDecrypter_1.default.decryptUser(req, process.env.JWT);
+    const unreadMsgs = yield Message_1.default.find({
+        reciever: validUser.id,
+        viewed: false,
+    }).count();
+    res.send({ unreadMsgs });
+}));
 chatRouter.get("/user/:chatId", validateUser_1.default, (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const id = new mongoose_1.default.Types.ObjectId(req.params.chatId);
-    const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT);
     const msgs = yield Message_1.default.find({
         chat: id,
     });
@@ -168,6 +169,7 @@ chatRouter.post("/new", validateUser_1.default, (req, res, next) => __awaiter(vo
     if (!chat) {
         if (!mongoose_1.Types.ObjectId.isValid(admin))
             throw new BadRequestError_1.default("Invalid Product Admin id is suplied to create chat");
+        //@ts-ignore
         chat = Chat_1.default.build(data);
         yield chat.save();
     }

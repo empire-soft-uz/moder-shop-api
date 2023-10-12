@@ -21,7 +21,7 @@ chatRouter.get(
   "/admin",
   validateAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
-    const admin = JWTDecrypter.decryptUser<IAdmin>(req, process.env.JWT_ADMIN);
+    const admin = JWTDecrypter.decryptUser<IAdmin>(req, process.env.JWT_ADMIN!);
 
     const result = await Chat.aggregate([
       {
@@ -58,13 +58,6 @@ chatRouter.get(
           as: "messages",
         },
       },
-
-      // {
-      //   $match: {
-      //     "messages.viewed":false,
-      //     "messages.reciever":new Types.ObjectId(admin.id),
-      //   },
-      // },
 
       {
         $project: {
@@ -119,7 +112,7 @@ chatRouter.get(
   validateAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     const id = new mongoose.Types.ObjectId(req.params.chatId);
-    const admin = JWTDecrypter.decryptUser<IAdmin>(req, process.env.JWT_ADMIN);
+    const admin = JWTDecrypter.decryptUser<IAdmin>(req, process.env.JWT_ADMIN!);
 
     // const viewedMsgs = await Message.updateMany(
     //   {
@@ -154,16 +147,29 @@ chatRouter.get(
   }
 );
 chatRouter.get(
+  "/user/msgcount",
+  validateUser,
+  async (req: Request, res: Response, next: NextFunction) => {
+    const validUser = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT!);
+    const unreadMsgs = await Message.find({
+      reciever: validUser.id,
+      viewed: false,
+    }).count();
+
+    res.send({ unreadMsgs });
+  }
+);
+
+chatRouter.get(
   "/user/:chatId",
   validateUser,
   async (req: Request, res: Response, next: NextFunction) => {
     const id = new mongoose.Types.ObjectId(req.params.chatId);
-    const user = JWTDecrypter.decryptUser<IUser>(req, process.env.JWT!);
 
     const msgs = await Message.find({
       chat: id,
     });
-   
+
     res.send({ messages: msgs });
   }
 );
@@ -182,6 +188,7 @@ chatRouter.post(
         throw new BadRequestError(
           "Invalid Product Admin id is suplied to create chat"
         );
+      //@ts-ignore
       chat = Chat.build(data);
       await chat.save();
     }

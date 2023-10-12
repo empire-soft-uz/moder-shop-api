@@ -1,25 +1,20 @@
-import { Request, Response, Router, query } from "express";
+import { Request, Response, Router } from "express";
 import "express-async-errors";
 import Product from "../Models/Product";
 import { productCreation } from "../Validation/ProductRules";
 import Validator from "../utils/Valiadtor";
 import Vendor from "../Models/Vendor";
-import Review from "../Models/Review";
 import NotFoundError from "../Classes/Errors/NotFoundError";
 import multer from "multer";
 import MediaManager from "../utils/MediaManager";
 import validateAdmin from "../middlewares/validateAdmin";
-import PropValue from "../Models/PropValue";
-import { populate } from "dotenv";
 import JWTDecrypter from "../utils/JWTDecrypter";
 import IAdmin from "../Interfaces/IAdmin";
 import validateUser from "../middlewares/validateUser";
 import IUserPayload from "../Interfaces/IUserPayload";
-import IPrice from "../Interfaces/Product/IPrice";
 import Admin from "../Models/Admin";
 import ForbidenError from "../Classes/Errors/ForbidenError";
 import PropFormater from "../utils/PropFormater";
-import { model } from "mongoose";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
 
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
@@ -174,7 +169,8 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
     id: product.id,
     ...product.toObject(),
     props: fProps,
-    author: { id: product.author._id, email: product.author.email },
+
+    author: { id: product.author.id, email: product.author.email },
   };
   delete obj._id;
   res.send(obj);
@@ -240,6 +236,7 @@ productRouter.post(
         }
       }
     }
+    //@ts-ignore
     product.author = admin.id;
 
     await product.save();

@@ -29,7 +29,7 @@ const JWTDecrypter_1 = __importDefault(require("../utils/JWTDecrypter"));
 const verifyUser_1 = __importDefault(require("../middlewares/verifyUser"));
 const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError"));
 const expiresAt = parseInt(process.env.EXPIRATION || "5");
-const jwtKey = process.env.JWT || "SomeJwT_keY";
+const jwtKey = process.env.JWT;
 userRoute.post("/get-code", [...UserRules_1.userRegistrationRules], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const { phoneNumber } = req.body;

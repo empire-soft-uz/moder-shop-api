@@ -74,13 +74,16 @@ propRoutes.post("/new/many", validateAdmin_1.isSuperAdmin, (req, res) => __await
 propRoutes.post("/values/new/many", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { values, subcategory } = req.body;
     const propVals = yield PropValue_1.default.insertMany(values);
+    //@ts-ignore
     const vals = [];
     propVals.forEach((v) => vals.push(v.id));
     const subct = yield Subcateygory_1.default.findByIdAndUpdate(req.body.subcategory, {
+        //@ts-ignore
         $push: { props: { $each: vals } },
     });
     if (!subcategory)
         throw new NotFoundError_1.default("Suncategory not found");
+    //@ts-ignore
     res.send({ values: vals });
 }));
 //updating prop value
@@ -97,16 +100,17 @@ propRoutes.put("/edit/:propId", validateAdmin_1.default, (req, res) => __awaiter
     res.send(updatedProp);
 }));
 propRoutes.get("/prop/:propId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const props = yield PropValue_1.default.find({ prop: req.params.propId }).populate('prop');
+    const props = yield PropValue_1.default.find({ prop: req.params.propId }).populate("prop");
     if (!props)
-        throw new NotFoundError_1.default('Property Not Found');
+        throw new NotFoundError_1.default("Property Not Found");
+    //@ts-ignore
     const formatedProps = PropFormater_1.default.format(props);
     res.send(formatedProps[0]);
 }));
 propRoutes.get("/:propId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const props = yield Prop_1.default.findById(req.params.propId);
     if (!props)
-        throw new NotFoundError_1.default('Property Not Found');
+        throw new NotFoundError_1.default("Property Not Found");
     res.send(props);
 }));
 propRoutes.get("/values/:valueId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -122,6 +126,7 @@ propRoutes.post("/values/new/:propId", validateAdmin_1.isSuperAdmin, (req, res) 
         throw new NotFoundError_1.default("Given property not found");
     if (!values || !Array.isArray(values) || values.length < 0)
         throw new BadRequestError_1.default("Property values are required");
+    //@ts-ignore
     const vals = [];
     values.forEach((v) => {
         vals.push({ value: v, prop: prop.id });

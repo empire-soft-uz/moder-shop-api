@@ -20,7 +20,16 @@ import chatRouter from "./routes/chatRoutes";
 
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: ['http://modernshop.uz', 'https://modernshop.uz',"http://admins.modernshop.uz","https://admins.modernshop.uz"] }));
+app.use(
+  cors({
+    origin: "*" || [
+      "http://modernshop.uz",
+      "https://modernshop.uz",
+      "http://admins.modernshop.uz",
+      "https://admins.modernshop.uz",
+    ],
+  })
+);
 
 app.use(express.static(path.join(__dirname, "..", "public")));
 

@@ -18,7 +18,7 @@ import NotFoundError from "../Classes/Errors/NotFoundError";
 import Product from "../Models/Product";
 import { model } from "mongoose";
 const expiresAt = parseInt(process.env.EXPIRATION || "5");
-const jwtKey = process.env.JWT || "SomeJwT_keY";
+const jwtKey = process.env.JWT!;
 userRoute.post(
   "/get-code",
   [...userRegistrationRules],

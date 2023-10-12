@@ -71,8 +71,10 @@ const startSocketServer = () => {
                     chat: msg.chat,
                 };
                 if (msg.message) {
+                    //@ts-ignore
                     m = Object.assign(Object.assign({}, m), { message: msg.message });
                 }
+                //@ts-ignore
                 const newMsg = Message_1.default.build(m);
                 if (msg.file) {
                     const filePath = path_1.default.join(__dirname, "..", "..", "public", newMsg.id + msg.file.originalName);
@@ -90,7 +92,7 @@ const startSocketServer = () => {
                     io.to(usr) //@ts-ignore
                         .emit(newMsg.chat.toString(), newMsg);
                     io.to(usr) //@ts-ignore
-                        .emit('total-count', newMsg);
+                        .emit("total-count", newMsg);
                 }
             }
             catch (error) {

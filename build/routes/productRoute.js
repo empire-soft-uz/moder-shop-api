@@ -149,7 +149,7 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
     product.viewCount += 1;
     yield product.save();
     const fProps = PropFormater_1.default.format(product.props);
-    const obj = Object.assign(Object.assign({ id: product.id }, product.toObject()), { props: fProps, author: { id: product.author._id, email: product.author.email } });
+    const obj = Object.assign(Object.assign({ id: product.id }, product.toObject()), { props: fProps, author: { id: product.author.id, email: product.author.email } });
     delete obj._id;
     res.send(obj);
 }));
@@ -198,6 +198,7 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [.
             }
         }
     }
+    //@ts-ignore
     product.author = admin.id;
     yield product.save();
     res.send(product);

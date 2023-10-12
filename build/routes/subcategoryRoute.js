@@ -29,7 +29,10 @@ subcatRoute.post("/new", [...SubcatRules_1.subcatCreation], validateAdmin_1.isSu
     const parentCat = yield Category_1.default.findById(category);
     if (!parentCat)
         throw new BadRequestError_1.default("Invalid category is provided");
-    const subCt = Subcateygory_1.default.build({ name, props: newProps.map(p => p.id), });
+    const subCt = Subcateygory_1.default.build({
+        name,
+        props: newProps.map((p) => p.id),
+    });
     yield subCt.save();
     parentCat.subcategories.push(subCt.id);
     yield parentCat.save();
@@ -83,7 +86,10 @@ subcatRoute.put("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(vo
         });
     }
     const props = [...new Set(temp)];
-    const subcategory = yield Subcateygory_1.default.findByIdAndUpdate(req.params.id, { name, props });
+    const subcategory = yield Subcateygory_1.default.findByIdAndUpdate(req.params.id, {
+        name,
+        props,
+    });
     if (!subcategory)
         throw new NotFoundError_1.default("Subcategory Not Found");
     res.send(subcategory);

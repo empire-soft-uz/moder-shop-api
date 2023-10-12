@@ -4,6 +4,7 @@ export default class ProductPrice implements IPrice {
   constructor(
     public price: number,
     public qtyMin: number,
-    public qtyMax: number
+    public qtyMax: number,
+    public oldPrice: number
   ) {}
 }

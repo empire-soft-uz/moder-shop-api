@@ -21,7 +21,10 @@ const validateAdmin_1 = require("../middlewares/validateAdmin");
 const Product_1 = __importDefault(require("../Models/Product"));
 const MediaManager_1 = __importDefault(require("../utils/MediaManager"));
 const Admin_1 = __importDefault(require("../Models/Admin"));
+const multer_1 = __importDefault(require("multer"));
 const vendorRoute = (0, express_1.Router)();
+const storage = multer_1.default.memoryStorage();
+const upload = (0, multer_1.default)({ storage: storage, limits: { fileSize: 50 * 1048576 } });
 vendorRoute.get("/admin", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const vendors = yield Vendor_1.default.aggregate([
         {
@@ -50,13 +53,39 @@ vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const vendors = yield Vendor_1.default.find();
     res.send(vendors);
 }));
-vendorRoute.post("/new", [...VendorRules_1.vendorCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const vendor = Vendor_1.default.build(req.body);
+vendorRoute.post("/new", validateAdmin_1.isSuperAdmin, [...VendorRules_1.vendorCreation], upload.single("baner"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, desc, phoneNumber } = req.body;
+    const vendor = Vendor_1.default.build({
+        name,
+        description: desc,
+        contacts: { phoneNumber },
+    });
+    if (req.file) {
+        const baner = yield MediaManager_1.default.uploadFile(req.file);
+        vendor.baner = baner;
+    }
     yield vendor.save();
     res.send(vendor);
 }));
-vendorRoute.put("/edit/:id", [...VendorRules_1.vendorCreation], validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const vendor = yield Vendor_1.default.findByIdAndUpdate(req.params.id, Object.assign({}, req.body), { new: true });
+vendorRoute.put("/edit/:id", upload.single("baner"), validateAdmin_1.isSuperAdmin, [...VendorRules_1.vendorCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, desc, phoneNumber, oldBaner } = req.body;
+    let update = {
+        name,
+        description: desc,
+        contacts: { phoneNumber },
+    };
+    if (req.file) {
+        const temp = [MediaManager_1.default.uploadFile(req.file)];
+        if (oldBaner) {
+            //@ts-ignore
+            temp.push(MediaManager_1.default.deletefiles(JSON.parse(oldBaner)));
+        }
+        const res = yield Promise.all(temp);
+        //@ts-ignore
+        update.baner = res[0];
+    }
+    console.log(update);
+    const vendor = yield Vendor_1.default.findByIdAndUpdate(req.params.id, Object.assign({}, update), { new: true });
     res.send(vendor);
 }));
 vendorRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -66,7 +95,6 @@ vendorRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function
     });
     if (!vendor)
         throw new NotFoundError_1.default("Vendor Not Found");
-    console.log(vendor);
     res.send(vendor);
 }));
 vendorRoute.delete("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -80,6 +108,9 @@ vendorRoute.delete("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter
     const products = yield Product_1.default.find({ vendorId: req.params.id });
     if (products.length > 0) {
         const delImages = [];
+        if (vendor.baner) {
+            delImages.push(MediaManager_1.default.deletefiles(vendor.baner));
+        }
         products.forEach((p) => {
             if (p.media && p.media.length > 0) {
                 p.media.forEach((m) => {

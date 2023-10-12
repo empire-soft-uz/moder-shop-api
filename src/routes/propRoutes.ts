@@ -53,13 +53,16 @@ propRoutes.post("/values/new/many", async (req: Request, res: Response) => {
   const { values, subcategory } = req.body;
 
   const propVals = await PropValue.insertMany(values);
+  //@ts-ignore
   const vals = [];
 
   propVals.forEach((v) => vals.push(v.id));
   const subct = await Subcategory.findByIdAndUpdate(req.body.subcategory, {
+    //@ts-ignore
     $push: { props: { $each: vals } },
   });
   if (!subcategory) throw new NotFoundError("Suncategory not found");
+  //@ts-ignore
   res.send({ values: vals });
 });
 //updating prop value
@@ -92,17 +95,19 @@ propRoutes.put(
   }
 );
 propRoutes.get("/prop/:propId", async (req: Request, res: Response) => {
-  const props=await PropValue.find({ prop: req.params.propId }).populate('prop')
-  if(!props) throw new NotFoundError('Property Not Found')
-   const formatedProps=PropFormater.format(props)
+  const props = await PropValue.find({ prop: req.params.propId }).populate(
+    "prop"
+  );
+  if (!props) throw new NotFoundError("Property Not Found");
+  //@ts-ignore
+  const formatedProps = PropFormater.format(props);
 
-   res.send(formatedProps[0]);
+  res.send(formatedProps[0]);
 });
 propRoutes.get("/:propId", async (req: Request, res: Response) => {
+  const props = await Prop.findById(req.params.propId);
+  if (!props) throw new NotFoundError("Property Not Found");
 
-  const props=await Prop.findById( req.params.propId )
- if(!props) throw new NotFoundError('Property Not Found')
- 
   res.send(props);
 });
 
@@ -122,12 +127,13 @@ propRoutes.post(
     if (!prop) throw new NotFoundError("Given property not found");
     if (!values || !Array.isArray(values) || values.length < 0)
       throw new BadRequestError("Property values are required");
+    //@ts-ignore
     const vals: [{ value: string; prop: string }] = [];
     values.forEach((v) => {
       vals.push({ value: v, prop: prop.id });
     });
     const newVals = await PropValue.insertMany(vals);
-    
+
     res.send({ values: newVals });
   }
 );
