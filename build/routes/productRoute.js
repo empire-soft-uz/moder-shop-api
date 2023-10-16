@@ -216,14 +216,13 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
         req.body.delFiles.map((f) => 
         //@ts-ignore
         fns.push(MediaManager_1.default.deletefiles(f)));
-    if (admin.vendorId) {
-        const vendor = yield Vendor_1.default.findByIdAndUpdate(admin.vendorId, {
-            $push: { products: product._id },
-        });
-        if (!vendor)
-            throw new NotFoundError_1.default(`Vendor with given id not found`);
-        yield vendor.save();
-    }
+    // if (admin.vendorId) {
+    //   const vendor = await Vendor.findByIdAndUpdate(admin.vendorId, {
+    //     $push: { products: product._id },
+    //   });
+    //   if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
+    //   await vendor.save();
+    // }
     let tempProps = [...new Set(req.body.props)];
     const newData = Object.assign(Object.assign({}, req.body), { video: product.video, media: product.media, price: [] });
     Array.isArray(prices) &&

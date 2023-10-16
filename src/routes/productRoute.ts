@@ -265,13 +265,13 @@ productRouter.put(
         //@ts-ignore
         fns.push(MediaManager.deletefiles(f))
       );
-    if (admin.vendorId) {
-      const vendor = await Vendor.findByIdAndUpdate(admin.vendorId, {
-        $push: { products: product._id },
-      });
-      if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
-      await vendor.save();
-    }
+    // if (admin.vendorId) {
+    //   const vendor = await Vendor.findByIdAndUpdate(admin.vendorId, {
+    //     $push: { products: product._id },
+    //   });
+    //   if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
+    //   await vendor.save();
+    // }
     let tempProps = [...new Set(req.body.props)];
     const newData = {
       ...req.body,
