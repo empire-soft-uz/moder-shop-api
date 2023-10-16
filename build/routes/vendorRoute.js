@@ -50,7 +50,27 @@ vendorRoute.get("/admin", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(
     res.send(vendors);
 }));
 vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const vendors = yield Vendor_1.default.find();
+    const vendors = yield Vendor_1.default.aggregate([
+        {
+            $lookup: {
+                from: "admins",
+                localField: "_id",
+                foreignField: "vendorId",
+                as: "admin",
+            },
+        },
+        { $unwind: "$admin" },
+        {
+            $project: {
+                id: "$_id",
+                name: "$name",
+                contacts: "$contacts",
+                "admin.id": "$admin._id",
+                "admin.email": "$admin.email",
+            },
+        },
+        { $unset: ["_id", "admin._id"] },
+    ]);
     res.send(vendors);
 }));
 vendorRoute.post("/new", validateAdmin_1.isSuperAdmin, [...VendorRules_1.vendorCreation], upload.single("baner"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {

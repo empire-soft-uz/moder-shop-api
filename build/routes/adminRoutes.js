@@ -31,13 +31,6 @@ adminRoute.get("/", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0
     });
     res.send(admins);
 }));
-adminRoute.get("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const admins = yield Admin_1.default.findById(req.params.id, { password: 0 }).populate({
-        path: "vendorId",
-        select: "id name contacts",
-    });
-    res.send(admins);
-}));
 adminRoute.put("/edit/:id", validateAdmin_1.isSuperAdmin, [...AdminRules_1.adminCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const hash = yield Password_1.default.hashPassword(req.body.password);
@@ -49,6 +42,13 @@ adminRoute.put("/edit/:id", validateAdmin_1.isSuperAdmin, [...AdminRules_1.admin
         email: admin.email,
     }, jwtKey);
     res.send({ id: admin.id, email: admin.email, token });
+}));
+adminRoute.get("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const admins = yield Admin_1.default.findById(req.params.id, { password: 0 }).populate({
+        path: "vendorId",
+        select: "id name contacts",
+    });
+    res.send(admins);
 }));
 adminRoute.post("/new", validateAdmin_1.isSuperAdmin, [...AdminRules_1.adminCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);

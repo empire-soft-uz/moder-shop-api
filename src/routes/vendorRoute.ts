@@ -8,7 +8,6 @@ import Product from "../Models/Product";
 import MediaManager from "../utils/MediaManager";
 import Admin from "../Models/Admin";
 import multer from "multer";
-import IProductMedia from "../Interfaces/Product/IProducMedia";
 const vendorRoute = Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage, limits: { fileSize: 50 * 1048576 } });
@@ -37,7 +36,27 @@ vendorRoute.get("/admin", isSuperAdmin, async (req: Request, res: Response) => {
   res.send(vendors);
 });
 vendorRoute.get("/", async (req: Request, res: Response) => {
-  const vendors = await Vendor.find();
+  const vendors = await Vendor.aggregate([
+    {
+      $lookup: {
+        from: "admins",
+        localField: "_id",
+        foreignField: "vendorId",
+        as: "admin",
+      },
+    },
+    { $unwind: "$admin" },
+    {
+      $project: {
+        id: "$_id",
+        name: "$name",
+        contacts: "$contacts",
+        "admin.id": "$admin._id",
+        "admin.email": "$admin.email",
+      },
+    },
+    { $unset: ["_id", "admin._id"] },
+  ]);
   res.send(vendors);
 });
 vendorRoute.post(

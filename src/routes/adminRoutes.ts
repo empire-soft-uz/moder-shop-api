@@ -4,10 +4,9 @@ import Admin from "../Models/Admin";
 import Password from "../utils/Password";
 import jwt from "jsonwebtoken";
 import { adminCreation } from "../Validation/AdminRules";
-import validateAdmin, { isSuperAdmin } from "../middlewares/validateAdmin";
+import { isSuperAdmin } from "../middlewares/validateAdmin";
 import Validator from "../utils/Valiadtor";
 import BadRequestError from "../Classes/Errors/BadRequestError";
-import ForbidenError from "../Classes/Errors/ForbidenError";
 import NotFoundError from "../Classes/Errors/NotFoundError";
 const adminRoute = express.Router();
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
@@ -17,13 +16,6 @@ interface adminPayload {
 }
 adminRoute.get("/", isSuperAdmin, async (req: Request, res: Response) => {
   const admins = await Admin.find({}, { password: 0 }).populate({
-    path: "vendorId",
-    select: "id name contacts",
-  });
-  res.send(admins);
-});
-adminRoute.get("/:id", isSuperAdmin, async (req: Request, res: Response) => {
-  const admins = await Admin.findById(req.params.id, { password: 0 }).populate({
     path: "vendorId",
     select: "id name contacts",
   });
@@ -55,6 +47,14 @@ adminRoute.put(
     res.send({ id: admin.id, email: admin.email, token });
   }
 );
+adminRoute.get("/:id", isSuperAdmin, async (req: Request, res: Response) => {
+  const admins = await Admin.findById(req.params.id, { password: 0 }).populate({
+    path: "vendorId",
+    select: "id name contacts",
+  });
+  res.send(admins);
+});
+
 adminRoute.post(
   "/new",
   isSuperAdmin,

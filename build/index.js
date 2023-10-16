@@ -18,7 +18,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const soketRoute_1 = __importDefault(require("./socketRoutes/soketRoute"));
 const WebServer_1 = __importDefault(require("./WebServer"));
 const port = process.env.PORT || 3000;
-const mongoURL = process.env.MONGO;
+const mongoURL = "mongodb://localhost:27017" || process.env.MONGO;
 function startServer() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
