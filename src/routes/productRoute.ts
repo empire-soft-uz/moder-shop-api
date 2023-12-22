@@ -16,11 +16,15 @@ import Admin from "../Models/Admin";
 import ForbidenError from "../Classes/Errors/ForbidenError";
 import PropFormater from "../utils/PropFormater";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
+import BadRequestError from "../Classes/Errors/BadRequestError";
 
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage, limits: { fileSize: 50 * 1048576 } });
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 100 * 1024 * 1024 },
+});
 const productRouter = Router();
 
 productRouter.get("/", async (req: Request, res: Response) => {
@@ -194,11 +198,19 @@ productRouter.post(
   upload.array("media", 4),
   [...productCreation],
   async (req: Request, res: Response) => {
+    const { files } = req;
+    if (files &&files.length>0) {
+      files.map(f=>{
+        if(f.fileSize>100 * 1024 * 1024){
+          throw new BadRequestError(`File ${f.originalName} size is more than 100MB `)
+        }
+      })
+    
+    }
     Validator.validate(req);
 
-    const { files } = req;
     const { prices } = req.body;
-
+    
     //@ts-ignore
 
     let temp = [];

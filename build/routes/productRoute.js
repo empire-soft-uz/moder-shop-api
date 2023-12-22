@@ -27,9 +27,13 @@ const validateUser_1 = __importDefault(require("../middlewares/validateUser"));
 const Admin_1 = __importDefault(require("../Models/Admin"));
 const ForbidenError_1 = __importDefault(require("../Classes/Errors/ForbidenError"));
 const PropFormater_1 = __importDefault(require("../utils/PropFormater"));
+const BadRequestError_1 = __importDefault(require("../Classes/Errors/BadRequestError"));
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 const storage = multer_1.default.memoryStorage();
-const upload = (0, multer_1.default)({ storage: storage, limits: { fileSize: 50 * 1048576 } });
+const upload = (0, multer_1.default)({
+    storage: storage,
+    limits: { fileSize: 100 * 1024 * 1024 },
+});
 const productRouter = (0, express_1.Router)();
 productRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { page, limit, name, priceMax, priceMin, category, subcategory, popularProducts, props, } = req.query;
@@ -159,8 +163,15 @@ productRouter.put("/like/:id", validateUser_1.default, (req, res) => __awaiter(v
     res.send(product);
 }));
 productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [...ProductRules_1.productCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    Valiadtor_1.default.validate(req);
     const { files } = req;
+    if (files && files.length > 0) {
+        files.map(f => {
+            if (f.fileSize > 100 * 1024 * 1024) {
+                throw new BadRequestError_1.default(`File ${f.originalName} size is more than 100MB `);
+            }
+        });
+    }
+    Valiadtor_1.default.validate(req);
     const { prices } = req.body;
     //@ts-ignore
     let temp = [];
