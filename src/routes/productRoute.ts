@@ -23,7 +23,7 @@ const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 100 * 1024 * 1024 },
+  limits: { fileSize: 200 * 1024 * 1024 },
 });
 const productRouter = Router();
 
@@ -195,18 +195,11 @@ productRouter.put(
 productRouter.post(
   "/new",
   validateAdmin,
-  upload.array("media", 4),
+  upload.array("media", 5),
   [...productCreation],
   async (req: Request, res: Response) => {
     const { files } = req;
-    if (files &&files.length>0) {
-      files.map(f=>{
-        if(f.fileSize>100 * 1024 * 1024){
-          throw new BadRequestError(`File ${f.originalName} size is more than 100MB `)
-        }
-      })
-    
-    }
+   
     Validator.validate(req);
 
     const { prices } = req.body;
