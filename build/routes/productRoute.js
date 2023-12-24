@@ -27,12 +27,11 @@ const validateUser_1 = __importDefault(require("../middlewares/validateUser"));
 const Admin_1 = __importDefault(require("../Models/Admin"));
 const ForbidenError_1 = __importDefault(require("../Classes/Errors/ForbidenError"));
 const PropFormater_1 = __importDefault(require("../utils/PropFormater"));
-const BadRequestError_1 = __importDefault(require("../Classes/Errors/BadRequestError"));
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({
     storage: storage,
-    limits: { fileSize: 100 * 1024 * 1024 },
+    limits: { fileSize: 200 * 1024 * 1024 },
 });
 const productRouter = (0, express_1.Router)();
 productRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -162,16 +161,16 @@ productRouter.put("/like/:id", validateUser_1.default, (req, res) => __awaiter(v
     const product = yield Product_1.default.likeProduct(req.params.id, user.id);
     res.send(product);
 }));
-productRouter.post("/new", validateAdmin_1.default, upload.array("media", 4), [...ProductRules_1.productCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { files } = req;
-    if (files && files.length > 0) {
-        files.map(f => {
-            if (f.fileSize > 100 * 1024 * 1024) {
-                throw new BadRequestError_1.default(`File ${f.originalName} size is more than 100MB `);
-            }
-        });
+productRouter.post("/new", validateAdmin_1.default, upload.array("media", 5), ProductRules_1.productCreation, (req, res, next) => {
+    try {
+        Valiadtor_1.default.validate(req);
+        next();
     }
-    Valiadtor_1.default.validate(req);
+    catch (error) {
+        next(error);
+    }
+}, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { files } = req;
     const { prices } = req.body;
     //@ts-ignore
     let temp = [];

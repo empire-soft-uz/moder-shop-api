@@ -27,6 +27,7 @@ vendorRoute.get("/admin", isSuperAdmin, async (req: Request, res: Response) => {
         id: "$_id",
         name: "$name",
         contacts: "$contacts",
+        baner: "$baner",
         "admin.id": "$admin._id",
         "admin.email": "$admin.email",
       },
@@ -41,6 +42,7 @@ vendorRoute.get("/", async (req: Request, res: Response) => {
       $lookup: {
         from: "admins",
         localField: "_id",
+
         foreignField: "vendorId",
         as: "admin",
       },
@@ -51,6 +53,7 @@ vendorRoute.get("/", async (req: Request, res: Response) => {
         id: "$_id",
         name: "$name",
         contacts: "$contacts",
+        baner: "$baner",
         "admin.id": "$admin._id",
         "admin.email": "$admin.email",
       },

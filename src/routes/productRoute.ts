@@ -196,14 +196,21 @@ productRouter.post(
   "/new",
   validateAdmin,
   upload.array("media", 5),
-  [...productCreation],
+  productCreation,
+  (req, res, next) => {
+    try {
+      Validator.validate(req);
+      next();
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async (req: Request, res: Response) => {
     const { files } = req;
-   
-    Validator.validate(req);
 
     const { prices } = req.body;
-    
+
     //@ts-ignore
 
     let temp = [];
