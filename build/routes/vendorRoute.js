@@ -26,29 +26,28 @@ const vendorRoute = (0, express_1.Router)();
 const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage: storage, limits: { fileSize: 50 * 1048576 } });
 vendorRoute.get("/admin", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // const vendors = await Vendor.aggregate([
-    //   {
-    //     $lookup: {
-    //       from: "admins",
-    //       localField: "_id",
-    //       foreignField: "vendorId",
-    //       as: "admin",
-    //     },
-    //   },
-    //   { $unwind: "$admin" },
-    //   {
-    //     $project: {
-    //       id: "$_id",
-    //       name: "$name",
-    //       contacts: "$contacts",
-    //       baner: "$baner",
-    //       "admin.id": "$admin._id",
-    //       "admin.email": "$admin.email",
-    //     },
-    //   },
-    //   { $unset: ["_id", "admin._id"] },
-    // ]);
-    const vendors = yield Vendor_1.default.find({}).populate(admin);
+    const vendors = yield Vendor_1.default.aggregate([
+        {
+            $lookup: {
+                from: "admins",
+                localField: "_id",
+                foreignField: "vendorId",
+                as: "admin",
+            },
+        },
+        { $unwind: "$admin" },
+        {
+            $project: {
+                id: "$_id",
+                name: "$name",
+                contacts: "$contacts",
+                baner: "$baner",
+                "admin.id": "$admin._id",
+                "admin.email": "$admin.email",
+            },
+        },
+        { $unset: ["_id", "admin._id"] },
+    ]);
     res.send(vendors);
 }));
 vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -67,6 +66,7 @@ vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 id: "$_id",
                 name: "$name",
                 contacts: "$contacts",
+                baner: "$baner",
                 "admin.id": "$admin._id",
                 "admin.email": "$admin.email",
             },
