@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -27,8 +50,14 @@ const validateUser_1 = __importDefault(require("../middlewares/validateUser"));
 const Admin_1 = __importDefault(require("../Models/Admin"));
 const ForbidenError_1 = __importDefault(require("../Classes/Errors/ForbidenError"));
 const PropFormater_1 = __importDefault(require("../utils/PropFormater"));
+const path = __importStar(require("path"));
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
-const storage = multer_1.default.memoryStorage();
+const storage = multer_1.default.diskStorage({
+    destination: path.join(process.cwd(), "uploads"),
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + file.originalname);
+    },
+}) || multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({
     storage: storage,
     limits: { fileSize: 200 * 1024 * 1024 },
@@ -161,7 +190,7 @@ productRouter.put("/like/:id", validateUser_1.default, (req, res) => __awaiter(v
     const product = yield Product_1.default.likeProduct(req.params.id, user.id);
     res.send(product);
 }));
-productRouter.post("/new", validateAdmin_1.default, upload.array("media", 5), ProductRules_1.productCreation, (req, res, next) => {
+productRouter.post("/new", validateAdmin_1.default, upload.array("media", 10), ProductRules_1.productCreation, (req, res, next) => {
     try {
         Valiadtor_1.default.validate(req);
         next();

@@ -17,10 +17,16 @@ import ForbidenError from "../Classes/Errors/ForbidenError";
 import PropFormater from "../utils/PropFormater";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
 import BadRequestError from "../Classes/Errors/BadRequestError";
-
+import * as path from "path";
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
-const storage = multer.memoryStorage();
+const storage =
+  multer.diskStorage({
+    destination: path.join(process.cwd(), "uploads"),
+    filename: (req, file, cb) => {
+      cb(null, Date.now() + file.originalname);
+    },
+  }) || multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: { fileSize: 200 * 1024 * 1024 },
@@ -195,7 +201,7 @@ productRouter.put(
 productRouter.post(
   "/new",
   validateAdmin,
-  upload.array("media", 5),
+  upload.array("media", 10),
   productCreation,
   (req, res, next) => {
     try {

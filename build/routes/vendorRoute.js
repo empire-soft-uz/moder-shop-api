@@ -26,62 +26,65 @@ const vendorRoute = (0, express_1.Router)();
 const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage: storage, limits: { fileSize: 50 * 1048576 } });
 vendorRoute.get("/admin", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const vendors = yield Vendor_1.default.aggregate([
-        {
-            $lookup: {
-                from: "admins",
-                localField: "_id",
-                foreignField: "vendorId",
-                as: "admin",
-            },
-        },
-        { $unwind: "$admin" },
-        {
-            $project: {
-                id: "$_id",
-                name: "$name",
-                contacts: "$contacts",
-                baner: "$baner",
-                "admin.id": "$admin._id",
-                "admin.email": "$admin.email",
-            },
-        },
-        { $unset: ["_id", "admin._id"] },
-    ]);
+    // const vendors = await Vendor.aggregate([
+    //   {
+    //     $lookup: {
+    //       from: "admins",
+    //       localField: "_id",
+    //       foreignField: "vendorId",
+    //       as: "admin",
+    //     },
+    //   },
+    //   { $unwind: "$admin" },
+    //   {
+    //     $project: {
+    //       id: "$_id",
+    //       name: "$name",
+    //       contacts: "$contacts",
+    //       baner: "$baner",
+    //       "admin.id": "$admin._id",
+    //       "admin.email": "$admin.email",
+    //     },
+    //   },
+    //   { $unset: ["_id", "admin._id"] },
+    // ]);
+    const vendors = yield Vendor_1.default.find();
     res.send(vendors);
 }));
 vendorRoute.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const vendors = yield Vendor_1.default.aggregate([
-        {
-            $lookup: {
-                from: "admins",
-                localField: "_id",
-                foreignField: "vendorId",
-                as: "admin",
-            },
-        },
-        { $unwind: "$admin" },
-        {
-            $project: {
-                id: "$_id",
-                name: "$name",
-                contacts: "$contacts",
-                baner: "$baner",
-                "admin.id": "$admin._id",
-                "admin.email": "$admin.email",
-            },
-        },
-        { $unset: ["_id", "admin._id"] },
-    ]);
+    // const vendors = await Vendor.aggregate([
+    //   {
+    //     $lookup: {
+    //       from: "admins",
+    //       localField: "_id",
+    //       foreignField: "vendorId",
+    //       as: "admin",
+    //     },
+    //   },
+    //   { $unwind: "$admin" },
+    //   {
+    //     $project: {
+    //       id: "$_id",
+    //       name: "$name",
+    //       contacts: "$contacts",
+    //       baner: "$baner",
+    //       "admin.id": "$admin._id",
+    //       "admin.email": "$admin.email",
+    //     },
+    //   },
+    //   { $unset: ["_id", "admin._id"] },
+    // ]);
+    const vendors = yield Vendor_1.default.find();
     res.send(vendors);
 }));
 vendorRoute.post("/new", validateAdmin_1.isSuperAdmin, [...VendorRules_1.vendorCreation], upload.single("baner"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, desc, phoneNumber } = req.body;
+    const { name, description, phoneNumber } = req.body;
     const vendor = Vendor_1.default.build({
         name,
-        description: desc,
+        description,
         contacts: { phoneNumber },
     });
+    console.log(vendor);
     if (req.file) {
         const baner = yield MediaManager_1.default.uploadFile(req.file);
         vendor.baner = baner;

@@ -12,54 +12,56 @@ const vendorRoute = Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage, limits: { fileSize: 50 * 1048576 } });
 vendorRoute.get("/admin", isSuperAdmin, async (req: Request, res: Response) => {
-  const vendors = await Vendor.aggregate([
-    {
-      $lookup: {
-        from: "admins",
-        localField: "_id",
-        foreignField: "vendorId",
-        as: "admin",
-      },
-    },
-    { $unwind: "$admin" },
-    {
-      $project: {
-        id: "$_id",
-        name: "$name",
-        contacts: "$contacts",
-        baner: "$baner",
-        "admin.id": "$admin._id",
-        "admin.email": "$admin.email",
-      },
-    },
-    { $unset: ["_id", "admin._id"] },
-  ]);
+  // const vendors = await Vendor.aggregate([
+  //   {
+  //     $lookup: {
+  //       from: "admins",
+  //       localField: "_id",
+  //       foreignField: "vendorId",
+  //       as: "admin",
+  //     },
+  //   },
+  //   { $unwind: "$admin" },
+  //   {
+  //     $project: {
+  //       id: "$_id",
+  //       name: "$name",
+  //       contacts: "$contacts",
+  //       baner: "$baner",
+  //       "admin.id": "$admin._id",
+  //       "admin.email": "$admin.email",
+  //     },
+  //   },
+  //   { $unset: ["_id", "admin._id"] },
+  // ]);
+  const vendors = await Vendor.find();
   res.send(vendors);
 });
 vendorRoute.get("/", async (req: Request, res: Response) => {
-  const vendors = await Vendor.aggregate([
-    {
-      $lookup: {
-        from: "admins",
-        localField: "_id",
+  // const vendors = await Vendor.aggregate([
+  //   {
+  //     $lookup: {
+  //       from: "admins",
+  //       localField: "_id",
 
-        foreignField: "vendorId",
-        as: "admin",
-      },
-    },
-    { $unwind: "$admin" },
-    {
-      $project: {
-        id: "$_id",
-        name: "$name",
-        contacts: "$contacts",
-        baner: "$baner",
-        "admin.id": "$admin._id",
-        "admin.email": "$admin.email",
-      },
-    },
-    { $unset: ["_id", "admin._id"] },
-  ]);
+  //       foreignField: "vendorId",
+  //       as: "admin",
+  //     },
+  //   },
+  //   { $unwind: "$admin" },
+  //   {
+  //     $project: {
+  //       id: "$_id",
+  //       name: "$name",
+  //       contacts: "$contacts",
+  //       baner: "$baner",
+  //       "admin.id": "$admin._id",
+  //       "admin.email": "$admin.email",
+  //     },
+  //   },
+  //   { $unset: ["_id", "admin._id"] },
+  // ]);
+  const vendors = await Vendor.find();
   res.send(vendors);
 });
 vendorRoute.post(
@@ -68,12 +70,13 @@ vendorRoute.post(
   [...vendorCreation],
   upload.single("baner"),
   async (req: Request, res: Response) => {
-    const { name, desc, phoneNumber } = req.body;
+    const { name, description, phoneNumber } = req.body;
     const vendor = Vendor.build({
       name,
-      description: desc,
+      description,
       contacts: { phoneNumber },
     });
+    console.log(vendor);
     if (req.file) {
       const baner = await MediaManager.uploadFile(req.file);
       vendor.baner = baner;
