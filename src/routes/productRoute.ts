@@ -20,13 +20,7 @@ import BadRequestError from "../Classes/Errors/BadRequestError";
 import * as path from "path";
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
-const storage =
-  multer.diskStorage({
-    destination: path.join(process.cwd(), "uploads"),
-    filename: (req, file, cb) => {
-      cb(null, Date.now() + file.originalname);
-    },
-  }) || multer.memoryStorage();
+const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: { fileSize: 200 * 1024 * 1024 },
