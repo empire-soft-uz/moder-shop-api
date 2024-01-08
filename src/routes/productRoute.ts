@@ -101,20 +101,36 @@ productRouter.get(
     if (!admin.super) {
       query = { author: admin.id };
     }
-    const products = await Product.find(query)
-      //@ts-ignore
-      .skip(page * limit)
-      //@ts-ignore
-      .limit(limit)
-      .populate("vendorId", "name")
-      .populate("category", "name id")
-      .populate("subcategory", "name id")
-      .populate({
-        path: "props",
-        model: "PropValue",
-        populate: { path: "prop", model: "Prop" },
-      });
-    const totalCount = await Product.count(query);
+    const products = admin.super
+      ? await Product.find(query)
+          //@ts-ignore
+          .skip(page * limit)
+          //@ts-ignore
+          .limit(limit)
+          .populate("vendorId", "name")
+          .populate("category", "name id")
+          .populate("subcategory", "name id")
+          .populate({
+            path: "props",
+            model: "PropValue",
+            populate: { path: "prop", model: "Prop" },
+          })
+      : await VendorProduct.find(query)
+          //@ts-ignore
+          .skip(page * limit)
+          //@ts-ignore
+          .limit(limit)
+          .populate("vendorId", "name")
+          .populate("category", "name id")
+          .populate("subcategory", "name id")
+          .populate({
+            path: "props",
+            model: "PropValue",
+            populate: { path: "prop", model: "Prop" },
+          });
+    const totalCount = admin.super
+      ? await Product.count(query)
+      : await VendorProduct.count(query);
     res.send({ page: page || 1, limit, totalCount, products });
   }
 );
@@ -211,7 +227,7 @@ productRouter.post(
     Array.isArray(prices) && prices.map((p) => temp.push(JSON.parse(p)));
     let product;
     const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
-
+    console.log(admin.vendorId);
     //@ts-ignore
     product = admin.super
       ? Product.build({ ...req.body, price: temp })

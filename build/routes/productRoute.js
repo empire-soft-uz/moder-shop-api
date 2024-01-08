@@ -96,20 +96,36 @@ productRouter.get("/admin", validateAdmin_1.default, (req, res) => __awaiter(voi
     if (!admin.super) {
         query = { author: admin.id };
     }
-    const products = yield Product_1.default.find(query)
-        //@ts-ignore
-        .skip(page * limit)
-        //@ts-ignore
-        .limit(limit)
-        .populate("vendorId", "name")
-        .populate("category", "name id")
-        .populate("subcategory", "name id")
-        .populate({
-        path: "props",
-        model: "PropValue",
-        populate: { path: "prop", model: "Prop" },
-    });
-    const totalCount = yield Product_1.default.count(query);
+    const products = admin.super
+        ? yield Product_1.default.find(query)
+            //@ts-ignore
+            .skip(page * limit)
+            //@ts-ignore
+            .limit(limit)
+            .populate("vendorId", "name")
+            .populate("category", "name id")
+            .populate("subcategory", "name id")
+            .populate({
+            path: "props",
+            model: "PropValue",
+            populate: { path: "prop", model: "Prop" },
+        })
+        : yield VendorProducts_1.default.find(query)
+            //@ts-ignore
+            .skip(page * limit)
+            //@ts-ignore
+            .limit(limit)
+            .populate("vendorId", "name")
+            .populate("category", "name id")
+            .populate("subcategory", "name id")
+            .populate({
+            path: "props",
+            model: "PropValue",
+            populate: { path: "prop", model: "Prop" },
+        });
+    const totalCount = admin.super
+        ? yield Product_1.default.count(query)
+        : yield VendorProducts_1.default.count(query);
     res.send({ page: page || 1, limit, totalCount, products });
 }));
 productRouter.get("/liked", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -171,6 +187,7 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 10), P
     Array.isArray(prices) && prices.map((p) => temp.push(JSON.parse(p)));
     let product;
     const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    console.log(admin.vendorId);
     //@ts-ignore
     product = admin.super
         ? Product_1.default.build(Object.assign(Object.assign({}, req.body), { price: temp }))
