@@ -27,6 +27,7 @@ const validateUser_1 = __importDefault(require("../middlewares/validateUser"));
 const Admin_1 = __importDefault(require("../Models/Admin"));
 const ForbidenError_1 = __importDefault(require("../Classes/Errors/ForbidenError"));
 const PropFormater_1 = __importDefault(require("../utils/PropFormater"));
+const VendorProducts_1 = __importDefault(require("../Models/VendorProducts"));
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({
@@ -161,15 +162,8 @@ productRouter.put("/like/:id", validateUser_1.default, (req, res) => __awaiter(v
     const product = yield Product_1.default.likeProduct(req.params.id, user.id);
     res.send(product);
 }));
-productRouter.post("/new", validateAdmin_1.default, upload.array("media", 10), ProductRules_1.productCreation, (req, res, next) => {
-    try {
-        Valiadtor_1.default.validate(req);
-        next();
-    }
-    catch (error) {
-        next(error);
-    }
-}, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+productRouter.post("/new", validateAdmin_1.default, upload.array("media", 10), ProductRules_1.productCreation, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    Valiadtor_1.default.validate(req);
     const { files } = req;
     const { prices } = req.body;
     //@ts-ignore
@@ -178,7 +172,9 @@ productRouter.post("/new", validateAdmin_1.default, upload.array("media", 10), P
     let product;
     const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
     //@ts-ignore
-    product = Product_1.default.build(Object.assign(Object.assign({}, req.body), { price: temp }));
+    product = admin.super
+        ? Product_1.default.build(Object.assign(Object.assign({}, req.body), { price: temp }))
+        : VendorProducts_1.default.build(Object.assign(Object.assign({}, req.body), { price: temp }));
     const vendor = yield Vendor_1.default.findByIdAndUpdate(admin.vendorId, {
         $push: { products: product.id },
     });
@@ -217,22 +213,17 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
     Valiadtor_1.default.validate(req);
     const { prices } = req.body;
     const { files } = req;
-    const product = yield Product_1.default.findById(req.params.id);
+    const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    const product = admin.super
+        ? yield Product_1.default.findById(req.params.id)
+        : yield VendorProducts_1.default.findById(req.params.id);
     if (!product)
         throw new NotFoundError_1.default("Product Not Found");
-    const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
     const fns = [];
     req.body.delFiles && //@ts-ignore
         req.body.delFiles.map((f) => 
         //@ts-ignore
         fns.push(MediaManager_1.default.deletefiles(f)));
-    // if (admin.vendorId) {
-    //   const vendor = await Vendor.findByIdAndUpdate(admin.vendorId, {
-    //     $push: { products: product._id },
-    //   });
-    //   if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
-    //   await vendor.save();
-    // }
     let tempProps = [...new Set(req.body.props)];
     const newData = Object.assign(Object.assign({}, req.body), { video: product.video, media: product.media, price: [] });
     Array.isArray(prices) &&
@@ -270,7 +261,9 @@ productRouter.delete("/delete/:id", validateAdmin_1.default, (req, res) => __awa
     const admin = yield Admin_1.default.findById(JWTDecrypter_1.default.decryptUser(req, jwtKey).id);
     if (!admin)
         throw new ForbidenError_1.default("Access denied");
-    const deletedProduct = yield Product_1.default.findById(req.params.id);
+    const deletedProduct = admin.super
+        ? yield Product_1.default.findById(req.params.id)
+        : yield VendorProducts_1.default.findById(req.params.id);
     if (!deletedProduct)
         throw new NotFoundError_1.default("Product Not Found");
     if (!admin.super) {

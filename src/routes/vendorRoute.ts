@@ -109,7 +109,6 @@ vendorRoute.put(
       //@ts-ignore
       update.baner = res[0];
     }
-    console.log(update);
     const vendor = await Vendor.findByIdAndUpdate(
       req.params.id,
       { ...update },
@@ -122,7 +121,7 @@ vendorRoute.put(
 vendorRoute.get("/:id", async (req: Request, res: Response) => {
   const vendor = await Vendor.findById(req.params.id).populate({
     path: "products",
-    model: "Product",
+    model: "VendorProduct",
   });
   if (!vendor) throw new NotFoundError("Vendor Not Found");
 

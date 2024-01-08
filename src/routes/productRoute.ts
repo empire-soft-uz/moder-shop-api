@@ -16,8 +16,8 @@ import Admin from "../Models/Admin";
 import ForbidenError from "../Classes/Errors/ForbidenError";
 import PropFormater from "../utils/PropFormater";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
-import BadRequestError from "../Classes/Errors/BadRequestError";
 import * as path from "path";
+import VendorProduct from "../Models/VendorProducts";
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
 const storage = multer.memoryStorage();
@@ -197,29 +197,25 @@ productRouter.post(
   validateAdmin,
   upload.array("media", 10),
   productCreation,
-  (req, res, next) => {
-    try {
-      Validator.validate(req);
-      next();
-    } catch (error) {
-      next(error);
-    }
-  },
 
   async (req: Request, res: Response) => {
+    Validator.validate(req);
+
     const { files } = req;
 
     const { prices } = req.body;
 
     //@ts-ignore
 
-    let temp = [];
+    let temp: IPrice[] = [];
     Array.isArray(prices) && prices.map((p) => temp.push(JSON.parse(p)));
     let product;
     const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
 
     //@ts-ignore
-    product = Product.build({ ...req.body, price: temp });
+    product = admin.super
+      ? Product.build({ ...req.body, price: temp })
+      : VendorProduct.build({ ...req.body, price: temp });
     const vendor = await Vendor.findByIdAndUpdate(admin.vendorId, {
       $push: { products: product.id },
     });
@@ -267,23 +263,20 @@ productRouter.put(
 
     const { prices } = req.body;
     const { files } = req;
-    const product = await Product.findById(req.params.id);
-    if (!product) throw new NotFoundError("Product Not Found");
 
     const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
+    const product = admin.super
+      ? await Product.findById(req.params.id)
+      : await VendorProduct.findById(req.params.id);
+    if (!product) throw new NotFoundError("Product Not Found");
+
     const fns: Function[] = [];
     req.body.delFiles && //@ts-ignore
       req.body.delFiles.map((f: IProductMedia) =>
         //@ts-ignore
         fns.push(MediaManager.deletefiles(f))
       );
-    // if (admin.vendorId) {
-    //   const vendor = await Vendor.findByIdAndUpdate(admin.vendorId, {
-    //     $push: { products: product._id },
-    //   });
-    //   if (!vendor) throw new NotFoundError(`Vendor with given id not found`);
-    //   await vendor.save();
-    // }
+
     let tempProps = [...new Set(req.body.props)];
     const newData = {
       ...req.body,
@@ -342,7 +335,9 @@ productRouter.delete(
     );
 
     if (!admin) throw new ForbidenError("Access denied");
-    const deletedProduct = await Product.findById(req.params.id);
+    const deletedProduct = admin.super
+      ? await Product.findById(req.params.id)
+      : await VendorProduct.findById(req.params.id);
 
     if (!deletedProduct) throw new NotFoundError("Product Not Found");
 

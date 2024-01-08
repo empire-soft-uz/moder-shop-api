@@ -109,14 +109,13 @@ vendorRoute.put("/edit/:id", upload.single("baner"), validateAdmin_1.isSuperAdmi
         //@ts-ignore
         update.baner = res[0];
     }
-    console.log(update);
     const vendor = yield Vendor_1.default.findByIdAndUpdate(req.params.id, Object.assign({}, update), { new: true });
     res.send(vendor);
 }));
 vendorRoute.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const vendor = yield Vendor_1.default.findById(req.params.id).populate({
         path: "products",
-        model: "Product",
+        model: "VendorProduct",
     });
     if (!vendor)
         throw new NotFoundError_1.default("Vendor Not Found");

@@ -12,7 +12,7 @@ const vendorSchema = new mongoose_1.Schema({
         phoneNumber: Number,
     },
     baner: mediaSchema,
-    products: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Product" }],
+    products: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "VendorProduct" }],
 }, {
     toJSON: {
         transform(doc, ret) {

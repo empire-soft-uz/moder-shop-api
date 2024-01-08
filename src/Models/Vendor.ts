@@ -34,7 +34,7 @@ const vendorSchema = new Schema(
       phoneNumber: Number,
     },
     baner: mediaSchema,
-    products: [{ type: Schema.Types.ObjectId, ref: "Product" }],
+    products: [{ type: Schema.Types.ObjectId, ref: "VendorProduct" }],
   },
   {
     toJSON: {
