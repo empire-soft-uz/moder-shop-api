@@ -147,6 +147,55 @@ productRouter.get(
     res.send(products);
   }
 );
+productRouter.get("/vendor/:id", async (req: Request, res: Response) => {
+  const product = await VendorProduct.findById(req.params.id)
+    .populate({
+      path: "category",
+      model: "Category",
+      select: "id name",
+    })
+    .populate({
+      path: "reviews",
+      model: "Review",
+      populate: {
+        path: "authorId",
+        model: "Admin",
+        select: "id fullName phoneNumber",
+      },
+    })
+
+    .populate("subcategory", "name id")
+    .populate("author", "id email")
+    .populate({
+      path: "props",
+      model: "PropValue",
+      populate: { path: "prop", model: "Prop" },
+    })
+    .populate({
+      path: "vendorId",
+      model: Vendor,
+    });
+  if (!product) throw new NotFoundError("Product Not Found");
+  if (req.query.admin) {
+    res.send(product);
+    return;
+  }
+  product.viewCount += 1;
+  await product.save();
+
+  const fProps = PropFormater.format(product.props);
+
+  const obj = {
+    id: product.id,
+    ...product.toObject(),
+    props: fProps,
+
+    author: { id: product.author.id, email: product.author.email },
+  };
+  delete obj._id;
+
+  res.send(obj);
+});
 productRouter.get("/:id", async (req: Request, res: Response) => {
   const product = await Product.findById(req.params.id)
     .populate({
@@ -285,8 +334,7 @@ productRouter.put(
       ? await Product.findById(req.params.id)
       : await VendorProduct.findById(req.params.id);
     if (!product) throw new NotFoundError("Product Not Found");
-
-    const fns: Function[] = [];
+    let fns: any[] = [];
     req.body.delFiles && //@ts-ignore
       req.body.delFiles.map((f: IProductMedia) =>
         //@ts-ignore
@@ -325,18 +373,33 @@ productRouter.put(
         newData.media.push(img);
       }
     }
-    await product.save();
-    const [newPr] = await Promise.all([
-      Product.findByIdAndUpdate(
-        product.id,
-        {
-          ...newData,
-          props: tempProps,
-        },
-        { new: true }
-      ),
-      ...fns,
-    ]);
+    if (admin.super) {
+      fns = [
+        Product.findByIdAndUpdate(
+          product.id,
+          {
+            ...newData,
+            props: tempProps,
+          },
+          { new: true }
+        ),
+        ...fns,
+      ];
+    } else {
+      fns = [
+        VendorProduct.findByIdAndUpdate(
+          product.id,
+          {
+            ...newData,
+            props: tempProps,
+          },
+
+          { new: true }
+        ),
+        ...fns,
+      ];
+    }
+    const [newPr] = await Promise.all([...fns]);
 
     res.send(newPr);
   }

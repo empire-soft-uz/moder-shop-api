@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.productCreation = void 0;
+exports.vendorProduct = exports.productCreation = void 0;
 const express_validator_1 = require("express-validator");
 exports.productCreation = [
     (0, express_validator_1.body)("name").notEmpty().withMessage("Product name is required"),
-    (0, express_validator_1.body)("category").notEmpty().withMessage("Product Category is required"),
-    (0, express_validator_1.body)("subcategory").notEmpty().withMessage("Product Subcategory is required"),
+    // body("category").notEmpty().withMessage("Product Category is required"),
+    // body("subcategory").notEmpty().withMessage("Product Subcategory is required"),
     // body("price")
     //   .notEmpty()
     //   .withMessage("Please provide price for varity of product quantity"),
@@ -18,4 +18,7 @@ exports.productCreation = [
     //     throw new Error("Please provide price for varity of product quantity");
     // }),
     // body("video").notEmpty().withMessage("Product Video is Required"),
+];
+exports.vendorProduct = [
+    (0, express_validator_1.body)("name").notEmpty().withMessage("Product name is required"),
 ];

@@ -133,6 +133,46 @@ productRouter.get("/liked", validateUser_1.default, (req, res) => __awaiter(void
     const products = yield Product_1.default.find({ likes: { $in: [user.id] } });
     res.send(products);
 }));
+productRouter.get("/vendor/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const product = yield VendorProducts_1.default.findById(req.params.id)
+        .populate({
+        path: "category",
+        model: "Category",
+        select: "id name",
+    })
+        .populate({
+        path: "reviews",
+        model: "Review",
+        populate: {
+            path: "authorId",
+            model: "Admin",
+            select: "id fullName phoneNumber",
+        },
+    })
+        .populate("subcategory", "name id")
+        .populate("author", "id email")
+        .populate({
+        path: "props",
+        model: "PropValue",
+        populate: { path: "prop", model: "Prop" },
+    })
+        .populate({
+        path: "vendorId",
+        model: Vendor_1.default,
+    });
+    if (!product)
+        throw new NotFoundError_1.default("Product Not Found");
+    if (req.query.admin) {
+        res.send(product);
+        return;
+    }
+    product.viewCount += 1;
+    yield product.save();
+    const fProps = PropFormater_1.default.format(product.props);
+    const obj = Object.assign(Object.assign({ id: product.id }, product.toObject()), { props: fProps, author: { id: product.author.id, email: product.author.email } });
+    delete obj._id;
+    res.send(obj);
+}));
 productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const product = yield Product_1.default.findById(req.params.id)
         .populate({
@@ -236,7 +276,7 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
         : yield VendorProducts_1.default.findById(req.params.id);
     if (!product)
         throw new NotFoundError_1.default("Product Not Found");
-    const fns = [];
+    let fns = [];
     req.body.delFiles && //@ts-ignore
         req.body.delFiles.map((f) => 
         //@ts-ignore
@@ -267,11 +307,19 @@ productRouter.put("/edit/:id", validateAdmin_1.default, upload.array("media", 4)
             newData.media.push(img);
         }
     }
-    yield product.save();
-    const [newPr] = yield Promise.all([
-        Product_1.default.findByIdAndUpdate(product.id, Object.assign(Object.assign({}, newData), { props: tempProps }), { new: true }),
-        ...fns,
-    ]);
+    if (admin.super) {
+        fns = [
+            Product_1.default.findByIdAndUpdate(product.id, Object.assign(Object.assign({}, newData), { props: tempProps }), { new: true }),
+            ...fns,
+        ];
+    }
+    else {
+        fns = [
+            VendorProducts_1.default.findByIdAndUpdate(product.id, Object.assign(Object.assign({}, newData), { props: tempProps }), { new: true }),
+            ...fns,
+        ];
+    }
+    const [newPr] = yield Promise.all([...fns]);
     res.send(newPr);
 }));
 productRouter.delete("/delete/:id", validateAdmin_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
