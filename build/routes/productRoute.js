@@ -133,6 +133,49 @@ productRouter.get("/liked", validateUser_1.default, (req, res) => __awaiter(void
     const products = yield Product_1.default.find({ likes: { $in: [user.id] } });
     res.send(products);
 }));
+productRouter.get("/vendor/:vendorId/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    const product = yield VendorProducts_1.default.findById(req.params.id)
+        .populate({
+        path: "category",
+        model: "Category",
+        select: "id name",
+    })
+        .populate({
+        path: "reviews",
+        model: "Review",
+        populate: {
+            path: "authorId",
+            model: "Admin",
+            select: "id fullName phoneNumber",
+        },
+    })
+        .populate("subcategory", "name id")
+        .populate("author", "id email")
+        .populate({
+        path: "props",
+        model: "PropValue",
+        populate: { path: "prop", model: "Prop" },
+    })
+        .populate({
+        path: "vendorId",
+        model: Vendor_1.default,
+    });
+    if (!product)
+        throw new NotFoundError_1.default("Product Not Found");
+    if (req.query.admin) {
+        res.send(product);
+        return;
+    }
+    if (!admin) {
+        product.viewCount += 1;
+        yield product.save();
+    }
+    const fProps = PropFormater_1.default.format(product.props);
+    const obj = Object.assign(Object.assign({ id: product.id }, product.toObject()), { props: fProps, author: { id: product.author.id, email: product.author.email } });
+    delete obj._id;
+    res.send(obj);
+}));
 productRouter.get("/vendor/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const product = yield VendorProducts_1.default.findById(req.params.id)
         .populate({
@@ -174,6 +217,7 @@ productRouter.get("/vendor/:id", (req, res) => __awaiter(void 0, void 0, void 0,
     res.send(obj);
 }));
 productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
     const product = yield Product_1.default.findById(req.params.id)
         .populate({
         path: "category",
@@ -206,8 +250,10 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
         res.send(product);
         return;
     }
-    product.viewCount += 1;
-    yield product.save();
+    if (!admin) {
+        product.viewCount += 1;
+        yield product.save();
+    }
     const fProps = PropFormater_1.default.format(product.props);
     const obj = Object.assign(Object.assign({ id: product.id }, product.toObject()), { props: fProps, author: { id: product.author.id, email: product.author.email } });
     delete obj._id;

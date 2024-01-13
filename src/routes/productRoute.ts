@@ -16,7 +16,6 @@ import Admin from "../Models/Admin";
 import ForbidenError from "../Classes/Errors/ForbidenError";
 import PropFormater from "../utils/PropFormater";
 import IProductMedia from "../Interfaces/Product/IProducMedia";
-import * as path from "path";
 import VendorProduct from "../Models/VendorProducts";
 const jwtKey = process.env.JWT_ADMIN || "SomeJwT_keY-ADmIn";
 
@@ -147,6 +146,60 @@ productRouter.get(
     res.send(products);
   }
 );
+productRouter.get(
+  "/vendor/:vendorId/:id",
+  async (req: Request, res: Response) => {
+    const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
+    const product = await VendorProduct.findById(req.params.id)
+      .populate({
+        path: "category",
+        model: "Category",
+        select: "id name",
+      })
+      .populate({
+        path: "reviews",
+        model: "Review",
+        populate: {
+          path: "authorId",
+          model: "Admin",
+          select: "id fullName phoneNumber",
+        },
+      })
+
+      .populate("subcategory", "name id")
+      .populate("author", "id email")
+      .populate({
+        path: "props",
+        model: "PropValue",
+        populate: { path: "prop", model: "Prop" },
+      })
+      .populate({
+        path: "vendorId",
+        model: Vendor,
+      });
+    if (!product) throw new NotFoundError("Product Not Found");
+    if (req.query.admin) {
+      res.send(product);
+      return;
+    }
+    if (!admin) {
+      product.viewCount += 1;
+      await product.save();
+    }
+
+    const fProps = PropFormater.format(product.props);
+
+    const obj = {
+      id: product.id,
+      ...product.toObject(),
+      props: fProps,
+
+      author: { id: product.author.id, email: product.author.email },
+    };
+    delete obj._id;
+    res.send(obj);
+  }
+);
 productRouter.get("/vendor/:id", async (req: Request, res: Response) => {
   const product = await VendorProduct.findById(req.params.id)
     .populate({
@@ -197,6 +250,7 @@ productRouter.get("/vendor/:id", async (req: Request, res: Response) => {
   res.send(obj);
 });
 productRouter.get("/:id", async (req: Request, res: Response) => {
+  const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
   const product = await Product.findById(req.params.id)
     .populate({
       path: "category",
@@ -229,8 +283,10 @@ productRouter.get("/:id", async (req: Request, res: Response) => {
     res.send(product);
     return;
   }
-  product.viewCount += 1;
-  await product.save();
+  if (!admin) {
+    product.viewCount += 1;
+    await product.save();
+  }
 
   const fProps = PropFormater.format(product.props);
 
