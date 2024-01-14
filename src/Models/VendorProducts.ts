@@ -44,10 +44,14 @@ interface VendorProductDoc extends Document {
   video: IProductMedia | undefined;
   reviews: Array<IReview>;
   viewCount: number;
+  vendorProduct: boolean;
 }
 interface VendorProductModel extends Model<VendorProductDoc> {
   build(attrs: vendorProduct): VendorProductDoc;
-  likeProduct(id: string, userId: string): Promise<VendorProductDoc>;
+  likeProduct(
+    id: string,
+    userId: string
+  ): Promise<VendorProductDoc | undefined>;
 }
 const priceSchema = new Schema(
   {
@@ -81,6 +85,7 @@ const vendorProductSchema = new Schema(
     category: { type: Schema.Types.ObjectId, ref: Category },
     subcategory: { type: Schema.Types.ObjectId, ref: Subcategory },
     reviews: [{ type: Schema.Types.ObjectId, ref: Review }],
+    vendorProduct: { type: Boolean, default: true },
   },
   {
     toJSON: {
@@ -106,7 +111,7 @@ vendorProductSchema.statics.build = (
 vendorProductSchema.statics.likeProduct = async (
   id: string,
   userId: string
-): Promise<VendorProductDoc> => {
+): Promise<VendorProductDoc | undefined> => {
   if (!userId) throw new UnauthorizedError("User Unauthorized");
   const product = await VendorProduct.findById(id)
     .populate("vendorId", "name")
@@ -117,7 +122,7 @@ vendorProductSchema.statics.likeProduct = async (
       model: "PropValue",
       populate: { path: "prop", model: "Prop" },
     });
-  if (!product) throw new NotFoundError("Product Not Found");
+  if (!product) return undefined;
   if (
     product.likes.find((l) => {
       if (l.toString() === userId) {

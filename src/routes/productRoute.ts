@@ -141,9 +141,13 @@ productRouter.get(
       req,
       process.env.JWT || ""
     );
-    const products = await Product.find({ likes: { $in: [user.id] } });
+    const query = { likes: { $in: [user.id] } };
+    const products = await Promise.all([
+      Product.find(query),
+      VendorProduct.find(query),
+    ]);
 
-    res.send(products);
+    res.send([...products[0], ...products[1]]);
   }
 );
 productRouter.get(
@@ -308,9 +312,14 @@ productRouter.put(
       req,
       process.env.JWT || ""
     );
-    const product = await Product.likeProduct(req.params.id, user.id);
 
-    res.send(product);
+    const [product, vendorProduct] = await Promise.all([
+      Product.likeProduct(req.params.id, user.id),
+      VendorProduct.likeProduct(req.params.id, user.id),
+    ]);
+    if (!product && !vendorProduct)
+      throw new NotFoundError("Product Not Found");
+    res.send(product || vendorProduct);
   }
 );
 productRouter.post(

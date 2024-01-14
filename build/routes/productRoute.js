@@ -130,8 +130,12 @@ productRouter.get("/admin", validateAdmin_1.default, (req, res) => __awaiter(voi
 }));
 productRouter.get("/liked", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT || "");
-    const products = yield Product_1.default.find({ likes: { $in: [user.id] } });
-    res.send(products);
+    const query = { likes: { $in: [user.id] } };
+    const products = yield Promise.all([
+        Product_1.default.find(query),
+        VendorProducts_1.default.find(query),
+    ]);
+    res.send([...products[0], ...products[1]]);
 }));
 productRouter.get("/vendor/:vendorId/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
@@ -261,8 +265,13 @@ productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, functi
 }));
 productRouter.put("/like/:id", validateUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = JWTDecrypter_1.default.decryptUser(req, process.env.JWT || "");
-    const product = yield Product_1.default.likeProduct(req.params.id, user.id);
-    res.send(product);
+    const [product, vendorProduct] = yield Promise.all([
+        Product_1.default.likeProduct(req.params.id, user.id),
+        VendorProducts_1.default.likeProduct(req.params.id, user.id),
+    ]);
+    if (!product && !vendorProduct)
+        throw new NotFoundError_1.default("Product Not Found");
+    res.send(product || vendorProduct);
 }));
 productRouter.post("/new", validateAdmin_1.default, upload.array("media", 10), ProductRules_1.productCreation, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);

@@ -35,7 +35,7 @@ interface ProductDoc extends Document {
 }
 interface ProductModel extends Model<ProductDoc> {
     build(attrs: product): ProductDoc;
-    likeProduct(id: string, userId: string): Promise<ProductDoc>;
+    likeProduct(id: string, userId: string): Promise<ProductDoc | undefined>;
 }
 declare const Product: ProductModel;
 export default Product;

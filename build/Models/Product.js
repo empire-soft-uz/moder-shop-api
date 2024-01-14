@@ -19,7 +19,6 @@ const Vendor_1 = __importDefault(require("./Vendor"));
 const Category_1 = __importDefault(require("./Category"));
 const PropValue_1 = __importDefault(require("./PropValue"));
 const Admin_1 = __importDefault(require("./Admin"));
-const NotFoundError_1 = __importDefault(require("../Classes/Errors/NotFoundError"));
 const UnauthoruzedError_1 = __importDefault(require("../Classes/Errors/UnauthoruzedError"));
 const priceSchema = new mongoose_1.Schema({
     price: Number,
@@ -77,8 +76,9 @@ productSchema.statics.likeProduct = (id, userId) => __awaiter(void 0, void 0, vo
         model: "PropValue",
         populate: { path: "prop", model: "Prop" },
     });
-    if (!product)
-        throw new NotFoundError_1.default("Product Not Found");
+    if (!product) {
+        return undefined;
+    }
     if (product.likes.find((l) => {
         if (l.toString() === userId) {
             return l;

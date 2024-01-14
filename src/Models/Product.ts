@@ -47,7 +47,7 @@ interface ProductDoc extends Document {
 }
 interface ProductModel extends Model<ProductDoc> {
   build(attrs: product): ProductDoc;
-  likeProduct(id: string, userId: string): Promise<ProductDoc>;
+  likeProduct(id: string, userId: string): Promise<ProductDoc | undefined>;
 }
 const priceSchema = new Schema(
   {
@@ -104,7 +104,7 @@ productSchema.statics.build = (attrs: product): ProductDoc => {
 productSchema.statics.likeProduct = async (
   id: string,
   userId: string
-): Promise<ProductDoc> => {
+): Promise<ProductDoc | undefined> => {
   if (!userId) throw new UnauthorizedError("User Unauthorized");
   const product = await Product.findById(id)
     .populate("vendorId", "name")
@@ -115,7 +115,9 @@ productSchema.statics.likeProduct = async (
       model: "PropValue",
       populate: { path: "prop", model: "Prop" },
     });
-  if (!product) throw new NotFoundError("Product Not Found");
+  if (!product) {
+    return undefined;
+  }
   if (
     product.likes.find((l) => {
       if (l.toString() === userId) {
