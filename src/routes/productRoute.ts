@@ -254,7 +254,12 @@ productRouter.get("/vendor/:id", async (req: Request, res: Response) => {
   res.send(obj);
 });
 productRouter.get("/:id", async (req: Request, res: Response) => {
-  const admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
+  let admin: IAdmin | undefined;
+  try {
+    admin = JWTDecrypter.decryptUser<IAdmin>(req, jwtKey);
+  } catch (error) {
+    admin = undefined;
+  }
   const product = await Product.findById(req.params.id)
     .populate({
       path: "category",

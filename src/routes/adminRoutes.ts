@@ -42,7 +42,6 @@ adminRoute.put(
       },
       jwtKey
     );
-  
 
     res.send({ id: admin.id, email: admin.email, token });
   }
@@ -54,6 +53,14 @@ adminRoute.get("/:id", isSuperAdmin, async (req: Request, res: Response) => {
   });
   res.send(admins);
 });
+adminRoute.delete("/:id", isSuperAdmin, async (req: Request, res: Response) => {
+  const admins = await Admin.findOneAndDelete({
+    _id: req.params.id,
+    root: false,
+  });
+
+  res.send(admins);
+});
 
 adminRoute.post(
   "/new",
@@ -61,7 +68,6 @@ adminRoute.post(
   [...adminCreation],
   async (req: Request, res: Response) => {
     Validator.validate(req);
-
 
     const admin = Admin.build(req.body);
     const hash = await Password.hashPassword(req.body.password);
@@ -71,11 +77,11 @@ adminRoute.post(
       {
         id: admin.id,
         email: admin.email,
-        super:admin.super
+        super: admin.super,
       },
       jwtKey
     );
-    res.send({ id: admin.id, email: admin.email, token , super:admin.super});
+    res.send({ id: admin.id, email: admin.email, token, super: admin.super });
   }
 );
 adminRoute.post(
@@ -97,13 +103,13 @@ adminRoute.post(
       {
         id: admin.id,
         email: admin.email,
-        super:admin.super,
-        vendorId:admin.vendorId
+        super: admin.super,
+        vendorId: admin.vendorId,
       },
       jwtKey
     );
 
-    res.send({ id: admin.id, email: admin.email, token,super:admin.super });
+    res.send({ id: admin.id, email: admin.email, token, super: admin.super });
   }
 );
 export default adminRoute;

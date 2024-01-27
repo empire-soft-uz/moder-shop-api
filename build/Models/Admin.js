@@ -7,6 +7,7 @@ const adminSchema = new mongoose_1.Schema({
     vendorId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Vendor" },
     online: { type: Boolean, default: false },
     super: { type: Boolean, default: false },
+    root: { type: Boolean, default: false },
 }, {
     toJSON: {
         transform(doc, ret) {

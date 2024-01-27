@@ -50,6 +50,13 @@ adminRoute.get("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(voi
     });
     res.send(admins);
 }));
+adminRoute.delete("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const admins = yield Admin_1.default.findOneAndDelete({
+        _id: req.params.id,
+        root: false,
+    });
+    res.send(admins);
+}));
 adminRoute.post("/new", validateAdmin_1.isSuperAdmin, [...AdminRules_1.adminCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     Valiadtor_1.default.validate(req);
     const admin = Admin_1.default.build(req.body);
@@ -59,7 +66,7 @@ adminRoute.post("/new", validateAdmin_1.isSuperAdmin, [...AdminRules_1.adminCrea
     const token = jsonwebtoken_1.default.sign({
         id: admin.id,
         email: admin.email,
-        super: admin.super
+        super: admin.super,
     }, jwtKey);
     res.send({ id: admin.id, email: admin.email, token, super: admin.super });
 }));
@@ -78,7 +85,7 @@ adminRoute.post("/login", [...AdminRules_1.adminCreation], (req, res) => __await
         id: admin.id,
         email: admin.email,
         super: admin.super,
-        vendorId: admin.vendorId
+        vendorId: admin.vendorId,
     }, jwtKey);
     res.send({ id: admin.id, email: admin.email, token, super: admin.super });
 }));

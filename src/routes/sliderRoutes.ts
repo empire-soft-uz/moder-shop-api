@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import "express-async-errors";
 import Slider from "../Models/Slider";
 import multer from "multer";
-import validateAdmin from "../middlewares/validateAdmin";
+import validateAdmin, { isSuperAdmin } from "../middlewares/validateAdmin";
 import { sliderCreation } from "../Validation/SliderRules";
 import Validator from "../utils/Valiadtor";
 import BadRequestError from "../Classes/Errors/BadRequestError";
@@ -19,7 +19,7 @@ sliderRouter.get("/", async (req: Request, res: Response) => {
 });
 sliderRouter.post(
   "/new",
-  validateAdmin,
+  isSuperAdmin,
   [...sliderCreation],
   upload.single("image"),
   async (req: Request, res: Response) => {
@@ -34,7 +34,7 @@ sliderRouter.post(
 );
 sliderRouter.delete(
   "/delete/:id",
-  validateAdmin,
+  isSuperAdmin,
   async (req: Request, res: Response) => {
     const slide = await Slider.findByIdAndDelete(req.params.id);
     if (!slide) throw new NotFoundError("Slide Not Found");

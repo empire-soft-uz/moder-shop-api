@@ -221,7 +221,13 @@ productRouter.get("/vendor/:id", (req, res) => __awaiter(void 0, void 0, void 0,
     res.send(obj);
 }));
 productRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    let admin;
+    try {
+        admin = JWTDecrypter_1.default.decryptUser(req, jwtKey);
+    }
+    catch (error) {
+        admin = undefined;
+    }
     const product = yield Product_1.default.findById(req.params.id)
         .populate({
         path: "category",
