@@ -55,6 +55,8 @@ adminRoute.delete("/:id", validateAdmin_1.isSuperAdmin, (req, res) => __awaiter(
         _id: req.params.id,
         root: false,
     });
+    if (!admins)
+        throw new BadRequestError_1.default("Account doesnt exists or it is root account!");
     res.send(admins);
 }));
 adminRoute.post("/new", validateAdmin_1.isSuperAdmin, [...AdminRules_1.adminCreation], (req, res) => __awaiter(void 0, void 0, void 0, function* () {

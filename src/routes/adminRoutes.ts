@@ -58,7 +58,8 @@ adminRoute.delete("/:id", isSuperAdmin, async (req: Request, res: Response) => {
     _id: req.params.id,
     root: false,
   });
-
+  if (!admins)
+    throw new BadRequestError("Account doesnt exists or it is root account!");
   res.send(admins);
 });
 
